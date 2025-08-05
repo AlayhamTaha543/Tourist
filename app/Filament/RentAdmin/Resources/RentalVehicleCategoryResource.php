@@ -1,0 +1,64 @@
+<?php
+
+namespace App\Filament\RentAdmin\Resources;
+
+use App\Filament\RentAdmin\Resources\RentalVehicleCategoryResource\Pages;
+use App\Filament\RentAdmin\Resources\RentalVehicleCategoryResource\RelationManagers;
+use App\Models\RentalVehicleCategory;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+
+class RentalVehicleCategoryResource extends Resource
+{
+    protected static ?string $model = RentalVehicleCategory::class;
+
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                //
+            ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                //
+            ])
+            ->filters([
+                //
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListRentalVehicleCategories::route('/'),
+            'create' => Pages\CreateRentalVehicleCategory::route('/create'),
+            'edit' => Pages\EditRentalVehicleCategory::route('/{record}/edit'),
+        ];
+    }
+}
