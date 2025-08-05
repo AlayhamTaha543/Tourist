@@ -28,6 +28,7 @@ class TaxiAdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Amber,
             ])
+
             ->discoverResources(in: app_path('Filament/TaxiAdmin/Resources'), for: 'App\\Filament\\TaxiAdmin\\Resources')
             ->discoverPages(in: app_path('Filament/TaxiAdmin/Pages'), for: 'App\\Filament\\TaxiAdmin\\Pages')
             ->pages([
@@ -49,8 +50,10 @@ class TaxiAdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
+
             ->authMiddleware([
                 Authenticate::class,
             ]);
+
     }
 }

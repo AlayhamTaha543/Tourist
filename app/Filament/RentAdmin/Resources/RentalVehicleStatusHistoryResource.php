@@ -18,6 +18,8 @@ class RentalVehicleStatusHistoryResource extends Resource
     protected static ?string $model = RentalVehicleStatusHistory::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationGroup = 'Rental Managment';
+
 
     public static function form(Form $form): Form
     {

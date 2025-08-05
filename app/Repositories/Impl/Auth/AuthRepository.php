@@ -126,7 +126,7 @@ class authRepository implements AuthInterface
             'last_name' => $user->last_name,
             'email' => $user->email,
             'location' => $user->location,
-            'photo_url' => $user->photo ? asset('storage/' . $user->photo) : null,
+            'photo_url' => $user->image ? asset('storage/' . $user->image) : null,
             'created_at' => $user->created_at,
             'updated_at' => $user->updated_at
         ];

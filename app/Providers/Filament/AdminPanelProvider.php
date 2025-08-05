@@ -51,12 +51,25 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\TourAdmin\Resources\TourResource::class,
                 \App\Filament\TravelAdmin\Resources\TravelAgencyResource::class,
                 \App\Filament\Resources\LocationResource::class,
+
+                \App\Filament\TaxiAdmin\Resources\TaxiServiceResource::class,
+                \App\Filament\TaxiAdmin\Resources\VehicleTypeResource::class,
+                \App\Filament\TaxiAdmin\Resources\VehicleResource::class,
+                \App\Filament\TaxiAdmin\Resources\DriverResource::class,
+                \App\Filament\TaxiAdmin\Resources\TaxiBookingResource::class,
+
+                \App\Filament\RentAdmin\Resources\RentalOfficeResource::class,
+                \App\Filament\RentAdmin\Resources\RentalVehicleCategoryResource::class,
+                \App\Filament\RentAdmin\Resources\RentalVehicleResource::class,
+                \App\Filament\RentAdmin\Resources\RentalBookingResource::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
+
             ])
+
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

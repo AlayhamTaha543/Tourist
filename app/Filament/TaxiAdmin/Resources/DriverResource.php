@@ -16,8 +16,16 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class DriverResource extends Resource
 {
     protected static ?string $model = Driver::class;
+    protected static ?string $navigationIcon = 'heroicon-o-users';
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    // Group drivers under Taxi Management
+    protected static ?string $navigationGroup = 'Taxi Management';
+
+    // Set the order within the group
+    protected static ?int $navigationSort = 5;
+
+    protected static ?string $navigationLabel = 'Drivers';
+
 
     public static function form(Form $form): Form
     {
