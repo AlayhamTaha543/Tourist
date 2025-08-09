@@ -22,22 +22,22 @@ use Illuminate\Http\Request;
 
 class TravelRepository implements TravelInterface
 {
-    use ApiResponse , HandlesUserPoints;
+    use ApiResponse, HandlesUserPoints;
 
     public function getAllFlights()
     {
-        $flights = TravelFlight::with(['agency', 'departure', 'arrival'])->get();
+        $flights = TravelFlight::with(['departure', 'arrival'])->get();
 
         $result = $flights->map(function ($flight) {
-        $user = auth()->user();
-        $isFavourited = false;
+            $user = auth()->user();
+            $isFavourited = false;
 
-        if ($user) {
-            $isFavourited = Favourite::where([
-                'user_id' => $user->id,
-                'favoritable_id' => $flight->id,
-                'favoritable_type' => TravelFlight::class,
-            ])->exists();
+            if ($user) {
+                $isFavourited = Favourite::where([
+                    'user_id' => $user->id,
+                    'favoritable_id' => $flight->id,
+                    'favoritable_type' => TravelFlight::class,
+                ])->exists();
             }
             $now = now();
             $promotion = Promotion::where('is_active', true)
@@ -135,7 +135,7 @@ class TravelRepository implements TravelInterface
     public function getAgency($id)
     {
         $agency = TravelAgency::where('id', $id)
-            ->with(['location', 'flights','admin'])
+            ->with(['location', 'flights', 'admin'])
             ->get();
         $policies = Policy::where('service_type', 2)->get()->map(function ($policy) {
             return [
@@ -151,13 +151,14 @@ class TravelRepository implements TravelInterface
     }
     public function getAllAgency()
     {
-        $agency = TravelAgency::with(['location', 'flights','admin'])
+        $agency = TravelAgency::with(['location', 'flights', 'admin'])
             ->get();
 
         return $this->success('agency by agency retrieved', $agency);
     }
 
-    public function bookFlightByPoint($id, TravelBookingRequest   $request){
+    public function bookFlightByPoint($id, TravelBookingRequest $request)
+    {
         $flight = TravelFlight::find($id);
 
         if (!$flight) {
@@ -271,7 +272,8 @@ class TravelRepository implements TravelInterface
         ]);
     }
 
-    public function bookFlight($id, TravelBookingRequest $request){
+    public function bookFlight($id, TravelBookingRequest $request)
+    {
         $flight = TravelFlight::find($id);
         if (!$flight) {
             return $this->error('Flight not found', 404);
@@ -327,7 +329,7 @@ class TravelRepository implements TravelInterface
                 ->where('end_date', '>=', now())
                 ->where(function ($q) {
                     $q->where('applicable_type', 1)
-                    ->orWhere('applicable_type', 7);
+                        ->orWhere('applicable_type', 7);
                 })
                 ->first();
 

@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Auth\OTPRequest;
 use App\Models\User;
 use App\Notifications\OTPNotification;
 use App\Repositories\Interfaces\Auth\AuthInterface;
+use App\Repositories\Interfaces\ServiceInterface;
 use App\Traits\ApiResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -15,6 +16,11 @@ use Illuminate\Support\Facades\Hash;
 class authRepository implements AuthInterface
 {
     use ApiResponse;
+    protected $serviceRepository;
+    public function __construct(ServiceInterface $serviceRepository)
+    {
+        $this->serviceRepository = $serviceRepository;
+    }
     public function login(LoginRequest $request)
     {
         $request->validated($request->all());
@@ -128,7 +134,8 @@ class authRepository implements AuthInterface
             'location' => $user->location,
             'photo_url' => $user->image ? asset('storage/' . $user->image) : null,
             'created_at' => $user->created_at,
-            'updated_at' => $user->updated_at
+            'updated_at' => $user->updated_at,
+            'points' => [$this->serviceRepository->UserRank()]
         ];
     }
 

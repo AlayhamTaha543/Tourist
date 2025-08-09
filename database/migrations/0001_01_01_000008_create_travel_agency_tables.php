@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -16,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->text('description')->nullable();
-            $table->foreignId('location_id')->nullable()->constrained('locations')->nullOnDelete(); $table->decimal('average_rating', 3, 2)->default(0);
+            $table->foreignId('location_id')->nullable()->constrained('locations')->nullOnDelete();
+            $table->decimal('average_rating', 3, 2)->default(0);
             $table->integer('total_ratings')->default(0);
             $table->string('logo')->nullable();
             $table->string('website')->nullable();
@@ -68,7 +68,7 @@ return new class extends Migration
 
         Schema::create('travel_flights', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('agency_id')->constrained('travel_agencies','id')->onDelete('cascade');
+            $table->unsignedBigInteger('agency_id')->constrained('travel_agencies', 'id')->onDelete('cascade');
             $table->string('flight_number')->unique();
             $table->unsignedBigInteger('departure_id')->constrained('locations')->onDelete('cascade');
             $table->unsignedBigInteger('arrival_id')->constrained('locations')->onDelete('cascade');
@@ -77,6 +77,7 @@ return new class extends Migration
             $table->integer('duration_minutes')->nullable();
             $table->decimal('price', 10, 2);
             $table->integer('available_seats');
+            $table->boolean('is_popular')->default(value: false);
             $table->enum('status', ['scheduled', 'delayed', 'cancelled'])->default('scheduled');
             $table->timestamps();
         });

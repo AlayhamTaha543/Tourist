@@ -2,6 +2,7 @@
 
 namespace App\Filament\TaxiAdmin\Resources;
 
+use App\Filament\TaxiAdmin\Clusters\DriverManagement;
 use App\Filament\TaxiAdmin\Resources\DriverResource\Pages;
 use App\Filament\TaxiAdmin\Resources\DriverResource\RelationManagers;
 use App\Models\Driver;
@@ -19,12 +20,10 @@ class DriverResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
     // Group drivers under Taxi Management
-    protected static ?string $navigationGroup = 'Taxi Management';
+    // protected static ?string $navigationGroup = 'Taxi Management';
+    // Add this line to put the resource inside the cluster
+    protected static ?string $cluster = DriverManagement::class;
 
-    // Set the order within the group
-    protected static ?int $navigationSort = 5;
-
-    protected static ?string $navigationLabel = 'Drivers';
 
 
     public static function form(Form $form): Form

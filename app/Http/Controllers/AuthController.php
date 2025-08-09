@@ -9,6 +9,7 @@ use App\Http\Requests\FeedBackRequest;
 use App\Http\Requests\PayRequest;
 use App\Http\Requests\RatingRequest;
 use App\Repositories\Interfaces\Auth\AuthInterface;
+use App\Repositories\Interfaces\ServiceInterface;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller
@@ -44,6 +45,6 @@ class AuthController extends Controller
     }
     public function userInfo()
     {
-        return $this->authRepository->userInfo();
+        return [$this->authRepository->userInfo()];
     }
 }

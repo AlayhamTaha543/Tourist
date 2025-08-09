@@ -20,21 +20,20 @@ class ServiceRepository implements ServiceInterface
 {
     use ApiResponse;
 
-    public function UserRank(){
-
+    public function UserRank()
+    {
         $user = auth('sanctum')->user();
         if (!$user) {
-            return $this->error('User not authenticated', 401);
+            return response()->json(['error' => 'User not authenticated'], 401);
         }
-        $rank = UserRank::where('user_id',$user->id)->first();
-        if ($rank) {
-            return $this->success('Successful', [
-                'rank' => $rank->points_earned,
-            ], 200);
-        }
-        return $this->error('You Dont Have any Points', 401);
+
+        $rank = UserRank::where('user_id', $user->id)->first();
+        $points = $rank ? $rank->points_earned : 0;
+
+        return $points; // Returns just the number
     }
-    public function discountPoints(){
+    public function discountPoints()
+    {
         $discountActions = PointRule::select('action', 'points')->get();
 
         if ($discountActions->isEmpty()) {
@@ -72,14 +71,14 @@ class ServiceRepository implements ServiceInterface
         }
 
         Rating::create([
-            'user_id'       => $user->id,
-            'rating_type'   => $request['rating_type'],
-            'entity_id'     => $request['entity_id'],
-            'rating'        => $request['rating'],
-            'comment'       => $request['comment'],
-            'ratingdate'    => now(),
-            'isVisible'     => true,
-            'admin_response'=> null,
+            'user_id' => $user->id,
+            'rating_type' => $request['rating_type'],
+            'entity_id' => $request['entity_id'],
+            'rating' => $request['rating'],
+            'comment' => $request['comment'],
+            'ratingdate' => now(),
+            'isVisible' => true,
+            'admin_response' => null,
         ]);
 
         return $this->success('Rating submitted successfully');
@@ -110,7 +109,8 @@ class ServiceRepository implements ServiceInterface
         return $this->success('Available promotions', $promotions);
     }
 
-    public function requestTourAdmin(Request $request){
+    public function requestTourAdmin(Request $request)
+    {
 
         $validated = $request->validate([
             'tour_name' => 'required|string|max:255',
@@ -129,7 +129,7 @@ class ServiceRepository implements ServiceInterface
 
         $user = auth()->user();
 
-        $admin = Admin::where('role', 'admin')->where('section','tour')->first();
+        $admin = Admin::where('role', 'admin')->where('section', 'tour')->first();
         if (!$admin) {
             return response()->json(['message' => 'No admin found'], 404);
         }
