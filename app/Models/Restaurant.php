@@ -20,6 +20,7 @@ class Restaurant extends Model
         'location_id',
         'cuisine',
         'price_range',
+        'price',
         'opening_time',
         'closing_time',
         'average_rating',

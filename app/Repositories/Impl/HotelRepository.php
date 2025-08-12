@@ -2,6 +2,8 @@
 namespace App\Repositories\Impl;
 
 use App\Http\Requests\Hotel\HotelBookingRequest;
+use App\Http\Resources\HotelCollection;
+use App\Http\Resources\HotelShowResource;
 use App\Models\Booking;
 use App\Models\Favourite;
 use App\Models\Hotel;
@@ -19,66 +21,67 @@ use Illuminate\Http\Request;
 
 class HotelRepository implements HotelInterface
 {
-    use ApiResponse,HandlesUserPoints;
+    use ApiResponse, HandlesUserPoints;
 
-    public function showHotel($id){
-        $hotel = Hotel::with('images','roomTypes')
-                    ->where('id',$id)
-                        ->first();
-       if (!$hotel) {
-             return $this->error('Hotel not found', 404);
-      }
-      $user = Auth::user();
 
-            $isFavourited = false;
-            if ($user) {
-                $isFavourited = Favourite::where([
-                    'user_id' => $user->id,
-                    'favoritable_id' => $hotel->id,
-                    'favoritable_type' => Hotel::class,
-                ])->exists();
-            }
-            $now = now();
-            $promotion = Promotion::where('is_active', true)
-                ->where('start_date', '<=', $now)
-                ->where('end_date', '>=', $now)
-                ->where('applicable_type', 2)
-                ->first();
-                $roomsData = [];
-                foreach ($hotel->roomTypes as $room) {
-                    $roomsData[] = [
-                        'name' => $room->name,
-                        'number' => $room->number,
-                    ];
-                }
-            $policies = Policy::where('service_type', 1)->get()->map(function ($policy) {
-                return [
-                    'policy_type' => $policy->policy_type,
-                    'cutoff_time' => $policy->cutoff_time,
-                    'penalty_percentage' => $policy->penalty_percentage,
-                ];
-            });
-      return $this->success('Store retrieved successfully', [
-        'hotel ' => $hotel,
-        'image'=>$hotel->images,
-        'rooms'=>$roomsData,
-        'total_ratings'=>$hotel->total_ratings,
-        'is_favourited' => $isFavourited,
-        'promotion' => $promotion ? [
-            'promotion_code' => $promotion->promotion_code,
-            'description' => $promotion->description,
-            'discount_type' => $promotion->discount_type,
-            'discount_value' => $promotion->discount_value,
-            'minimum_purchase' => $promotion->minimum_purchase,
-        ] : null,
-          'policies' => $policies,
-    ]);
+    public function showHotel($id)
+    {
+        $hotel = Hotel::with(['location', 'images', 'roomTypes'])
+            ->where('id', $id)
+            ->first();
+
+        if (!$hotel) {
+            return $this->error('Hotel not found', 404);
+        }
+
+        // If you want to return the resource directly
+        return new HotelShowResource($hotel);
     }
 
-    public function showAllHotel(){
-        $hotels = Hotel::with('images','roomTypes')->get();
+    public function showAllHotel(Request $request)
+    {
+        // Validate request
+        $request->validate([
+            'location' => 'nullable|string|max:255'
+        ]);
 
-        $result = $hotels->map(function($hotel) {
+        // Get user location from request
+        $userLocation = $request->input('location');
+        $countryName = null;
+
+        if ($userLocation) {
+            // Extract country name from location string
+            $locationParts = array_map('trim', explode(',', $userLocation));
+
+            if (count($locationParts) >= 2) {
+                $countryName = end($locationParts);
+            } else {
+                $countryName = $locationParts[0];
+            }
+        }
+
+        // Build query with location filtering
+        $hotelsQuery = Hotel::with(['location.city.country', 'images', 'roomTypes']);
+
+        // Filter by country if provided
+        if ($countryName) {
+            $hotelsQuery->whereHas('location.city.country', function ($query) use ($countryName) {
+                // For explicit case-insensitive search in MySQL, use LOWER()
+                $query->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($countryName) . '%']);
+            });
+        }
+
+        $hotels = $hotelsQuery->get();
+
+        // If no hotels found and location was provided
+        if ($hotels->isEmpty() && $countryName) {
+            return response()->json([
+                'data' => ['hotels' => []],
+                'message' => "No hotels found in {$countryName}",
+            ], 200);
+        }
+
+        $result = $hotels->map(function ($hotel) {
             $user = Auth::user();
             $isFavourited = false;
             if ($user) {
@@ -88,39 +91,26 @@ class HotelRepository implements HotelInterface
                     'favoritable_type' => Hotel::class,
                 ])->exists();
             }
+
             $now = now();
             $promotion = Promotion::where('is_active', true)
                 ->where('start_date', '<=', $now)
                 ->where('end_date', '>=', $now)
                 ->where('applicable_type', 2)
                 ->first();
+
             $roomsData = [];
             foreach ($hotel->roomTypes as $room) {
-                    $roomData = [
-                        'name' => $room->name,
-                        'number' => $room->number,
-                        'price' => $room->price,
-                    ];
-                    $roomsData[] = $roomData;
+                $roomData = [
+                    'name' => $room->name,
+                    'number' => $room->number,
+                    'price' => $room->price,
+                ];
+                $roomsData[] = $roomData;
             }
-            return [
-                'hotel' => $hotel,
-                'images' => $hotel->images,
-                'rooms' => $roomsData,
-                'is_favourited' => $isFavourited,
-                'promotion' => $promotion ? [
-                    'promotion_code' => $promotion->promotion_code,
-                    'description' => $promotion->description,
-                    'discount_type' => $promotion->discount_type,
-                    'discount_value' => $promotion->discount_value,
-                    'minimum_purchase' => $promotion->minimum_purchase,
-                ] : null,
-            ];
         });
 
-        return $this->success('All hotels retrieved successfully', [
-            'hotels' => $result,
-        ]);
+        return new HotelCollection($hotels);
     }
 
     public function showNearByHotel(Request $request)
@@ -135,60 +125,62 @@ class HotelRepository implements HotelInterface
                 cos(radians(longitude) - radians(?)) +
                 sin(radians(?)) * sin(radians(latitude))
             )) AS distance", [$latitude, $longitude, $latitude])
-        ->having("distance", "<=", $radius)
-        ->orderBy("distance")
-        ->get();
+            ->having("distance", "<=", $radius)
+            ->orderBy("distance")
+            ->get();
 
         return $this->success('Nearby Hotels retrieved successfully', [
             'hotels' => $hotels,
         ]);
     }
-    public function showAviableRoom($id){
-        $hotel=Hotel::with('roomTypes')->where('id',$id)->first();
+    public function showAviableRoom($id)
+    {
+        $hotel = Hotel::with('roomTypes')->where('id', $id)->first();
         if (!$hotel) {
             return $this->error('hotel not found', 404);
         }
-        $hotelRoom=0;
-        foreach($hotel->roomTypes as $roomType){
-            $hotelRoom+=$roomType->number;
+        $hotelRoom = 0;
+        foreach ($hotel->roomTypes as $roomType) {
+            $hotelRoom += $roomType->number;
         }
         $bookingRoom = HotelBooking::where('hotel_id', $hotel->id)
-        ->whereDate('check_in_date', '<=', now()->toDateString())
-        ->whereDate('check_out_date', '>', now()->toDateString())
-        ->count();
+            ->whereDate('check_in_date', '<=', now()->toDateString())
+            ->whereDate('check_out_date', '>', now()->toDateString())
+            ->count();
 
-        if($bookingRoom < $hotelRoom){
-            $aviableRoom=$hotelRoom-$bookingRoom;
-        }else{
-            $aviableRoom=0;
+        if ($bookingRoom < $hotelRoom) {
+            $aviableRoom = $hotelRoom - $bookingRoom;
+        } else {
+            $aviableRoom = 0;
         }
 
         return $this->success('Nearby Hotels retrieved successfully', [
             'aviableRoom' => $aviableRoom,
         ]);
     }
-    public function showAviableRoomType($id,Request $request){
-        $hotel=Hotel::with('roomTypes')->where('id',$id)->first();
+    public function showAviableRoomType($id, Request $request)
+    {
+        $hotel = Hotel::with('roomTypes')->where('id', $id)->first();
         if (!$hotel) {
             return $this->error('hotel not found', 404);
         }
-        $hotelRoom=RoomType::where([
-            'name'=>$request->room_type,
-            'hotel_id'=>$hotel->id
-            ])->first();
+        $hotelRoom = RoomType::where([
+            'name' => $request->room_type,
+            'hotel_id' => $hotel->id
+        ])->first();
         if (!$hotelRoom) {
             return $this->error('Room type not found', 404);
         }
         $totalRooms = $hotelRoom->number;
-        $bookingRoom=HotelBooking::where([
-            'check_in_date'=>now()->toDateString(),
-            'room_type_id'=>$hotelRoom->id
-            ])->count();
+        $bookingRoom = HotelBooking::where([
+            'check_in_date' => now()->toDateString(),
+            'room_type_id' => $hotelRoom->id
+        ])->count();
 
-        if($bookingRoom < $totalRooms){
-            $aviableRoom=$totalRooms-$bookingRoom;
-        }else{
-            $aviableRoom=0;
+        if ($bookingRoom < $totalRooms) {
+            $aviableRoom = $totalRooms - $bookingRoom;
+        } else {
+            $aviableRoom = 0;
         }
 
         return $this->success('Nearby Hotels retrieved successfully', [
@@ -198,14 +190,16 @@ class HotelRepository implements HotelInterface
     public function bookHotel($id, HotelBookingRequest $request)
     {
         $hotel = Hotel::with('roomTypes')->find($id);
-        if (!$hotel) return $this->error('Hotel not found', 404);
+        if (!$hotel)
+            return $this->error('Hotel not found', 404);
 
         $roomType = RoomType::where([
             'id' => $request->room_type_id,
             'hotel_id' => $hotel->id
         ])->first();
 
-        if (!$roomType) return $this->error('Room type not found', 404);
+        if (!$roomType)
+            return $this->error('Room type not found', 404);
 
         $check_in_date = Carbon::parse($request->check_in_date);
         $check_out_date = $check_in_date->copy()->addDays($request->number_of_days);
@@ -247,37 +241,37 @@ class HotelRepository implements HotelInterface
 
 
         $promotion = null;
-    $promotionCode = $request->promotion_code;
+        $promotionCode = $request->promotion_code;
 
-    if ($promotionCode) {
-        $promotion = Promotion::where('promotion_code', $promotionCode)
-            ->where('is_active', true)
-            ->where('start_date', '<=', now())
-            ->where('end_date', '>=', now())
-            ->where(function ($q) {
-                $q->where('applicable_type', 1)->orWhere('applicable_type', 3);
-            })
-            ->first();
+        if ($promotionCode) {
+            $promotion = Promotion::where('promotion_code', $promotionCode)
+                ->where('is_active', true)
+                ->where('start_date', '<=', now())
+                ->where('end_date', '>=', now())
+                ->where(function ($q) {
+                    $q->where('applicable_type', 1)->orWhere('applicable_type', 3);
+                })
+                ->first();
 
-        if (!$promotion || !$promotion->is_active) {
-            return $this->error('Invalid or expired promotion code', 400);
+            if (!$promotion || !$promotion->is_active) {
+                return $this->error('Invalid or expired promotion code', 400);
+            }
+
+            if ($totalCost < $promotion->minimum_purchase) {
+                return $this->error('Total does not meet minimum purchase requirement', 400);
+            }
         }
 
-        if ($totalCost < $promotion->minimum_purchase) {
-            return $this->error('Total does not meet minimum purchase requirement', 400);
+        $discountAmount = 0;
+        if ($promotion) {
+            $discountAmount = $promotion->discount_type == 1
+                ? ($totalCost * $promotion->discount_value / 100)
+                : $promotion->discount_value;
+
+            $discountAmount = min($discountAmount, $totalCost);
         }
-    }
 
-    $discountAmount = 0;
-    if ($promotion) {
-        $discountAmount = $promotion->discount_type == 1
-            ? ($totalCost * $promotion->discount_value / 100)
-            : $promotion->discount_value;
-
-        $discountAmount = min($discountAmount, $totalCost);
-    }
-
-    $totalAfterDiscount = $totalCost - $discountAmount;
+        $totalAfterDiscount = $totalCost - $discountAmount;
 
         $booking = Booking::create([
             'booking_reference' => 'HB-' . strtoupper(uniqid()),

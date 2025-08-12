@@ -19,13 +19,13 @@ class TourSeeder extends Seeder
      */
     public function run(): void
     {
-        $category1 = TourCategory::create([
+        $category1 = TourCategory::updateOrCreate([
             'name' => 'Adventure',
             'description' => 'Exciting and adventurous tours for thrill seekers.',
             'icon' => 'adventure_icon.png',
             'is_active' => true,
         ]);
-        $tour1 = Tour::create([
+        $tour1 = Tour::updateOrCreate([
             'name' => 'Mountain Adventure',
             'description' => 'A thrilling mountain trekking experience.',
             'short_description' => 'A challenging trek through the mountains.',
@@ -44,7 +44,7 @@ class TourSeeder extends Seeder
             'admin_id' => 7,
         ]);
 
-        $schedule1 = TourSchedule::create([
+        $schedule1 = TourSchedule::updateOrCreate([
             'tour_id' => $tour1->id,
             'start_date' => '2025-06-01',
             'end_date' => '2025-06-01',
@@ -53,17 +53,17 @@ class TourSeeder extends Seeder
             'price' => 150.00,
             'is_active' => true,
         ]);
-        $activity1 = Activity::create([
+        $activity1 = Activity::updateOrCreate([
             'name' => 'Hiking',
             'description' => 'A challenging and exciting hiking experience.',
             'image' => 'hiking_image.png',
         ]);
-        $activity2 = Activity::create([
+        $activity2 = Activity::updateOrCreate([
             'name' => 'Snorkeling',
             'description' => 'A fun and relaxing snorkeling adventure.',
             'image' => 'snorkeling_image.png',
         ]);
-        TourActivity::create([
+        TourActivity::updateOrCreate([
             'schedule_id' => $schedule1->id,
             'activity_id' => $activity1->id,
             'is_active' => true,

@@ -14,10 +14,10 @@ class RestaurantSeeder extends Seeder
 {
     public function run()
     {
-        $restaurant = Restaurant::create([
+        $restaurant = Restaurant::updateOrCreate([
             'name' => 'Al-Fakher Restaurant',
             'description' => 'A luxury restaurant offering a variety of dishes with excellent service.',
-            'location_id' => 1, 
+            'location_id' => 1,
             'cuisine' => 'Saudi Cuisine',
             'price_range' => 3,
             'opening_time' => '10:00:00',
@@ -32,10 +32,10 @@ class RestaurantSeeder extends Seeder
             'cost' => 100.00,
             'is_active' => true,
             'is_featured' => true,
-            'admin_id' => 3, 
+            'admin_id' => 3,
         ]);
 
-        RestaurantImage::create([
+        RestaurantImage::updateOrCreate([
             'restaurant_id' => $restaurant->id,
             'image' => 'path/to/restaurant_image_1.jpg',
             'display_order' => 1,
@@ -43,7 +43,7 @@ class RestaurantSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        $category = MenuCategory::create([
+        $category = MenuCategory::updateOrCreate([
             'restaurant_id' => $restaurant->id,
             'name' => 'Appetizers',
             'description' => 'Various appetizers',
@@ -51,7 +51,7 @@ class RestaurantSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        MenuItem::create([
+        MenuItem::updateOrCreate([
             'category_id' => $category->id,
             'name' => 'Mutabal',
             'description' => 'Fresh appetizers with tahini and olive oil.',
@@ -65,7 +65,7 @@ class RestaurantSeeder extends Seeder
             'is_featured' => false,
         ]);
 
-        RestaurantTable::create([
+        RestaurantTable::updateOrCreate([
             'restaurant_id' => $restaurant->id,
             'number' => 'T1',
             'cost' => 100,

@@ -26,12 +26,13 @@ class Location extends Model
     ];
 
     public function city()
-{
-    return $this->belongsTo(City::class);
-}
+    {
+        return $this->belongsTo(City::class);
+    }
 
-public function country()
-{
-    return $this->belongsTo(Country::class);
-}
+
+    public function fullName()
+    {
+        return $this->name . ', ' . ($this->city->name ?? '') . ', ' . ($this->city->country->name ?? '');
+    }
 }

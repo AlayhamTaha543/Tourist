@@ -24,7 +24,7 @@ class Country extends Model
 
     public function cities(): HasMany
     {
-        return $this->hasMany(City::class, 'country_id', 'od');
+        return $this->hasMany(City::class, 'country_id', 'id');
     }
     public function users(): HasMany
     {

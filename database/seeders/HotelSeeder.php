@@ -17,10 +17,10 @@ class HotelSeeder extends Seeder
      */
     public function run(): void
     {
-        $hotel = Hotel::create([
+        $hotel = Hotel::updateOrCreate([
             'name' => 'Grand Palace Hotel',
             'description' => 'A luxurious hotel in the heart of the city.',
-            'location_id'=>1,
+            'location_id' => 1,
             'discount' => 10,
             'star_rating' => 5,
             'checkIn_time' => '14:00:00',
@@ -36,7 +36,7 @@ class HotelSeeder extends Seeder
             'admin_id' => 5,
         ]);
 
-        $roomType = RoomType::create([
+        $roomType = RoomType::updateOrCreate([
             'hotel_id' => $hotel->id,
             'name' => 'Deluxe King Room',
             'number' => 20,
@@ -51,8 +51,8 @@ class HotelSeeder extends Seeder
         ]);
 
         foreach (range(0, 6) as $offset) {
-            RoomAvailability::create([
-                'roomType_id' => $roomType->id,
+            RoomAvailability::updateOrCreate([
+                'room_type_id' => $roomType->id,
                 'date' => now()->addDays($offset)->toDateString(),
                 'available_rooms' => 10,
                 'price' => 180.00,
@@ -69,13 +69,13 @@ class HotelSeeder extends Seeder
         ];
 
         foreach ($amenities as $item) {
-            $amenity = HotelAmenity::create([
+            $amenity = HotelAmenity::updateOrCreate([
                 'name' => $item['name'],
                 'icon' => $item['icon'],
                 'is_active' => true,
             ]);
 
-            HotelAmenityMap::create([
+            HotelAmenityMap::updateOrCreate([
                 'hotel_id' => $hotel->id,
                 'amenity_id' => $amenity->id,
             ]);
