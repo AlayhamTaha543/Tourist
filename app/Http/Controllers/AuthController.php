@@ -45,6 +45,6 @@ class AuthController extends Controller
     }
     public function userInfo()
     {
-        return [$this->authRepository->userInfo()];
+        return $this->authRepository->userInfo();
     }
 }
