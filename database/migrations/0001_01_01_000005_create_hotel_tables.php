@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -29,6 +28,8 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->boolean('is_active')->default(true);
             $table->boolean('is_featured')->default(false);
+            $table->boolean('is_recommended')->default(false);
+            $table->boolean('is_popular')->default(true);
             $table->unsignedBigInteger('admin_id')->constrained('admins', 'id')->cascadeOnDelete();
             $table->timestamps();
         });

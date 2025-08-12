@@ -23,6 +23,8 @@ class HotelCollection extends ResourceCollection
                         'price' => $this->getLowestRoomPrice($hotel),
                         'image' => $hotel->main_image,
                         'rating' => $hotel->average_rating,
+                        'recommended' => $hotel->is_recommended,
+                        'popular' => $hotel->is_popular,
                     ];
                 }),
             ],
