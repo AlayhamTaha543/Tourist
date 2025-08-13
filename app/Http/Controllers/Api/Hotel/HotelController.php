@@ -19,9 +19,16 @@ class HotelController extends Controller
     {
         return $this->hotelRepository->showHotel($id);
     }
-    public function showAllHotel(HotelRequest $request)
+    public function showAllHotel()
     {
-        return $this->hotelRepository->showAllHotel($request);
+        $user = auth()->user();
+        return $this->hotelRepository->showAllHotel(false, $user);
+    }
+    public function showNextTripHotel()
+    {
+        $user = auth()->user();
+
+        return $this->hotelRepository->showAllHotel(true, $user);
     }
     public function showNearByHotel(Request $request)
     {

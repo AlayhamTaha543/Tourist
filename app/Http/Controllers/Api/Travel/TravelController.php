@@ -38,13 +38,42 @@ class TravelController extends Controller
     {
         return $this->travelRepository->getAllAgency();
     }
-    public function bookFlight($id,TravelBookingRequest $request)
+    public function bookFlight($id, TravelBookingRequest $request)
     {
-        return $this->travelRepository->bookFlight($id,$request);
+        return $this->travelRepository->bookFlight($id, $request);
     }
-    public function bookFlightByPoint($id,TravelBookingRequest $request)
+    public function bookFlightByPoint($id, TravelBookingRequest $request)
     {
-        return $this->travelRepository->bookFlightByPoint($id,$request);
+        return $this->travelRepository->bookFlightByPoint($id, $request);
     }
+    public function getAllBookedFlights()
+    {
+        $user = auth()->user();
 
+        if (!$user) {
+            return response()->json(['error' => 'User not authenticated'], 401);
+        }
+        $id = $user->id;
+        $bookedFlights = $this->travelRepository->getAllBookedFlights($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => $bookedFlights
+        ]);
+    }
+    public function getNearestBookedFlight()
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json(['error' => 'User not authenticated'], 401);
+        }
+        $id = $user->id;
+        $bookedFlights = $this->travelRepository->getNearestBookedFlight($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => $bookedFlights
+        ]);
+    }
 }

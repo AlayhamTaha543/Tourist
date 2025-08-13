@@ -58,12 +58,12 @@ class User extends Authenticatable
     }
     public function createdTours(): HasMany
     {
-        return $this->hasMany(Tour::class, 'CreatedBy', 'UserID');
+        return $this->hasMany(Tour::class, 'created_by', 'id');
     }
 
     public function bookings(): HasMany
     {
-        return $this->hasMany(Booking::class, 'UserID', 'UserID');
+        return $this->hasMany(Booking::class, 'user_id', 'id');
     }
     public function favoriteTours()
     {

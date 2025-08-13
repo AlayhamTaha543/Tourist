@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
@@ -24,7 +23,13 @@ class HotelShowResource extends JsonResource
                 return [
                     'name' => $room->name,
                     'price' => $room->base_price,
-                    'number' => $room->number,
+                    'availability' => $room->availability->map(function ($availability) {
+                        return [
+                            'date' => $availability->date->format('Y-m-d'),
+                            'available_rooms' => $availability->available_rooms,
+                            'price' => $availability->price,
+                        ];
+                    }),
                 ];
             }),
         ];

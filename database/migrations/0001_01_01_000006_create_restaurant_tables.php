@@ -31,6 +31,8 @@ return new class extends Migration {
             $table->integer('max_tables')->nullable();
             $table->boolean('is_active')->default(true);
             $table->boolean('is_featured')->default(false);
+            $table->boolean('is_recommended')->default(false);
+            $table->boolean('is_popular')->default(true);
             $table->unsignedBigInteger('admin_id')->constrained('admins', 'id')->cascadeOnDelete();
             $table->timestamps();
         });

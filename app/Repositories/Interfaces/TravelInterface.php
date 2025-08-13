@@ -13,7 +13,9 @@ interface TravelInterface
     public function getAvailableFlightsDate(Request $request);
     public function getAgency($id);
     public function getAllAgency();
+    public function getAllBookedFlights($id);
 
+    public function getNearestBookedFlight($id);
     public function bookFlight($id, TravelBookingRequest $request);
     public function bookFlightByPoint($id, TravelBookingRequest $request);
 }

@@ -8,69 +8,112 @@ use App\Models\MenuCategory;
 use App\Models\MenuItem;
 use App\Models\RestaurantTable;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class RestaurantSeeder extends Seeder
 {
     public function run()
     {
-        $restaurant = Restaurant::updateOrCreate([
-            'name' => 'Al-Fakher Restaurant',
-            'description' => 'A luxury restaurant offering a variety of dishes with excellent service.',
-            'location_id' => 1,
-            'cuisine' => 'Saudi Cuisine',
-            'price_range' => 3,
-            'opening_time' => '10:00:00',
-            'closing_time' => '23:00:00',
-            'average_rating' => 4.5,
-            'total_ratings' => 150,
-            'main_image' => 'path/to/image.jpg',
-            'website' => 'https://restaurant-website.com',
-            'phone' => '+966123456789',
-            'email' => 'info@restaurant.com',
-            'max_tables' => 50,
-            'cost' => 100.00,
-            'is_active' => true,
-            'is_featured' => true,
-            'admin_id' => 3,
-        ]);
+        $restaurantsData = [
+            [
+                'name' => 'Al-Fakher Restaurant',
+                'description' => 'A luxury restaurant offering a variety of dishes with excellent service.',
+                'cuisine' => 'Saudi Cuisine',
+                'main_image' => 'path/to/alfakher.jpg',
+            ],
+            [
+                'name' => 'Golden Oasis',
+                'description' => 'Traditional Saudi dishes with a modern twist.',
+                'cuisine' => 'Middle Eastern',
+                'main_image' => 'path/to/golden_oasis.jpg',
+            ],
+            [
+                'name' => 'Palm Breeze',
+                'description' => 'Seafood specialties with fresh ingredients.',
+                'cuisine' => 'Seafood',
+                'main_image' => 'path/to/palm_breeze.jpg',
+            ],
+            [
+                'name' => 'Spice Souk',
+                'description' => 'Indian and Arabic fusion cuisine with aromatic spices.',
+                'cuisine' => 'Indian-Arabic Fusion',
+                'main_image' => 'path/to/spice_souk.jpg',
+            ],
+            [
+                'name' => 'Desert Rose Diner',
+                'description' => 'Casual dining with a focus on comfort food.',
+                'cuisine' => 'International',
+                'main_image' => 'path/to/desert_rose.jpg',
+            ],
+        ];
 
-        RestaurantImage::updateOrCreate([
-            'restaurant_id' => $restaurant->id,
-            'image' => 'path/to/restaurant_image_1.jpg',
-            'display_order' => 1,
-            'caption' => 'Exterior view of the restaurant',
-            'is_active' => true,
-        ]);
+        foreach ($restaurantsData as $index => $data) {
+            $restaurant = Restaurant::updateOrCreate([
+                'name' => $data['name'],
+                'location_id' => 1,
+            ], [
+                'description' => $data['description'],
+                'cuisine' => $data['cuisine'],
+                'price_range' => rand(2, 4),
+                'opening_time' => '10:00:00',
+                'closing_time' => '23:00:00',
+                'average_rating' => rand(35, 50) / 10,
+                'total_ratings' => rand(50, 300),
+                'main_image' => $data['main_image'],
+                'website' => 'https://example.com/' . strtolower(str_replace(' ', '_', $data['name'])),
+                'phone' => '+96612345678' . $index,
+                'email' => 'info' . $index . '@restaurant.com',
+                'max_tables' => rand(20, 60),
+                'price' => rand(80, 200),
+                'is_active' => true,
+                'is_featured' => (bool) rand(0, 1),
+                'admin_id' => rand(1, 5),
+            ]);
 
-        $category = MenuCategory::updateOrCreate([
-            'restaurant_id' => $restaurant->id,
-            'name' => 'Appetizers',
-            'description' => 'Various appetizers',
-            'display_order' => 1,
-            'is_active' => true,
-        ]);
+            // Image
+            RestaurantImage::updateOrCreate([
+                'restaurant_id' => $restaurant->id,
+                'display_order' => 1,
+            ], [
+                'image' => 'path/to/image_' . $index . '.jpg',
+                'caption' => 'Photo of ' . $data['name'],
+                'is_active' => true,
+            ]);
 
-        MenuItem::updateOrCreate([
-            'category_id' => $category->id,
-            'name' => 'Mutabal',
-            'description' => 'Fresh appetizers with tahini and olive oil.',
-            'price' => 25.00,
-            'is_vegetarian' => true,
-            'is_vegan' => true,
-            'is_gluten_free' => false,
-            'spiciness' => 'mild',
-            'image' => 'path/to/item_image_1.jpg',
-            'is_active' => true,
-            'is_featured' => false,
-        ]);
+            // Menu Category
+            $category = MenuCategory::updateOrCreate([
+                'restaurant_id' => $restaurant->id,
+                'name' => 'Specialties',
+            ], [
+                'description' => 'Signature dishes of the restaurant',
+                'display_order' => 1,
+                'is_active' => true,
+            ]);
 
-        RestaurantTable::updateOrCreate([
-            'restaurant_id' => $restaurant->id,
-            'number' => 'T1',
-            'cost' => 100,
-            'location' => 'Indoor',
-            'is_active' => true,
-        ]);
+            // Menu Item
+            MenuItem::updateOrCreate([
+                'category_id' => $category->id,
+                'name' => 'Signature Dish ' . ($index + 1),
+            ], [
+                'description' => 'A special dish from ' . $data['name'],
+                'price' => rand(20, 80),
+                'is_vegetarian' => (bool) rand(0, 1),
+                'is_vegan' => false,
+                'is_gluten_free' => false,
+                'spiciness' => 'mild',
+                'image' => 'path/to/dish_' . $index . '.jpg',
+                'is_active' => true,
+                'is_featured' => false,
+            ]);
+
+            // Table
+            RestaurantTable::updateOrCreate([
+                'restaurant_id' => $restaurant->id,
+                'number' => 'T' . ($index + 1),
+            ], [
+                'cost' => rand(50, 150),
+                'location' => 'Indoor',
+                'is_active' => true,
+            ]);
+        }
     }
 }

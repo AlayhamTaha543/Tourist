@@ -1,6 +1,7 @@
 <?php
 namespace App\Repositories\Impl;
 
+use App\Helper\CountryOfNextTrip;
 use App\Http\Requests\Hotel\HotelBookingRequest;
 use App\Http\Resources\HotelCollection;
 use App\Http\Resources\HotelShowResource;
@@ -12,6 +13,7 @@ use App\Models\Policy;
 use App\Models\Promotion;
 use App\Models\RoomAvailability;
 use App\Models\RoomType;
+use App\Models\User;
 use App\Repositories\Interfaces\HotelInterface;
 use App\Traits\ApiResponse;
 use App\Traits\HandlesUserPoints;
@@ -38,25 +40,23 @@ class HotelRepository implements HotelInterface
         return new HotelShowResource($hotel);
     }
 
-    public function showAllHotel(Request $request)
+    public function showAllHotel(bool $nextTrip = false, ?User $user = null)
     {
-        // Validate request
-        $request->validate([
-            'location' => 'nullable|string|max:255'
-        ]);
+        if ($nextTrip) {
+            $countryName = CountryOfNextTrip::getCountryForUser($user->id);
+        } else {
+            $userLocation = $user->location;
+            $countryName = null;
 
-        // Get user location from request
-        $userLocation = $request->input('location');
-        $countryName = null;
+            if ($userLocation) {
+                // Extract country name from location string
+                $locationParts = array_map('trim', explode(',', $userLocation));
 
-        if ($userLocation) {
-            // Extract country name from location string
-            $locationParts = array_map('trim', explode(',', $userLocation));
-
-            if (count($locationParts) >= 2) {
-                $countryName = end($locationParts);
-            } else {
-                $countryName = $locationParts[0];
+                if (count($locationParts) >= 2) {
+                    $countryName = end($locationParts);
+                } else {
+                    $countryName = $locationParts[0];
+                }
             }
         }
 
@@ -66,7 +66,6 @@ class HotelRepository implements HotelInterface
         // Filter by country if provided
         if ($countryName) {
             $hotelsQuery->whereHas('location.city.country', function ($query) use ($countryName) {
-                // For explicit case-insensitive search in MySQL, use LOWER()
                 $query->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($countryName) . '%']);
             });
         }

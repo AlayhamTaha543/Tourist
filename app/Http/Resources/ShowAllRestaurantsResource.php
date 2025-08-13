@@ -17,11 +17,13 @@ class ShowAllRestaurantsResource extends JsonResource
         return [
             'name' => $this->name,
             'location' => $this->location->fullName(),
-                'average_rating' => (float) $this->average_rating,
-                // 'total_ratings' => $this->total_ratings,
+            'average_rating' => (float) $this->average_rating,
+            // 'total_ratings' => $this->total_ratings,
 
             'cuisine' => $this->cuisine,
             'image' => $this->main_image,
+            'popular' => $this->is_popular,
+            'recommended' => $this->is_recommended,
         ];
     }
 }

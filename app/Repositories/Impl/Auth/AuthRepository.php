@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Impl\Auth;
 
+use App\Http\Requests\Api\Auth\EditProfileRequest;
 use App\Http\Requests\Api\Auth\LoginRequest;
 use App\Http\Requests\Api\Auth\RegisterRequest;
 use App\Http\Requests\Api\Auth\OTPRequest;
@@ -12,6 +13,7 @@ use App\Repositories\Interfaces\ServiceInterface;
 use App\Traits\ApiResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class authRepository implements AuthInterface
 {
@@ -138,5 +140,97 @@ class authRepository implements AuthInterface
             'points' => [$this->serviceRepository->UserRank()]
         ];
     }
+    /**
+     * Edit user profile
+     *
+     * @param EditProfileRequest $request
+     * @return array
+     */
+    public function editProfile(EditProfileRequest $request)
+    {
+        try {
+            $userId = Auth::id();
 
+            if (!$userId) {
+                return [
+                    'success' => false,
+                    'message' => 'User not authenticated',
+                    'data' => null
+                ];
+            }
+
+            $user = User::find($userId);
+
+            if (!$user) {
+                return [
+                    'success' => false,
+                    'message' => 'User not found',
+                    'data' => null
+                ];
+            }
+
+            // Parse the fullname into first_name and last_name
+            $parsedName = $request->getParsedName();
+
+            $imagePath = $user->image; // Keep existing image by default
+            if ($request->hasFile('image')) {
+                // Delete old image if exists
+                if ($user->image && Storage::disk('public')->exists($user->image)) {
+                    Storage::disk('public')->delete($user->image);
+                }
+
+                // Store new image
+                $imagePath = $request->file('image')->storeAs(
+                    'profiles',
+                    $user->first_name . '_' . $user->last_name . '_' . time() . '.' . $request->file('image')->getClientOriginalExtension()
+                    ,
+                    'public'
+                );
+
+
+            }
+
+            // Prepare data to update
+            $updateData = [
+                'first_name' => $parsedName['first_name'],
+                'last_name' => $parsedName['last_name'],
+                'image' => $imagePath,
+            ];
+
+            // Only update location if it's provided in the request
+            if ($request->has('location')) {
+                $updateData['location'] = $request->input('location');
+            }
+
+            // Update user data
+            $user->update($updateData);
+
+            // Refresh user data
+            $user->refresh();
+
+            return [
+                'success' => true,
+                'message' => 'Profile updated successfully',
+                'data' => [
+                    'user' => [
+                        'id' => $user->id,
+                        'first_name' => $user->first_name,
+                        'last_name' => $user->last_name,
+                        'full_name' => $user->full_name,
+                        'email' => $user->email,
+                        'location' => $user->location,
+                        'image' => $user->image ? Storage::url($user->image) : null,
+                        'phone_number' => $user->phone_number,
+                    ]
+                ]
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Failed to update profile: ' . $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
 }

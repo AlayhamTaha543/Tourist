@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Interfaces\Auth;
 
+use App\Http\Requests\Api\Auth\EditProfileRequest;
 use App\Http\Requests\Api\Auth\LoginRequest;
 use App\Http\Requests\Api\Auth\OTPRequest;
 use App\Http\Requests\Api\Auth\RegisterRequest;
@@ -14,4 +15,5 @@ interface AuthInterface
     public function resendOTPCode();
     public function logout();
     public function userInfo();
+    public function editProfile(EditProfileRequest $request);
 }

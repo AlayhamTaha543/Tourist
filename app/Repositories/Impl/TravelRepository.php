@@ -3,6 +3,7 @@
 namespace App\Repositories\Impl;
 
 use App\Http\Requests\Travel\TravelBookingRequest;
+use App\Http\Resources\NearestFlightResource;
 use App\Models\Booking;
 use App\Models\DiscountPoint;
 use App\Models\Promotion;
@@ -11,6 +12,7 @@ use App\Models\TravelBooking;
 use App\Models\TravelFlight;
 use App\Models\Favourite;
 use App\Models\Policy;
+use App\Models\User;
 use App\Models\UserRank;
 use App\Repositories\Interfaces\TravelInterface;
 use App\Traits\ApiResponse;
@@ -357,7 +359,7 @@ class TravelRepository implements TravelInterface
         $booking = Booking::create([
             'booking_reference' => $booking_reference,
             'user_id' => auth('sanctum')->id(),
-            'booking_type' => 2,
+            'booking_type' => 'travel',
             'total_price' => $totalCost_afterDiscount,
             'payment_status' => 1,
         ]);
@@ -407,4 +409,84 @@ class TravelRepository implements TravelInterface
             'discount_amount' => $discount_amount,
         ]);
     }
+    public function getAllBookedFlights($id)
+    {
+        $user = User::findOrFail($id);
+
+        return $user->Bookings()->where('booking_type', 'travel')
+            ->get();
+    }
+
+
+    public function getNearestBookedFlight($id)
+    {
+        try {
+            $user = User::findOrFail($id);
+
+            $bookedFlights = $user->Bookings()
+                ->where('booking_type', 'travel')
+                ->whereIn('status', ['confirmed', 'pending'])
+                ->with([
+                    'travelBooking.flight' => function ($query) {
+                        $query->select(
+                            'id',
+                            'flight_number',
+                            'departure_id',
+                            'arrival_id',
+                            'departure_time',
+                            'arrival_time',
+                            'duration_minutes',
+                            'price',
+                            'status'
+                        );
+                    },
+                    'travelBooking.flight.arrival.city.country'
+                ])
+                ->get();
+
+            if ($bookedFlights->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No confirmed or pending flight bookings found'
+                ], 404);
+            }
+
+            // Filter future flights and sort by departure time
+            $futureFlight = $bookedFlights
+                ->filter(function ($booking) {
+                    return $booking->travelBooking &&
+                        $booking->travelBooking->flight &&
+                        $booking->travelBooking->flight->departure_time &&
+                        Carbon::parse($booking->travelBooking->flight->departure_time)->isFuture();
+                })
+                ->sortBy(function ($booking) {
+                    return Carbon::parse($booking->travelBooking->flight->departure_time);
+                })
+                ->first();
+
+            if (!$futureFlight) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No upcoming flights found'
+                ], 404);
+            }
+
+            // Calculate time until departure
+            $flight = $futureFlight->travelBooking->flight;
+            $departureTime = Carbon::parse($flight->departure_time);
+            $arrivalTime = Carbon::parse($flight->arrival_time);
+            $timeUntilDeparture = $departureTime->diffForHumans();
+            $hoursUntilDeparture = now()->diffInHours($departureTime);
+
+            return new NearestFlightResource($futureFlight);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to retrieve nearest flight',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 }

@@ -24,6 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('auth')->controller(AuthController::class)->group(function () {
         Route::get('resendOTPCode', 'resendOTPCode');
         Route::get('userInfo', 'userInfo');
+        Route::post('/profile/edit', [AuthController::class, 'editProfile']);
         Route::post('OTPCode', 'OTPCode');
         Route::post('logout', 'logout');
     });
@@ -65,6 +66,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('bookFlight/{id}', 'bookFlight');
         Route::post('bookFlightByPoint/{id}', 'bookFlightByPoint');
         Route::post('updateFlightBooking/{id}', 'updateFlightBooking');
+        Route::get('bookings', 'getNearestBookedFlight');
     });
 
     // --- Favourites ---
@@ -90,6 +92,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('hotel')->controller(HotelController::class)->group(function () {
         Route::get('show/{id}', 'showHotel');
         Route::get('showAll', 'showAllHotel');
+        Route::get('showAllNextTrip', 'showNextTripHotel');
         Route::get('showNearBy', 'showNearByHotel');
         Route::get('showAvailableRoom/{id}', 'showAvailableRoom');
         Route::post('showAvailableRoomType/{id}', 'showAvailableRoomType');
@@ -100,6 +103,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('restaurants')->controller(RestaurantController::class)->group(function () {
         Route::get('show/{id}', 'showRestaurant');
         Route::get('showAll', 'showAllRestaurant');
+        Route::get('showAllNextTrip', 'showNextTripRestaurant');
         Route::get('showNearBy', 'showNearByRestaurant');
         Route::get('showRestaurantByLocation', 'showRestaurantByLocation');
         Route::get('showMenuItem/{id}', 'showMenuItem');

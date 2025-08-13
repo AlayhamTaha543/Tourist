@@ -2,8 +2,10 @@
 
 namespace App\Repositories\Impl;
 
+use App\Helper\CountryOfNextTrip;
 use App\Http\Requests\Restaurant\RestaurantBookingRequest;
 use App\Http\Resources\RestaurantResource;
+use App\Http\Resources\ShowAllRestaurantsResource;
 use App\Models\Booking;
 use App\Models\Favourite;
 use App\Models\MenuCategory;
@@ -13,6 +15,7 @@ use App\Models\Promotion;
 use App\Models\Restaurant;
 use App\Models\RestaurantBooking;
 use App\Models\RestaurantTable;
+use App\Models\User;
 use App\Repositories\Interfaces\RestaurantInterface;
 use App\Traits\HandlesUserPoints;
 use Illuminate\Http\Request;
@@ -85,11 +88,55 @@ class RestaurantRepository implements RestaurantInterface
         // ]);
         return new RestaurantResource($restaurant);
     }
-    public function showAllRestaurant()
+    public function showAllRestaurant(bool $nextTrip = false, ?User $user = null)
     {
-        $restaurants = Restaurant::with('menuCategories')->get();
-        $result = $restaurants->map(function ($restaurant) {
+        // Get the user if not provided
+        if (!$user) {
             $user = auth()->user();
+        }
+
+        $countryName = null;
+        if ($nextTrip) {
+            // Get country for next trip
+            $countryName = CountryOfNextTrip::getCountryForUser($user->id);
+        } else {
+            // Get country from user's current location
+            $userLocation = $user->location;
+            if ($userLocation) {
+                // Extract country name from location string
+                $locationParts = array_map('trim', explode(',', $userLocation));
+                if (count($locationParts) >= 2) {
+                    $countryName = end($locationParts);
+                } else {
+                    $countryName = $locationParts[0];
+                }
+            }
+        }
+
+        // Build query with location filtering
+        $restaurantsQuery = Restaurant::with(['menuCategories', 'location.city.country']);
+
+        // Filter by country if provided
+        if ($countryName) {
+            $restaurantsQuery->whereHas('location.city.country', function ($query) use ($countryName) {
+                $query->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($countryName) . '%']);
+            });
+        }
+
+        $restaurants = $restaurantsQuery->get();
+
+        // If no restaurants found and location was provided
+        if ($restaurants->isEmpty() && $countryName) {
+            return $this->success("No restaurants found in {$countryName}", [
+                'restaurants' => [],
+            ]);
+        }
+
+        // Transform restaurants using the resource and add additional data
+        $result = $restaurants->map(function ($restaurant) use ($user) {
+            $restaurantData = new ShowAllRestaurantsResource($restaurant);
+
+            // Check if restaurant is favourited
             $isFavourited = false;
             if ($user) {
                 $isFavourited = Favourite::where([
@@ -98,26 +145,30 @@ class RestaurantRepository implements RestaurantInterface
                     'favoritable_type' => Restaurant::class,
                 ])->exists();
             }
+
+            // Get active promotion
             $now = now();
             $promotion = Promotion::where('is_active', true)
                 ->where('start_date', '<=', $now)
                 ->where('end_date', '>=', $now)
                 ->where('applicable_type', 5)
                 ->first();
+
             return [
-                'restaurant' => $restaurant,
-                'categories' => $restaurant->menuCategories,
-                'is_favourited' => $isFavourited,
-                'promotion' => $promotion ? [
-                    'promotion_code' => $promotion->promotion_code,
-                    'description' => $promotion->description,
-                    'discount_type' => $promotion->discount_type,
-                    'discount_value' => $promotion->discount_value,
-                    'minimum_purchase' => $promotion->minimum_purchase,
-                ] : null,
+                'restaurant' => $restaurantData->toArray(request()),
+                // 'categories' => $restaurant->menuCategories,
+                // 'is_favourited' => $isFavourited,
+                // 'promotion' => $promotion ? [
+                //     'promotion_code' => $promotion->promotion_code,
+                //     'description' => $promotion->description,
+                //     'discount_type' => $promotion->discount_type,
+                //     'discount_value' => $promotion->discount_value,
+                //     'minimum_purchase' => $promotion->minimum_purchase,
+                // ] : null,
             ];
         });
-        return $this->success('All restaurants retrieved successfully', [
+
+        return $this->success('Restaurants retrieved successfully', [
             'restaurants' => $result,
         ]);
     }

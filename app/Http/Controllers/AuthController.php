@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Api\Auth\EditProfileRequest;
 use App\Http\Requests\Api\Auth\LoginRequest;
 use App\Http\Requests\Api\Auth\OTPRequest;
 use App\Http\Requests\Api\Auth\RegisterRequest;
@@ -10,6 +11,7 @@ use App\Http\Requests\PayRequest;
 use App\Http\Requests\RatingRequest;
 use App\Repositories\Interfaces\Auth\AuthInterface;
 use App\Repositories\Interfaces\ServiceInterface;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller
@@ -47,4 +49,29 @@ class AuthController extends Controller
     {
         return $this->authRepository->userInfo();
     }
+    /**
+     * Edit user profile
+     *
+     * @param \App\Http\Requests\Api\Auth\EditProfileRequest $request
+     * @return JsonResponse
+     */
+    public function editProfile(EditProfileRequest $request): JsonResponse
+    {
+        $result = $this->authRepository->editProfile($request);
+
+        if ($result['success']) {
+            return response()->json([
+                'status' => 'success',
+                'message' => $result['message'],
+                'data' => $result['data']
+            ], 200);
+        }
+
+        return response()->json([
+            'status' => 'error',
+            'message' => $result['message'],
+            'errors' => $result['data']
+        ], 400);
+    }
+
 }

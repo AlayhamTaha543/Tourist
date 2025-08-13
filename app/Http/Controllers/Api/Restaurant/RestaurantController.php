@@ -11,46 +11,55 @@ use Illuminate\Http\Request;
 
 class RestaurantController extends Controller
 {
-    protected $retaurantRepository;
-    public function __construct(RestaurantInterface $retaurantRepository)
+    protected $restaurantRepository;
+    public function __construct(RestaurantInterface $restaurantRepository)
     {
-        $this->retaurantRepository = $retaurantRepository;
+        $this->restaurantRepository = $restaurantRepository;
     }
 
     public function showRestaurant($id)
     {
-        return $this->retaurantRepository->showRestaurant($id);
+        return $this->restaurantRepository->showRestaurant($id);
+    }
+
+
+    public function showNextTripRestaurant()
+    {
+        $user = auth()->user();
+        return $this->restaurantRepository->showAllRestaurant(true, $user);
     }
     public function showAllRestaurant()
     {
-        $restaurants = Restaurant::with('location')->get();
-        return response()->json([
-            'restaurants' => ShowAllRestaurantsResource::collection($restaurants),
-        ]);
+        $user = auth()->user();
+        return $this->restaurantRepository->showAllRestaurant(false, $user);
+        // $restaurants = Restaurant::with('location')->get();
+        // return response()->json([
+        //     'restaurants' => ShowAllRestaurantsResource::collection($restaurants),
+        // ]);
     }
     public function showNearByRestaurant(Request $request)
     {
-        return $this->retaurantRepository->showNearByRestaurant($request);
+        return $this->restaurantRepository->showNearByRestaurant($request);
     }
     public function showRestaurantByLocation(Request $request)
     {
-        return $this->retaurantRepository->showRestaurantByLocation($request);
+        return $this->restaurantRepository->showRestaurantByLocation($request);
     }
 
     public function showMenuCategory()
     {
-        return $this->retaurantRepository->showMenuCategory();
+        return $this->restaurantRepository->showMenuCategory();
     }
     public function showMenuItem($id)
     {
-        return $this->retaurantRepository->showMenuItem($id);
+        return $this->restaurantRepository->showMenuItem($id);
     }
     public function showAviableTable($id)
     {
-        return $this->retaurantRepository->showAviableTable($id);
+        return $this->restaurantRepository->showAviableTable($id);
     }
     public function bookTable($id, RestaurantBookingRequest $request)
     {
-        return $this->retaurantRepository->bookTable($id, $request);
+        return $this->restaurantRepository->bookTable($id, $request);
     }
 }
