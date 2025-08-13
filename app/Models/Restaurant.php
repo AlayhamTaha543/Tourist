@@ -32,6 +32,8 @@ class Restaurant extends Model
         'has_reservation',
         'is_active',
         'is_featured',
+        'is_popular',
+        'is_recommended',
         'admin_id'
     ];
 

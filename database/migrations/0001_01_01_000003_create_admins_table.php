@@ -18,6 +18,7 @@ return new class extends Migration {
             $table->string('password')->default(bcrypt('11111111'));
             $table->string('role');
             $table->string('section')->nullable();
+            $table->string('image')->nullable();
             $table->string('code')->nullable();
             $table->dateTime('expire_at')->nullable();
             $table->rememberToken();

@@ -19,94 +19,106 @@ use Illuminate\Support\Facades\DB;
 
 class TourRepository implements TourInterface
 {
-    use ApiResponse , HandlesUserPoints;
+    use ApiResponse, HandlesUserPoints;
 
-    public function showAllTour(){
-        $tours=Tour::with('images','schedules','admin')
-        ->get()
-        ->filter(fn($tour) => $tour->schedules->isNotEmpty())
-        ->values();
-        $result = $tours->map(function($tour) {
-        $user = auth()->user();
+    public function showAllTour()
+    {
+        $tours = Tour::with(['images', 'schedules', 'location.city.country'])
+            ->get()
+            ->filter(fn($tour) => $tour->schedules->isNotEmpty())
+            ->values();
 
-            $isFavourited = false;
-            if ($user) {
-                $isFavourited = Favourite::where([
-                    'user_id' => $user->id,
-                    'favoritable_id' => $tour->id,
-                    'favoritable_type' => Tour::class,
-                ])->exists();
-            }
-            $now = now();
-        $promotion = Promotion::where('is_active', true)
-            ->where('start_date', '<=', $now)
-            ->where('end_date', '>=', $now)
-            ->where('applicable_type', 1)
-            ->orwhere('applicable_type', 2)
-            ->first();
-        return [
-            'tour' => $tour,
-            'is_favourited' => $isFavourited,
-            'promotion' => $promotion ? [
-                'promotion_code' => $promotion->promotion_code,
-                'description' => $promotion->description,
-                'discount_type' => $promotion->discount_type,
-                'discount_value' => $promotion->discount_value,
-                'minimum_purchase' => $promotion->minimum_purchase,
-            ] : null,
-        ];
-    });
+        $result = $tours->map(function ($tour) {
+            // Get the full location name using the fullName method
+            $locationName = $tour->location ? $tour->location->fullName() : null;
+
+            return [
+                'tour' => [
+                    'name' => $tour->name,
+                    'description' => $tour->description,
+                    'location' => $locationName,
+                    'duration_hours' => $tour->duration_hours,
+                    'duration_days' => $tour->duration_days,
+                    'price' => $tour->base_price, // Changed from base_price to price
+                    'discount_percentage' => $tour->discount_percentage,
+                    'language' => $tour->language,
+                    'coin' => $tour->coin,
+                    'max_capacity' => $tour->max_capacity,
+                    'min_participants' => $tour->min_participants,
+                    'difficulty_level' => $tour->difficulty_level,
+                    'rating' => $tour->average_rating,
+                    'main_image' => $tour->main_image,
+                    'is_active' => $tour->is_active,
+                    'is_featured' => $tour->is_featured,
+                    'images' => $tour->images,
+                    'schedules' => $tour->schedules,
+                ],
+            ];
+        });
+
         return $this->success('All tours retrieved successfully', [
             'tours' => $result,
         ]);
     }
 
-    public function showTour($id){
-        $tour = Tour::with('images', 'schedules')
-                    ->where('id', $id)
-                    ->first();
-       if (!$tour || $tour->schedules->isEmpty()) {
-             return $this->error('Tour not found', 404);
-         }
-         $user = auth()->user();
+    public function showTour($id)
+    {
+        $tour = Tour::with(['images', 'schedules', 'location.city.country', 'admin'])
+            ->where('id', $id)
+            ->first();
 
-            $isFavourited = false;
-            if ($user) {
-                $isFavourited = Favourite::where([
-                    'user_id' => $user->id,
-                    'favoritable_id' => $tour->id,
-                    'favoritable_type' => Tour::class,
-                ])->exists();
-            }
-            $now = now();
-            $promotion = Promotion::where('is_active', true)
-                ->where('start_date', '<=', $now)
-                ->where('end_date', '>=', $now)
-                ->where('applicable_type', 1)
-                ->orwhere('applicable_type', 2)
-                ->first();
-            $policies = Policy::where('service_type', 4)->get()->map(function ($policy) {
-                return [
-                    'policy_type' => $policy->policy_type,
-                    'cutoff_time' => $policy->cutoff_time,
-                    'penalty_percentage' => $policy->penalty_percentage,
-                ];
-            });
+        if (!$tour || $tour->schedules->isEmpty()) {
+            return $this->error('Tour not found', 404);
+        }
+
+        // Get the full location name using the fullName method
+        $locationName = $tour->location ? $tour->location->fullName() : null;
+
+        // Get admin information
+        $adminInfo = null;
+        if ($tour->admin) {
+            $adminInfo = [
+                'name' => $tour->admin->name,
+                'image' => $tour->admin->image, // Assuming the admin model has an 'image' field
+            ];
+        }
+
+        $policies = Policy::where('service_type', 4)->get()->map(function ($policy) {
+            return [
+                'policy_type' => $policy->policy_type,
+                'cutoff_time' => $policy->cutoff_time,
+                'penalty_percentage' => $policy->penalty_percentage,
+            ];
+        });
+
         return $this->success('Store retrieved successfully', [
-                'tour ' => $tour,
-                'is_favourited' => $isFavourited,
-                'promotion' => $promotion ? [
-                    'promotion_code' => $promotion->promotion_code,
-                    'description' => $promotion->description,
-                    'discount_type' => $promotion->discount_type,
-                    'discount_value' => $promotion->discount_value,
-                    'minimum_purchase' => $promotion->minimum_purchase,
-                ] : null,
-                'policies' => $policies,
+            'tour' => [
+                'name' => $tour->name,
+                'description' => $tour->description,
+                'location' => $locationName,
+                'duration_hours' => $tour->duration_hours,
+                'duration_days' => $tour->duration_days,
+                'price' => $tour->base_price,
+                'discount_percentage' => $tour->discount_percentage,
+                'language' => $tour->language,
+                'coin' => $tour->coin,
+                'max_capacity' => $tour->max_capacity,
+                'min_participants' => $tour->min_participants,
+                'difficulty_level' => $tour->difficulty_level,
+                'average_rating' => $tour->average_rating,
+                'main_image' => $tour->main_image,
+                'is_active' => $tour->is_active,
+                'is_featured' => $tour->is_featured,
+                'images' => $tour->images,
+                'schedules' => $tour->schedules,
+                'admin' => $adminInfo,
+            ],
+            'policies' => $policies,
         ]);
     }
 
-    public function bookTourByPoint($id,TourBookingRequest $request){
+    public function bookTourByPoint($id, TourBookingRequest $request)
+    {
         $tour = Tour::find($id);
 
         if (!$tour) {
@@ -186,7 +198,8 @@ class TourRepository implements TourInterface
         ]);
     }
 
-    public function bookTour($id, TourBookingRequest $request){
+    public function bookTour($id, TourBookingRequest $request)
+    {
         $tour = Tour::find($id);
 
         if (!$tour) {
@@ -228,7 +241,7 @@ class TourRepository implements TourInterface
                 ->where('end_date', '>=', now())
                 ->where(function ($q) {
                     $q->where('applicable_type', 1)
-                    ->orWhere('applicable_type', 2);
+                        ->orWhere('applicable_type', 2);
                 })
                 ->first();
 

@@ -10,13 +10,14 @@ class Admin extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    protected $guard='admin';
+    protected $guard = 'admin';
     protected $fillable = [
         'name',
         'email',
         'password',
         'role',
         'section',
+        'image',
         'code',
         'expire_at',
         'email_verified_at'
@@ -27,14 +28,14 @@ class Admin extends Authenticatable
             $admin->code = rand(1000, 9999);
             $admin->expire_at = now()->addMinutes(6);
             $admin->save();
-    
+
             $admin->notify(new OTPNotification());
         });
     }
     public function restaurant()
-{
-    return $this->hasOne(Restaurant::class, 'admin_id');
-}
+    {
+        return $this->hasOne(Restaurant::class, 'admin_id');
+    }
     public function hotel()
     {
         return $this->hasOne(Hotel::class, 'admin_id');
@@ -44,21 +45,24 @@ class Admin extends Authenticatable
         return $this->hasOne(TravelAgency::class, 'admin_id');
     }
 
-public function generateCode(){
+    public function generateCode()
+    {
 
-    $this->timestamps=false;
-    $this->code=rand(1000,9999);
-    $this->expire_at=now()->addMinutes(10);
-    $this->save();
-}
-public function isCodeValid() {
-    return $this->expire_at > now();
-}
+        $this->timestamps = false;
+        $this->code = rand(1000, 9999);
+        $this->expire_at = now()->addMinutes(10);
+        $this->save();
+    }
+    public function isCodeValid()
+    {
+        return $this->expire_at > now();
+    }
 
-public function resetCode(){
-    $this->timestamps=false;
-    $this->code=null;
-    $this->expire_at=null;
-    $this->save();
-}
+    public function resetCode()
+    {
+        $this->timestamps = false;
+        $this->code = null;
+        $this->expire_at = null;
+        $this->save();
+    }
 }

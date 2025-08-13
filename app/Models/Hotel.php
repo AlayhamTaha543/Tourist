@@ -27,6 +27,8 @@ class Hotel extends Model
         'email',
         'is_active',
         'is_featured',
+        'is_popular',
+        'is_recommended',
         'admin_id',
         'location_id',
     ];
