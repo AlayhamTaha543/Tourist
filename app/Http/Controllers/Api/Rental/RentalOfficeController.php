@@ -3,10 +3,14 @@
 namespace App\Http\Controllers\Api\Rental;
 
 use App\Http\Controllers\BaseController;
+use App\Http\Requests\Rental\ShowRentalOfficeRequest;
 use App\Http\Requests\Rental\StoreRentalOfficeRequest;
 use App\Http\Requests\Rental\UpdateRentalOfficeRequest;
+use App\Http\Resources\RentalOfficeResource;
 use App\Services\Rental\RentalOfficeService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class RentalOfficeController extends BaseController
 {
@@ -17,16 +21,32 @@ class RentalOfficeController extends BaseController
         $this->officeService = $officeService;
     }
 
-    public function index(): JsonResponse
+    public function index(Request $request): AnonymousResourceCollection
     {
-        try {
-            $offices = $this->officeService->getPaginatedOffices();
-            return $this->successResponse($offices);
-        } catch (\Exception $e) {
-            return $this->handleException($e);
-        }
+        $perPage = $request->input('per_page', 15);
+        $offices = $this->officeService->getPaginatedOffices($perPage);
+
+        return RentalOfficeResource::collection($offices)
+            ->additional([
+                'meta' => [
+                    'total' => $offices->total(),
+                    'current_page' => $offices->currentPage(),
+                    'last_page' => $offices->lastPage(),
+                    'per_page' => $offices->perPage(),
+                ]
+            ]);
+    }
+    public function showAllRentalOffice()
+    {
+        $user = auth()->user();
+        return $this->officeService->showAllRentalOffice(false, $user);
     }
 
+    public function showNextTripRentalOffice()
+    {
+        $user = auth()->user();
+        return $this->officeService->showAllRentalOffice(true, $user);
+    }
     public function store(StoreRentalOfficeRequest $request): JsonResponse
     {
         try {
@@ -38,16 +58,16 @@ class RentalOfficeController extends BaseController
         }
     }
 
-    public function show(int $id): JsonResponse
+    public function show(ShowRentalOfficeRequest $request): JsonResponse
     {
         try {
-            $office = $this->officeService->getOfficeById($id, true);
+            $office = $this->officeService->getOfficeById($request->id, true);
+            return (new RentalOfficeResource($office))->response();
 
             if (!$office) {
                 return $this->resourceNotFound('Rental office');
             }
 
-            return $this->successResponse($office);
         } catch (\Exception $e) {
             return $this->handleException($e);
         }

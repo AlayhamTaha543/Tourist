@@ -7,6 +7,7 @@ use App\Http\Controllers\BaseController;
 use App\Http\Requests\Rental\StoreRentalVehicleRequest;
 use App\Http\Requests\Rental\UpdateRentalVehicleRequest;
 use App\Http\Requests\Rental\UpdateVehicleStatusRequest;
+use App\Http\Resources\RentalVehicleResource;
 use App\Services\Rental\RentalVehicleService;
 use Illuminate\Http\JsonResponse;
 
@@ -23,7 +24,12 @@ class RentalVehicleController extends BaseController
     {
         try {
             $vehicles = $this->vehicleService->getPaginatedVehicles();
-            return $this->successResponse($vehicles);
+
+            // Transform the paginated data using the resource
+            $transformedVehicles = $vehicles->toArray();
+            $transformedVehicles['data'] = RentalVehicleResource::collection($vehicles->items())->toArray(request());
+
+            return $this->successResponse($transformedVehicles);
         } catch (\Exception $e) {
             return $this->handleException($e);
         }

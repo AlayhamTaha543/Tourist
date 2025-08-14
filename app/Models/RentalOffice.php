@@ -11,8 +11,10 @@ class RentalOffice extends Model
     protected $fillable = [
         'name',
         'address',
+        'rating',
         'location_id',
         'manager_id',
+        'image'
     ];
 
     public function location()
@@ -28,5 +30,16 @@ class RentalOffice extends Model
     public function vehicles()
     {
         return $this->hasMany(RentalVehicle::class, 'office_id');
+    }
+    public function vehicleCategories()
+    {
+        return $this->hasManyThrough(
+            RentalVehicleCategory::class,
+            RentalVehicle::class,
+            'office_id', // Foreign key on RentalVehicle table
+            'id', // Foreign key on RentalVehicleCategory table
+            'id', // Local key on RentalOffice table
+            'category_id' // Local key on RentalVehicle table
+        )->distinct();
     }
 }

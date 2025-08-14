@@ -11,6 +11,7 @@ return new class extends Migration {
             $table->id('id');
             $table->string('name', 100);
             $table->string('address', 255)->nullable();
+            $table->double('rating')->default(2.5);
 
             $table->unsignedBigInteger('location_id');
             $table->foreign('location_id')->references('id')->on('locations');
@@ -41,6 +42,7 @@ return new class extends Migration {
             $table->string('license_plate', 20)->unique();
             $table->string('make', 50)->nullable();
             $table->string('model', 50)->nullable();
+            $table->string('image', 50)->nullable();
             $table->year('year')->nullable();
             $table->unsignedTinyInteger('seating_capacity')->nullable();
 

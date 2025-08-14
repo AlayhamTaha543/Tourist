@@ -16,7 +16,7 @@ class RentalOfficeRepositoryImpl implements RentalOfficeRepositoryInterface
 
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
-        return RentalOffice::paginate($perPage);
+        return RentalOffice::with('location')->paginate($perPage);
     }
 
     public function find(int $id): ?RentalOffice

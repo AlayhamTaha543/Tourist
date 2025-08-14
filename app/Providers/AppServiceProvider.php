@@ -8,6 +8,8 @@ use App\Repositories\Impl\FavouriteRepository;
 use App\Repositories\Impl\HotelRepository;
 use App\Repositories\Impl\LocationRepository;
 use App\Repositories\Impl\Rent\RentalOfficeRepositoryImpl;
+use App\Repositories\Impl\Rent\RentalVehicleCategoryRepositoryImpl;
+use App\Repositories\Impl\Rent\RentalVehicleRepositoryImpl;
 use App\Repositories\Impl\RestaurantRepository;
 use App\Repositories\Impl\ServiceRepository;
 use App\Repositories\Impl\TourRepository;
@@ -18,6 +20,8 @@ use App\Repositories\Interfaces\FavouriteInterface;
 use App\Repositories\Interfaces\HotelInterface;
 use App\Repositories\Interfaces\LocationInterface;
 use App\Repositories\Interfaces\Rent\RentalOfficeRepositoryInterface;
+use App\Repositories\Interfaces\Rent\RentalVehicleCategoryRepositoryInterface;
+use App\Repositories\Interfaces\Rent\RentalVehicleRepositoryInterface;
 use App\Repositories\Interfaces\RestaurantInterface;
 use App\Repositories\Interfaces\ServiceInterface;
 use App\Repositories\Interfaces\TourInterface;
@@ -42,6 +46,14 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             RentalOfficeRepositoryInterface::class,
             RentalOfficeRepositoryImpl::class
+        );
+        $this->app->bind(
+            RentalVehicleCategoryRepositoryInterface::class,
+            RentalVehicleCategoryRepositoryImpl::class
+        );
+        $this->app->bind(
+            RentalVehicleRepositoryInterface::class,
+            RentalVehicleRepositoryImpl::class
         );
         $this->app->bind(
             AuthInterface::class,

@@ -25,6 +25,10 @@ class DatabaseSeeder extends Seeder
             VehicleSeeder::class,
             DriverSeeder::class,
             DriverVehicleAssignmentSeeder::class,
+            RentalOfficeSeeder::class,
+            RentalVehicleCategorySeeder::class,
+            RentalVehicleSeeder::class,
+            RentalVehicleStatusHistorySeeder::class,
         ]);
     }
 }

@@ -19,7 +19,7 @@ class RentalVehicleRepositoryImpl implements RentalVehicleRepositoryInterface
 
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
-        return RentalVehicle::with(['office', 'category'])->paginate($perPage);
+        return RentalVehicle::with(['category'])->paginate($perPage);
     }
 
     public function find(int $id): ?RentalVehicle
