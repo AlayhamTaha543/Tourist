@@ -22,26 +22,9 @@ class VehicleResource extends JsonResource
             'color' => $this->color,
             'is_active' => $this->is_active,
 
-            // Relationships
-            'vehicle_type' => $this->when($this->relationLoaded('vehicleType'), function () {
-                return [
-                    'id' => $this->vehicleType->id,
-                    'name' => $this->vehicleType->name,
-                    'max_passengers' => $this->vehicleType->max_passengers,
-                    'image_url' => $this->vehicleType->image_url,
-                    'price_info' => [
-                        'base_price' => $this->vehicleType->base_price,
-                        'price_per_km' => $this->vehicleType->price_per_km,
-                    ],
-                ];
-            }),
+            'vehicle_type' => $this->vehicleType->name,
 
-            'taxi_service' => $this->when($this->relationLoaded('taxiService'), function () {
-                return [
-                    'id' => $this->taxiService->id,
-                    'name' => $this->taxiService->name,
-                ];
-            }),
+
 
             // HATEOAS links
             'links' => [

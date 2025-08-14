@@ -8,6 +8,7 @@ use App\Http\Requests\Taxi\ShowTaxiServiceRequest;
 use App\Http\Requests\Taxi\UpdateTaxiServiceRequest;
 use App\Http\Requests\Taxi\DeleteTaxiServiceRequest;
 use App\Http\Requests\Taxi\TaxiServicesByLocationRequest;
+use App\Http\Resources\TaxiServiceCollection;
 use App\Http\Resources\TaxiServiceResource;
 use App\Services\TaxiService\TaxiServiceManagementService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -33,13 +34,25 @@ class TaxiServiceController extends Controller
         $perPage = $request->input('per_page', 15);
         $services = $this->service->paginateTaxiServices($perPage, true);
 
-        return TaxiServiceResource::collection($services)
+        return TaxiServiceCollection::collection($services)
             ->additional([
                 'meta' => [
                     'total' => $services->total(),
                     'current_page' => $services->currentPage(),
                 ]
             ]);
+    }
+    public function showAllTaxiService()
+    {
+        $user = auth()->user();
+        return $this->service->showAllTaxiService(false, $user);
+    }
+
+    // New method for next trip location taxi services
+    public function showNextTripTaxiService()
+    {
+        $user = auth()->user();
+        return $this->service->showAllTaxiService(true, $user);
     }
 
     /**

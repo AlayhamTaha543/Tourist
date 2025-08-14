@@ -1,13 +1,19 @@
 <?php
 namespace App\Services\TaxiService;
 
+use App\Helper\CountryOfNextTrip;
+use App\Http\Resources\TaxiServiceCollection;
+use App\Http\Resources\TaxiServiceResource;
 use App\Models\TaxiService;
+use App\Models\User;
 use App\Repositories\Impl\TaxiServiceRepository;
+use App\Services\interfaces\TaxiServiceManagementServiceInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 
-class TaxiServiceManagementService
+class TaxiServiceManagementService implements TaxiServiceManagementServiceInterface
 {
     protected $repository;
 
@@ -32,7 +38,47 @@ class TaxiServiceManagementService
     {
         return $this->repository->paginate($perPage, $activeOnly);
     }
+    public function showAllTaxiService(bool $nextTrip = false, ?User $user = null)
+    {
+        if ($nextTrip) {
+            $countryName = CountryOfNextTrip::getCountryForUser($user->id);
+        } else {
+            $userLocation = $user->location;
+            $countryName = null;
+            if ($userLocation) {
+                // Extract country name from location string
+                $locationParts = array_map('trim', explode(',', $userLocation));
+                if (count($locationParts) >= 2) {
+                    $countryName = end($locationParts);
+                } else {
+                    $countryName = $locationParts[0];
+                }
+            }
+        }
 
+        // Build query with location filtering
+        $taxiServicesQuery = TaxiService::with(['location.city.country']);
+
+        // Filter by country if provided
+        if ($countryName) {
+            $taxiServicesQuery->whereHas('location.city.country', function ($query) use ($countryName) {
+                $query->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($countryName) . '%']);
+            });
+        }
+
+        $taxiServices = $taxiServicesQuery->get();
+
+        // If no taxi services found and location was provided
+        if ($taxiServices->isEmpty() && $countryName) {
+            return response()->json([
+                'data' => ['taxi_services' => []],
+                'message' => "No taxi services found in {$countryName}",
+            ], 200);
+        }
+
+        // Return collection of resources - this will use your TaxiServiceResource exactly as defined
+        return TaxiServiceCollection::collection($taxiServices);
+    }
     /**
      * Get active taxi services with relations
      */
@@ -54,7 +100,7 @@ class TaxiServiceManagementService
      *
      * @throws ModelNotFoundException
      */
-    public function getTaxiServiceById(int $id, bool $withRelations = true): TaxiService
+    public function getFullTaxiServiceDetails(int $id, bool $withRelations = true): TaxiService
     {
         return $this->repository->findOrFail($id, $withRelations);
     }
@@ -105,9 +151,9 @@ class TaxiServiceManagementService
     public function getFullServiceDetails(int $id): TaxiService
     {
         $service = $this->repository->findOrFail($id, true);
-
         // Load additional relationships not handled by repository
-        $service->load(['vehicles', 'drivers', 'vehicleTypes']);
+        $service->load(['vehicles', 'vehicleTypes']);
+
 
         return $service;
     }

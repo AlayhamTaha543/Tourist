@@ -13,8 +13,8 @@ class Rating extends Model
     protected $fillable = [
         'user_id',
         'booking_id',
-        'rating_type',
-        'entity_id',
+        'rateable_type',
+        'rateable_id',
         'rating',
         'comment',
         'rating_date',

@@ -7,6 +7,7 @@ use App\Repositories\Impl\BookingRepository;
 use App\Repositories\Impl\FavouriteRepository;
 use App\Repositories\Impl\HotelRepository;
 use App\Repositories\Impl\LocationRepository;
+use App\Repositories\Impl\Rent\RentalOfficeRepositoryImpl;
 use App\Repositories\Impl\RestaurantRepository;
 use App\Repositories\Impl\ServiceRepository;
 use App\Repositories\Impl\TourRepository;
@@ -16,6 +17,7 @@ use App\Repositories\Interfaces\BookingInterface;
 use App\Repositories\Interfaces\FavouriteInterface;
 use App\Repositories\Interfaces\HotelInterface;
 use App\Repositories\Interfaces\LocationInterface;
+use App\Repositories\Interfaces\Rent\RentalOfficeRepositoryInterface;
 use App\Repositories\Interfaces\RestaurantInterface;
 use App\Repositories\Interfaces\ServiceInterface;
 use App\Repositories\Interfaces\TourInterface;
@@ -36,6 +38,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             ServiceInterface::class,
             ServiceRepository::class
+        );
+        $this->app->bind(
+            RentalOfficeRepositoryInterface::class,
+            RentalOfficeRepositoryImpl::class
         );
         $this->app->bind(
             AuthInterface::class,

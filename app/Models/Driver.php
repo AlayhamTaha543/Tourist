@@ -21,14 +21,14 @@ class Driver extends Model
      *
      * @var string
      */
-    protected $primaryKey = 'DriverID';
+    protected $primaryKey = 'id';
 
     /**
      * Indicates if the model should be timestamped.
      *
      * @var bool
      */
-    public $timestamps = false;
+    public $timestamps = true;
 
     /**
      * The attributes that are mass assignable.
@@ -36,20 +36,20 @@ class Driver extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'UserID',
-        'TaxiServiceID',
-        'LicenseNumber',
-        'ExperienceYears',
-        'Rating',
-        'IsActive',
+        'admin_id',
+        'taxi_service_id',
+        'license_number',
+        'experience_years',
+        'rating',
+        'is_active',
     ];
 
     /**
      * Get the user that owns the driver.
      */
-    public function user()
+    public function admin()
     {
-        return $this->belongsTo(User::class, 'UserID', 'UserID');
+        return $this->belongsTo(Admin::class, 'admin_id', 'id');
     }
 
     /**
@@ -57,7 +57,7 @@ class Driver extends Model
      */
     public function taxiService()
     {
-        return $this->belongsTo(TaxiService::class, 'TaxiServiceID', 'TaxiServiceID');
+        return $this->belongsTo(TaxiService::class, 'taxi_service_id', 'id');
     }
 
     /**
@@ -65,6 +65,6 @@ class Driver extends Model
      */
     public function taxiBookings()
     {
-        return $this->hasMany(TaxiBooking::class, 'DriverID', 'DriverID');
+        return $this->hasMany(TaxiBooking::class, 'driver_id', 'id');
     }
 }

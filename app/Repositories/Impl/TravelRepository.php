@@ -12,6 +12,7 @@ use App\Models\TravelBooking;
 use App\Models\TravelFlight;
 use App\Models\Favourite;
 use App\Models\Policy;
+use App\Models\Rating;
 use App\Models\User;
 use App\Models\UserRank;
 use App\Repositories\Interfaces\TravelInterface;
@@ -28,7 +29,12 @@ class TravelRepository implements TravelInterface
 
     public function getAllFlights()
     {
-        $flights = TravelFlight::with(['departure', 'arrival'])->get();
+        // Get current time plus 6 hours
+        $minimumDepartureTime = now()->addHours(6);
+
+        $flights = TravelFlight::with(['departure.city.country', 'arrival.city.country'])
+            ->where('departure_time', '>=', $minimumDepartureTime)
+            ->get();
 
         $result = $flights->map(function ($flight) {
             $user = auth()->user();
@@ -41,6 +47,7 @@ class TravelRepository implements TravelInterface
                     'favoritable_type' => TravelFlight::class,
                 ])->exists();
             }
+
             $now = now();
             $promotion = Promotion::where('is_active', true)
                 ->where('start_date', '<=', $now)
@@ -49,16 +56,43 @@ class TravelRepository implements TravelInterface
                 ->orwhere('applicable_type', 6)
                 ->first();
 
+            // Calculate average rating for this flight
+            $averageRating = Rating::where('rateable_id', $flight->id)
+                ->where('rateable_type', 'flight') // Assuming you have a rating_type for flights
+                ->where('is_visible', true)
+                ->avg('rating') ?? 0;
+
+            // Format departure and arrival locations
+            $departureLocation = $flight->departure->name . ', ' .
+                ($flight->departure->city->name ?? '') . ', ' .
+                ($flight->departure->city->country->name ?? '');
+
+            $arrivalLocation = $flight->arrival->name . ', ' .
+                ($flight->arrival->city->name ?? '') . ', ' .
+                ($flight->arrival->city->country->name ?? '');
+
             return [
-                'flight' => $flight,
-                'is_favourited' => $isFavourited,
-                'promotion' => $promotion ? [
-                    'promotion_code' => $promotion->promotion_code,
-                    'description' => $promotion->description,
-                    'discount_type' => $promotion->discount_type,
-                    'discount_value' => $promotion->discount_value,
-                    'minimum_purchase' => $promotion->minimum_purchase,
-                ] : null,
+                'flight' => [
+                    'flight_number' => $flight->flight_number,
+                    'departure' => $departureLocation,
+                    'arrival' => $arrivalLocation,
+                    'departure_time' => $flight->departure_time,
+                    'arrival_time' => $flight->arrival_time,
+                    'duration_minutes' => $flight->duration_minutes,
+                    'price' => $flight->price,
+                    'available_seats' => $flight->available_seats,
+                    'is_popular' => $flight->is_popular,
+                    'status' => $flight->status,
+                    'rating' => round($averageRating, 1), // Round to 1 decimal place
+                ],
+                // 'is_favourited' => $isFavourited,
+                // 'promotion' => $promotion ? [
+                //     'promotion_code' => $promotion->promotion_code,
+                //     'description' => $promotion->description,
+                //     'discount_type' => $promotion->discount_type,
+                //     'discount_value' => $promotion->discount_value,
+                //     'minimum_purchase' => $promotion->minimum_purchase,
+                // ] : null,
             ];
         });
 
@@ -69,7 +103,7 @@ class TravelRepository implements TravelInterface
 
     public function getFlight($id)
     {
-        $flight = TravelFlight::with(['agency', 'departure', 'arrival'])->find($id);
+        $flight = TravelFlight::with(['agency', 'departure.city.country', 'arrival.city.country'])->find($id);
 
         if (!$flight) {
             return $this->error('Flight not found', 404);
@@ -85,6 +119,7 @@ class TravelRepository implements TravelInterface
                 'favoritable_type' => TravelFlight::class,
             ])->exists();
         }
+
         $now = now();
         $promotion = Promotion::where('is_active', true)
             ->where('start_date', '<=', $now)
@@ -93,8 +128,36 @@ class TravelRepository implements TravelInterface
             ->orwhere('applicable_type', 6)
             ->first();
 
+        // Calculate average rating for this flight
+        $averageRating = Rating::where('rateable_id', $flight->id)
+            ->where('rateable_type', 'flight') // Assuming you have a rating_type for flights
+            ->where('is_visible', true)
+            ->avg('rating') ?? 0;
+
+        // Format departure and arrival locations
+        $departureLocation = $flight->departure->name . ', ' .
+            ($flight->departure->city->name ?? '') . ', ' .
+            ($flight->departure->city->country->name ?? '');
+
+        $arrivalLocation = $flight->arrival->name . ', ' .
+            ($flight->arrival->city->name ?? '') . ', ' .
+            ($flight->arrival->city->country->name ?? '');
+
         return $this->success('Flight retrieved successfully', [
-            'flight' => $flight,
+            'flight' => [
+                'flight_number' => $flight->flight_number,
+                'departure' => $departureLocation,
+                'arrival' => $arrivalLocation,
+                'departure_time' => $flight->departure_time,
+                'arrival_time' => $flight->arrival_time,
+                'duration_minutes' => $flight->duration_minutes,
+                'price' => $flight->price,
+                'available_seats' => $flight->available_seats,
+                'is_popular' => $flight->is_popular,
+                'status' => $flight->status,
+                'rating' => round($averageRating, 1),
+                'agency_name' => $flight->agency->name ?? null,
+            ],
             'is_favourited' => $isFavourited,
             'promotion' => $promotion ? [
                 'promotion_code' => $promotion->promotion_code,

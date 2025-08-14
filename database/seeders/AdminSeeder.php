@@ -66,5 +66,14 @@ class AdminSeeder extends Seeder
             'role' => 'sub_admin',
             'section' => 'travel'
         ]);
+        for ($i = 1; $i <= 9; $i++) {
+            Admin::updateOrCreate(['email' => "driver{$i}@taxi.com"], [
+                'name' => "Driver {$i}",
+                'password' => bcrypt('11111111'),
+                'role' => 'driver_admin',
+                'section' => 'taxi'
+            ]);
+        }
     }
+
 }

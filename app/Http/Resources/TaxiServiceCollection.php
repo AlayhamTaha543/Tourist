@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class TaxiServiceResource extends JsonResource
+class TaxiServiceCollection extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -30,25 +30,9 @@ class TaxiServiceResource extends JsonResource
             // 'updated_at' => $this->updated_at?->toIso8601String(),
             // Include location data if relationship is loaded
             // // Include vehicles if relationship is loaded
-            'vehicles' => $this->when($this->relationLoaded('vehicles'), function () {
-                return VehicleResource::collection($this->vehicles);
-            }),
-            'vehicle_types' => $this->when($this->relationLoaded('vehicleTypes'), function () {
-                return $this->vehicleTypes->map(function ($vehicleType) {
-                    return [
-                        'id' => $vehicleType->id,
-                        'name' => $vehicleType->name,
-                        'description' => $vehicleType->description,
-                        'max_passengers' => $vehicleType->max_passengers,
-                        'image_url' => $vehicleType->image_url,
-                        'price_info' => [
-                            'base_price' => $vehicleType->base_price,
-                            'price_per_km' => $vehicleType->price_per_km,
-                        ],
-                        'is_active' => $vehicleType->is_active,
-                    ];
-                });
-            }),
+            // 'vehicles' => $this->when($this->relationLoaded('vehicles'), function () {
+            //     return VehicleResource::collection($this->vehicles);
+            // }),
             // // Include drivers if relationship is loaded
             // 'drivers' => $this->when($this->relationLoaded('drivers'), function () {
             //     return DriverResource::collection($this->drivers);

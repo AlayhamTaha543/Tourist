@@ -16,7 +16,7 @@ class TaxiServiceRepository implements TaxiServiceRepositoryInterface
         $query = TaxiService::query();
 
         if ($withRelations) {
-            $query->with(['location', 'manager', 'vehicleTypes']);
+            $query->with(['vehicles', 'location', 'manager', 'vehicleTypes']);
         }
 
         if ($activeOnly) {

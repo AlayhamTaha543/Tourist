@@ -20,6 +20,11 @@ class DatabaseSeeder extends Seeder
             RestaurantSeeder::class,
             TourSeeder::class,
             HotelSeeder::class,
+            TaxiServiceSeeder::class,
+            VehicleTypeSeeder::class,
+            VehicleSeeder::class,
+            DriverSeeder::class,
+            DriverVehicleAssignmentSeeder::class,
         ]);
     }
 }
