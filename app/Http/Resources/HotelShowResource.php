@@ -18,7 +18,7 @@ class HotelShowResource extends JsonResource
             'description' => $this->description,
             'location' => $this->location ? $this->location->fullName() : null,
             'average_rating' => $this->average_rating,
-            'image' => $this->main_image,
+            'image' => $this->main_image ? asset('storage/' . $this->main_image) : null,
             'room_types' => $this->roomTypes->map(function ($room) {
                 return [
                     'name' => $room->name,

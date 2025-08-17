@@ -20,6 +20,7 @@ return new class extends Migration {
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->timestamp('deleted_at')->nullable();
             $table->foreignId('manager_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->timestamps();
         });
@@ -35,6 +36,8 @@ return new class extends Migration {
             $table->decimal('base_price', 10, 2);
             $table->string('image_url')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->timestamps();
+
         });
 
         // vehicles table
@@ -47,6 +50,8 @@ return new class extends Migration {
             $table->integer('year')->nullable();
             $table->string('color')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->timestamps();
+
         });
 
         // drivers table

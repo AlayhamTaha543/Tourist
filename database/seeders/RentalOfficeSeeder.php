@@ -13,18 +13,23 @@ class RentalOfficeSeeder extends Seeder
             [
                 'name' => 'City Rentals',
                 'address' => '123 Main Street, Downtown',
+                'image' => 'images/rental/r.png',
                 'location_id' => 1,
                 'manager_id' => 1, // Assuming admin with ID 1 exists
             ],
             [
                 'name' => 'Metro Car Hire',
                 'address' => '456 Central Avenue, Uptown',
+                'image' => 'images/rental/r.png',
+
                 'location_id' => 2,
                 'manager_id' => 1,
             ],
             [
                 'name' => 'Premium Auto Rentals',
                 'address' => '789 Luxury Lane, Midtown',
+                'image' => 'images/rental/r.png',
+
                 'location_id' => 3,
                 'manager_id' => 1,
             ],

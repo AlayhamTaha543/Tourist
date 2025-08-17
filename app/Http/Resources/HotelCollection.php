@@ -18,10 +18,11 @@ class HotelCollection extends ResourceCollection
             'data' => [
                 'hotels' => $this->collection->map(function ($hotel) {
                     return [
+                        'id' => $hotel->id,
                         'name' => $hotel->name,
                         'location' => $hotel->location ? $hotel->location->fullName() : null,
                         'price' => $this->getLowestRoomPrice($hotel),
-                        'image' => $hotel->main_image,
+                        'image' => $hotel->main_image ? asset('storage/' . $hotel->main_image) : null,
                         'rating' => $hotel->average_rating,
                         'recommended' => $hotel->is_recommended,
                         'popular' => $hotel->is_popular,

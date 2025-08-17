@@ -15,10 +15,11 @@ class TaxiServiceCollection extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            // 'id' => $this->id,
+            'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'logo_url' => $this->logo_url,
+
+            'logo_url' => $this->logo_url ? asset('storage/' . $this->main_image) : null,
             'website' => $this->website,
             // 'phone' => $this->phone,
             // 'email' => $this->email,

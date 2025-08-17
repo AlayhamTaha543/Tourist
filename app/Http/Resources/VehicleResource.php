@@ -21,7 +21,7 @@ class VehicleResource extends JsonResource
             'year' => $this->year,
             'color' => $this->color,
             'is_active' => $this->is_active,
-
+            'image' => $this->image ? asset('storage/' . $this->image) : null,
             'vehicle_type' => $this->vehicleType->name,
 
 

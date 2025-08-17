@@ -12,6 +12,8 @@ return new class extends Migration {
             $table->string('name', 100);
             $table->string('address', 255)->nullable();
             $table->double('rating')->default(2.5);
+            $table->string('image', 50)->nullable();
+
 
             $table->unsignedBigInteger('location_id');
             $table->foreign('location_id')->references('id')->on('locations');

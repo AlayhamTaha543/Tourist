@@ -19,6 +19,7 @@ class VehicleTypeResource extends JsonResource
             'taxi_service_id' => $this->taxi_service_id,
             'name' => $this->name,
             'description' => $this->description,
+            'image' => $this->image_url ? asset('storage/' . $this->main_image) : null,
             'max_passengers' => $this->max_passengers,
             'price_per_km' => (float) $this->price_per_km,
             'base_price' => (float) $this->base_price,

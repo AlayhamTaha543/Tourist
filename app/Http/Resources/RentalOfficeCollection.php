@@ -16,6 +16,7 @@ class RentalOfficeCollection extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'id' => $this->id,
             'name' => $this->name,
             'location' => $this->location->fullName(),
             'image' => $this->image,

@@ -18,7 +18,7 @@ class HotelResource extends JsonResource
             'name' => $this->name,
             'location' => $this->location ? $this->location->fullName() : null,
             'price' => $this->getLowestRoomPrice(),
-            'image' => $this->main_image,
+            'image' => $this->main_image ? asset('storage/' . $this->main_image) : null,
             'rating' => $this->average_rating,
         ];
     }

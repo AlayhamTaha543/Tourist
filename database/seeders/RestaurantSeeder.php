@@ -18,31 +18,31 @@ class RestaurantSeeder extends Seeder
                 'name' => 'Al-Fakher Restaurant',
                 'description' => 'A luxury restaurant offering a variety of dishes with excellent service.',
                 'cuisine' => 'Saudi Cuisine',
-                'main_image' => 'path/to/alfakher.jpg',
+                'main_image' => 'images/restaurant/r.png',
             ],
             [
                 'name' => 'Golden Oasis',
                 'description' => 'Traditional Saudi dishes with a modern twist.',
                 'cuisine' => 'Middle Eastern',
-                'main_image' => 'path/to/golden_oasis.jpg',
+                'main_image' => 'images/restaurant/r.png',
             ],
             [
                 'name' => 'Palm Breeze',
                 'description' => 'Seafood specialties with fresh ingredients.',
                 'cuisine' => 'Seafood',
-                'main_image' => 'path/to/palm_breeze.jpg',
+                'main_image' => 'images/restaurant/r.png',
             ],
             [
                 'name' => 'Spice Souk',
                 'description' => 'Indian and Arabic fusion cuisine with aromatic spices.',
                 'cuisine' => 'Indian-Arabic Fusion',
-                'main_image' => 'path/to/spice_souk.jpg',
+                'main_image' => 'images/restaurant/r.png',
             ],
             [
                 'name' => 'Desert Rose Diner',
                 'description' => 'Casual dining with a focus on comfort food.',
                 'cuisine' => 'International',
-                'main_image' => 'path/to/desert_rose.jpg',
+                'main_image' => 'images/restaurant/r.png',
             ],
         ];
 

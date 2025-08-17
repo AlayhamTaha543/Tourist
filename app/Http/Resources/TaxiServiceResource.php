@@ -18,7 +18,7 @@ class TaxiServiceResource extends JsonResource
             // 'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'logo_url' => $this->logo_url,
+            'logo_url' => $this->logo_url ? asset('storage/' . $this->main_image) : null,
             'website' => $this->website,
             // 'phone' => $this->phone,
             // 'email' => $this->email,
@@ -40,7 +40,7 @@ class TaxiServiceResource extends JsonResource
                         'name' => $vehicleType->name,
                         'description' => $vehicleType->description,
                         'max_passengers' => $vehicleType->max_passengers,
-                        'image_url' => $vehicleType->image_url,
+                        'image_url' => $vehicleType->image_url ? asset('storage/' . $this->image_url) : null,
                         'price_info' => [
                             'base_price' => $vehicleType->base_price,
                             'price_per_km' => $vehicleType->price_per_km,
