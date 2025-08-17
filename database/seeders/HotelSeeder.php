@@ -17,6 +17,7 @@ class HotelSeeder extends Seeder
      */
     public function run(): void
     {
+
         // 1. Grand Palace Hotel (your original)
         $this->createHotel(
             'Grand Palace Hotel',
@@ -62,7 +63,7 @@ class HotelSeeder extends Seeder
         $this->createHotel(
             'Ocean View Resort',
             'Beachfront resort with stunning ocean views.',
-            2,
+            1,
             15,
             4,
             '15:00:00',
@@ -115,7 +116,7 @@ class HotelSeeder extends Seeder
         $this->createHotel(
             'Mountain Retreat Lodge',
             'Cozy lodge nestled in the mountains with nature views.',
-            3,
+            1,
             5,
             3,
             '16:00:00',

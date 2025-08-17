@@ -18,6 +18,7 @@ class RestaurantResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'location' => $this->location ? $this->location->fullName() : null,
+            'image' => $this->main_image ? asset('storage/' . $this->main_image) : null,
             'rating' => $this->average_rating,
             'price' => $this->price,
             'cuisine' => $this->cuisine,

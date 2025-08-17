@@ -21,7 +21,7 @@ class ShowAllRestaurantsResource extends JsonResource
             // 'total_ratings' => $this->total_ratings,
 
             'cuisine' => $this->cuisine,
-            'image' => $this->main_image,
+            'image' => $this->main_image ? asset('storage/' . $this->main_image) : null,
             'popular' => $this->is_popular,
             'recommended' => $this->is_recommended,
         ];

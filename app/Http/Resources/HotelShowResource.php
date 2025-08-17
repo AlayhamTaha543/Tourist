@@ -21,15 +21,21 @@ class HotelShowResource extends JsonResource
             'image' => $this->main_image ? asset('storage/' . $this->main_image) : null,
             'room_types' => $this->roomTypes->map(function ($room) {
                 return [
+                    'id' => $room->id,
                     'name' => $room->name,
                     'price' => $room->base_price,
-                    'availability' => $room->availability->map(function ($availability) {
-                        return [
-                            'date' => $availability->date->format('Y-m-d'),
-                            'available_rooms' => $availability->available_rooms,
-                            'price' => $availability->price,
-                        ];
-                    }),
+                    'availability' => $room->availability
+                        ->filter(function ($availability) {
+                            return $availability->available_rooms > 0;
+                        })
+                        ->map(function ($availability) {
+                            return [
+                                'date' => $availability->date->format('Y-m-d'),
+                                'available_rooms' => $availability->available_rooms,
+                                'price' => $availability->price,
+                            ];
+                        })
+                        ->values(), // Reset array keys after filtering
                 ];
             }),
         ];
