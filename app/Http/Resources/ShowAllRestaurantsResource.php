@@ -15,6 +15,8 @@ class ShowAllRestaurantsResource extends JsonResource
     public function toArray($request)
     {
         return [
+            'id' => $this->id,
+
             'name' => $this->name,
             'location' => $this->location->fullName(),
             'average_rating' => (float) $this->average_rating,
