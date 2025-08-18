@@ -50,7 +50,8 @@ class RentalOfficeResource extends JsonResource
                     ];
                 });
             }),
-            'reviews' => FeedbackResource::collection($this->whenLoaded('feedbacks')),
+            'reviews' => FeedbackResource::collection($this->feedbacks ?? collect()),
+
         ];
     }
 }

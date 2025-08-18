@@ -53,7 +53,7 @@ class TaxiServiceResource extends JsonResource
             // 'drivers' => $this->when($this->relationLoaded('drivers'), function () {
             //     return DriverResource::collection($this->drivers);
             // }),
-            'reviews' => FeedbackResource::collection($this->whenLoaded('feedbacks')),
+            'reviews' => FeedbackResource::collection($this->feedbacks ?? collect()),
         ];
     }
 }

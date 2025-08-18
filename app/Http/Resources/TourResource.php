@@ -23,7 +23,7 @@ class TourResource extends JsonResource
             'base_price' => $this->base_price,
             'average_rating' => $this->average_rating,
             'main_image' => $this->main_image ? asset('storage/' . $this->main_image) : null,
-            'reviews' => FeedbackResource::collection($this->whenLoaded('feedbacks')),
+            'reviews' => FeedbackResource::collection($this->feedbacks ?? collect()),
         ];
     }
 }
