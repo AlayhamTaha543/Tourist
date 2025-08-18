@@ -288,7 +288,7 @@ class HotelRepository implements HotelInterface
             'hotel_room' => 1,
             'check_in_date' => $check_in_date,
             'check_out_date' => $check_out_date,
-            'number_of_guests' => $request->number_of_guests,
+            'number_of_guests' => $request->number_of_guests ?? 1,
             'number_of_rooms' => $request->number_of_rooms,
             'booking_id' => $booking->id,
             'cost' => $totalAfterDiscount,

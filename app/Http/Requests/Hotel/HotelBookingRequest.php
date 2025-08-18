@@ -25,7 +25,6 @@ class HotelBookingRequest extends FormRequest
             'room_type_id'=>'required',
             'check_in_date'=>'after_or_equal:today',
             'number_of_rooms'=>'required',
-            'number_of_guests'=>'required',
             'number_of_days' => 'required|integer|min:1'
         ];
     }
