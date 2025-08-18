@@ -6,13 +6,28 @@ use App\Models\Restaurant;
 use App\Models\RestaurantImage;
 use App\Models\MenuCategory;
 use App\Models\MenuItem;
-use App\Models\RestaurantTable;
+use App\Models\RestaurantChair; // Import RestaurantChair
+use App\Models\ChairAvailability; // Import ChairAvailability
+use Carbon\Carbon; // Import Carbon
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class RestaurantSeeder extends Seeder
 {
-    public function run()
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
     {
+        // Temporarily disable foreign key checks
+        Schema::disableForeignKeyConstraints();
+
+        // Truncate the table to start fresh
+        ChairAvailability::truncate();
+
+        // Re-enable foreign key checks
+        Schema::enableForeignKeyConstraints();
+
         $restaurantsData = [
             [
                 'name' => 'Al-Fakher Restaurant',
@@ -49,7 +64,7 @@ class RestaurantSeeder extends Seeder
         foreach ($restaurantsData as $index => $data) {
             $restaurant = Restaurant::updateOrCreate([
                 'name' => $data['name'],
-                'location_id' => 1,
+                'location_id' => 1, // Assuming a default location_id
             ], [
                 'description' => $data['description'],
                 'cuisine' => $data['cuisine'],
@@ -62,11 +77,11 @@ class RestaurantSeeder extends Seeder
                 'website' => 'https://example.com/' . strtolower(str_replace(' ', '_', $data['name'])),
                 'phone' => '+96612345678' . $index,
                 'email' => 'info' . $index . '@restaurant.com',
-                'max_tables' => rand(20, 60),
+                'max_chairs' => rand(20, 60),
                 'price' => rand(80, 200),
                 'is_active' => true,
                 'is_featured' => (bool) rand(0, 1),
-                'admin_id' => rand(1, 5),
+                'admin_id' => rand(1, 5), // Assuming admin_id exists
             ]);
 
             // Image
@@ -105,15 +120,51 @@ class RestaurantSeeder extends Seeder
                 'is_featured' => false,
             ]);
 
-            // Table
-            RestaurantTable::updateOrCreate([
+            // Chair
+            $chair = RestaurantChair::updateOrCreate([
                 'restaurant_id' => $restaurant->id,
-                'number' => 'T' . ($index + 1),
+                'number' => 'C' . ($index + 1), // Changed to 'C' for Chair
             ], [
                 'cost' => rand(50, 150),
                 'location' => 'Indoor',
                 'is_active' => true,
+                'is_reservable' => true, // Set is_reservable to true
             ]);
+
+            // --- Add Chair Availability Seeding ---
+            $tables = $restaurant->chairs()->get(); // Get all chairs for this restaurant
+
+            // Generate availability for the next 7 days
+            for ($dayOffset = 0; $dayOffset < 7; $dayOffset++) {
+                $currentDate = Carbon::now()->addDays($dayOffset);
+
+                // Get opening and closing times from the restaurant model
+                // Ensure these are Carbon instances for comparison
+                $openingTime = Carbon::parse($restaurant->opening_time);
+                $closingTime = Carbon::parse($restaurant->closing_time);
+
+                // Generate hourly time slots
+                // We iterate up to, but not including, the closing time.
+                // For example, if closing time is 23:00, we generate slots up to 22:00.
+                while ($openingTime->lt($closingTime)) {
+                    $fullDateTime = $currentDate->copy()->setTimeFrom($openingTime);
+
+                    foreach ($tables as $currentTable) {
+                        // Create ChairAvailability record
+                        // Using create since we are truncating the table first.
+                        ChairAvailability::create([
+                            'chair_id' => $currentTable->id,
+                            'date' => $fullDateTime->format('Y-m-d'),
+                            'time_slot' => $fullDateTime,
+                            'is_available' => true,
+                            'is_blocked' => false,
+                            'price_multiplier' => 1.00,
+                        ]);
+                    }
+                    $openingTime->addHour(); // Move to the next hour
+                }
+            }
+            // --- End Chair Availability Seeding ---
         }
     }
 }

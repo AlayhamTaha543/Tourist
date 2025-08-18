@@ -29,6 +29,7 @@ class Restaurant extends Model
         'website',
         'phone',
         'email',
+        'max_chairs',
         'has_reservation',
         'is_active',
         'is_featured',
@@ -62,9 +63,9 @@ class Restaurant extends Model
         return $this->hasMany(MenuCategory::class, 'restaurant_id', 'id');
     }
 
-    public function tables(): HasMany
+    public function chairs(): HasMany
     {
-        return $this->hasMany(RestaurantTable::class, 'restaurant_id', 'id');
+        return $this->hasMany(RestaurantChair::class, 'restaurant_id', 'id');
     }
 
     public function bookings(): HasMany

@@ -26,58 +26,70 @@ class RestaurantResource extends JsonResource
             'cuisine' => $this->cuisine,
             'opening_time' => $this->opening_time ? Carbon::parse($this->opening_time)->format('H:i') : null,
             'closing_time' => $this->closing_time ? Carbon::parse($this->closing_time)->format('H:i') : null,
-            'availability' => $this->getSevenDayAvailability(),
+            'location_of_tables' => $this->getSevenDayAvailability(),
             'reviews' => FeedbackResource::collection($this->feedbacks ?? collect()),
         ];
     }
 
     /**
-     * Get 7-day availability data similar to hotel structure
+     * Get 7-day availability data grouped by location, then date, then time slot.
      */
     private function getSevenDayAvailability(): array
     {
+        $allChairs = $this->chairs()->get();
+        $chairsByLocation = $allChairs->groupBy('location');
         $availability = [];
-        
-        for ($i = 0; $i < 7; $i++) {
-            $date = Carbon::now()->addDays($i);
-            $dateString = $date->toDateString();
-            
-            $timeSlots = $this->generateTimeSlots();
-            $daySlots = [];
-            
-            foreach ($timeSlots as $timeSlot) {
-                $availableTables = $this->getAvailableTablesForSlot($dateString, $timeSlot);
-                
-                if ($availableTables->count() > 0) {
-                    $groupedTables = $availableTables->groupBy('location');
-                    $locationData = [];
-                    
-                    foreach ($groupedTables as $location => $tables) {
-                        $locationData[] = [
-                            'location' => $location,
-                            'available_tables' => $tables->count(),
-                            'base_price' => $tables->first()->cost ?? 0
+        $timeSlots = $this->generateTimeSlots();
+
+        foreach ($chairsByLocation as $location => $chairs) {
+            $locationAvailability = [];
+            for ($i = 0; $i < 7; $i++) {
+                $date = Carbon::now()->addDays($i);
+                $dateString = $date->toDateString();
+                $daySlots = [];
+
+                foreach ($timeSlots as $timeSlot) {
+                    // Filter chairs for the current location and check availability
+                    $availableChairsInLocation = collect();
+                    $timeSlotFormatted = Carbon::parse($timeSlot)->format('H:i:s');
+
+                    foreach ($chairs as $chair) {
+                        $chairAvailability = $chair->availability()
+                            ->where('date', $dateString)
+                            ->whereTime('time_slot', $timeSlotFormatted)
+                            ->first();
+
+                        if ($chairAvailability && $chairAvailability->is_available && !$chairAvailability->is_blocked) {
+                            $availableChairsInLocation->push($chair);
+                        }
+                    }
+
+                    if ($availableChairsInLocation->count() > 0) {
+                        $daySlots[] = [
+                            'time' => Carbon::parse($timeSlot)->format('H:i'),
+                            'available_chairs' => $availableChairsInLocation->count(),
+                            'price' => $availableChairsInLocation->first()->cost ?? 0 // Assuming cost is consistent per location for simplicity
                         ];
                     }
-                    
-                    $daySlots[] = [
-                        'time' => Carbon::parse($timeSlot)->format('H:i'),
-                        'total_available_tables' => $availableTables->count(),
-                        'locations' => $locationData
+                }
+
+                if (!empty($daySlots)) {
+                    $locationAvailability[] = [
+                        'date' => $dateString,
+                        'day_name' => $date->format('l'),
+                        'time_slots' => $daySlots
                     ];
                 }
             }
-            
-            // Only include days with available slots
-            if (!empty($daySlots)) {
+
+            if (!empty($locationAvailability)) {
                 $availability[] = [
-                    'date' => $dateString,
-                    'day_name' => $date->format('l'),
-                    'time_slots' => $daySlots
+                    'location' => $location,
+                    'availability' => $locationAvailability
                 ];
             }
         }
-        
+
         return $availability;
     }
 
@@ -108,16 +120,21 @@ class RestaurantResource extends JsonResource
     /**
      * Get available tables for a specific slot
      */
-    private function getAvailableTablesForSlot($date, $timeSlot)
+    private function getAvailableChairsForSlot($date, $timeSlot, $location = null)
     {
         $timeSlotFormatted = Carbon::parse($timeSlot)->format('H:i:s');
         
-        return $this->tables()
+        $query = $this->chairs()
             ->where('is_active', true)
-            ->where('is_reservable', true)
-            ->whereDoesntHave('availability', function ($query) use ($date, $timeSlotFormatted) {
+            ->where('is_reservable', true);
+
+        if ($location) {
+            $query->where('location', $location);
+        }
+        
+        return $query->whereDoesntHave('availability', function ($query) use ($date, $timeSlotFormatted) {
                 $query->where('date', $date)
-                      ->where('time_slot', $timeSlotFormatted)
+                      ->whereTime('time_slot', $timeSlotFormatted)
                       ->where(function ($q) {
                           $q->where('is_available', false)
                             ->orWhere('is_blocked', true);

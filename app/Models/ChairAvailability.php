@@ -1,16 +1,18 @@
-<?php 
+<?php
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class TableAvailability extends Model
+class ChairAvailability extends Model
 {
     use HasFactory;
 
+    protected $table = 'chair_availabilities'; // Explicitly set table name
+
     protected $fillable = [
-        'table_id',
+        'chair_id',
         'date',
         'time_slot',
         'is_available',
@@ -26,8 +28,8 @@ class TableAvailability extends Model
         'price_multiplier' => 'decimal:2',
     ];
 
-    public function table(): BelongsTo
+    public function chair(): BelongsTo
     {
-        return $this->belongsTo(RestaurantTable::class, 'table_id', 'id');
+        return $this->belongsTo(RestaurantChair::class, 'chair_id', 'id');
     }
 }

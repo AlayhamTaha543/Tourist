@@ -10,7 +10,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        // Restaurants table
+        // Restaurants chairs
         Schema::create('restaurants', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
@@ -28,7 +28,7 @@ return new class extends Migration {
             $table->string('website')->nullable();
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
-            $table->integer('max_tables')->nullable();
+            $table->integer('max_chairs')->nullable();
             $table->boolean('is_active')->default(true);
             $table->boolean('is_featured')->default(false);
             $table->boolean('is_recommended')->default(false);
@@ -77,19 +77,21 @@ return new class extends Migration {
             $table->timestamps();
         });
 
-        // Restaurant Tables table
-        Schema::create('restaurant_tables', function (Blueprint $table) {
+        // Restaurant Chairs table
+        Schema::create('restaurant_chairs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('restaurant_id')->constrained('restaurants', 'id');
             $table->string('number')->notNull();
             $table->integer('cost')->notNull();
             $table->enum('location', ['indoor', 'outdoor', 'private'])->nullable();
             $table->boolean('is_active')->default(true);
+            $table->boolean('is_reservable')->default(false);
+            
             $table->timestamps();
         });
-        Schema::create('table_availabilities', function (Blueprint $table) {
+        Schema::create('chair_availabilities', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('table_id')->constrained('restaurant_tables')->onDelete('cascade');
+            $table->foreignId('chair_id')->constrained('restaurant_chairs')->onDelete('cascade');
             $table->date('date');
             $table->time('time_slot');
             $table->boolean('is_available')->default(true);
@@ -97,8 +99,8 @@ return new class extends Migration {
             $table->decimal('price_multiplier', 3, 2)->default(1.00);
             $table->timestamps();
             
-            // Ensure uniqueness for table, date, and time slot combination
-            $table->unique(['table_id', 'date', 'time_slot']);
+            // Ensure uniqueness for chair, date, and time slot combination
+            $table->unique(['chair_id', 'date', 'time_slot']);
             
             // Add indexes for better query performance
             $table->index(['date', 'time_slot']);
@@ -111,11 +113,11 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('restaurant_tables');
+        Schema::dropIfExists('restaurant_chairs');
         Schema::dropIfExists('menu_items');
         Schema::dropIfExists('menu_categories');
         Schema::dropIfExists('restaurant_images');
         Schema::dropIfExists('restaurants');
-        Schema::dropIfExists('table_availabilities');
+        Schema::dropIfExists('chair_availabilities');
     }
 };
