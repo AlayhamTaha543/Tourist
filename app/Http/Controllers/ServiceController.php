@@ -27,6 +27,15 @@ class ServiceController extends Controller
     {
         return $this->serviceRepository->addRating($request);
     }
+    public function getAllFeedbacks()
+    {
+        return $this->serviceRepository->getAllFeedbacks();
+    }
+
+    public function getFeedbacksByType(Request $request)
+    {
+        return $this->serviceRepository->getFeedbacksByType($request);
+    }
     public function submitFeedback(FeedBackRequest $request)
     {
         return $this->serviceRepository->submitFeedback($request);

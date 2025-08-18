@@ -15,6 +15,7 @@ class RestaurantResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
             'location' => $this->location ? $this->location->fullName() : null,
@@ -23,6 +24,7 @@ class RestaurantResource extends JsonResource
             'price' => $this->price,
             'cuisine' => $this->cuisine,
             'tables' => $this->getTablesGroupedByLocation(),
+            'reviews' => FeedbackResource::collection($this->whenLoaded('feedbacks')),
         ];
     }
 

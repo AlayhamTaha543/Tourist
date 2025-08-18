@@ -83,20 +83,62 @@ class ServiceRepository implements ServiceInterface
 
         return $this->success('Rating submitted successfully');
     }
+
+    public function getAllFeedbacks()
+    {
+        try {
+            $feedbacks = FeedBack::with('user:id,name,email')
+                ->orderBy('feedback_date', 'desc')
+                ->get();
+
+            if ($feedbacks->isEmpty()) {
+                return $this->error('No feedbacks found', 404);
+            }
+
+            return $this->success('All feedbacks retrieved successfully', $feedbacks, 200);
+        } catch (\Exception $e) {
+            return $this->error('Failed to retrieve feedbacks: ' . $e->getMessage(), 500);
+        }
+    }
+
+    public function getFeedbacksByType(Request $request)
+    {
+        try {
+            $request->validate([
+                'feedback_type' => 'required|in:App,Taxi,Rental,Restaurant,Hotel,Tour,Other'
+            ]);
+
+            $feedbackType = $request->feedback_type;
+
+            $feedbacks = FeedBack::with('user:id,name,email')
+                ->where('feedback_type', $feedbackType)
+                ->orderBy('feedback_date', 'desc')
+                ->get();
+
+            if ($feedbacks->isEmpty()) {
+                return $this->error('No feedbacks found for type: ' . $feedbackType, 404);
+            }
+
+            return $this->success('Feedbacks for type ' . $feedbackType . ' retrieved successfully', $feedbacks, 200);
+        } catch (\Exception $e) {
+            return $this->error('Failed to retrieve feedbacks by type: ' . $e->getMessage(), 500);
+        }
+    }
     public function submitFeedback(FeedBackRequest $request)
     {
-        $request->validated($request->all());
+        $validatedData = $request->validated(); // Fixed validation call
 
         $feedback = FeedBack::create([
             'user_id' => Auth::id(),
-            'feedback_text' => $request['feedback_text'],
-            'feedback_type' => $request['feedback_type'],
+            'feedback_text' => $validatedData['feedback_text'],
+            'feedback_type' => $validatedData['feedback_type'],
             'feedback_date' => now(),
-            'status' => 1
+            'status' => 'Unread'
         ]);
 
         return $this->success('Feedback submitted successfully', $feedback);
     }
+
     public function getAvailablePromotions()
     {
         $now = now();

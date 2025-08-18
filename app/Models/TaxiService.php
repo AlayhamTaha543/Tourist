@@ -75,4 +75,9 @@ class TaxiService extends Model
     {
         return $query->with(['location']);
     }
+
+    public function feedbacks()
+    {
+        return $this->morphMany(FeedBack::class, 'feedbackable');
+    }
 }

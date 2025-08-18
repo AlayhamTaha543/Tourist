@@ -71,4 +71,8 @@ class Hotel extends Model
         );
     }
 
+    public function feedbacks()
+    {
+        return $this->morphMany(FeedBack::class, 'feedbackable');
+    }
 }

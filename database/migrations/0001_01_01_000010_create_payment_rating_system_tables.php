@@ -2,10 +2,10 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -48,9 +48,10 @@ return new class extends Migration
         Schema::create('feedback', function (Blueprint $table) {
             $table->id('id');
             $table->foreignId('user_id')->nullable()->constrained('users', 'id');
+            $table->morphs('feedbackable');
             $table->text('feedback_text')->notNull();
             $table->dateTime('feedback_date')->default(now());
-            $table->enum('feedback_type', ['App', 'Service', 'Other']);
+            $table->enum('feedback_type', ['App', 'Taxi', 'Rental', 'Restaurant', 'Hotel', 'Tour', 'Other']);
             $table->enum('status', ['Unread', 'Read', 'Responded'])->default('Unread');
             $table->text('response_text')->nullable();
             $table->dateTime('response_date')->nullable();
@@ -81,22 +82,22 @@ return new class extends Migration
         Schema::create('ranks', function (Blueprint $table) {
             $table->id();
             $table->enum('name', ['Starter', 'Bronze', 'Silver', 'Gold', 'Platinum'])->nullable();
-            $table->integer('min_points'); 
+            $table->integer('min_points');
             $table->timestamps();
         });
 
         Schema::create('user_ranks', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');            
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('rank_id')->nullable()->constrained('ranks')->nullOnDelete();
             $table->integer('points_earned')->default(0);
             $table->timestamps();
         });
-       
+
         Schema::create('point_rules', function (Blueprint $table) {
             $table->id();
             $table->enum('action', ['book_flight', 'book_tour', 'book_hotel', 'add_restaurant_order', 'book_restaurant']);
-            $table->integer('points'); 
+            $table->integer('points');
             $table->timestamps();
         });
         Schema::create('discount_points', function (Blueprint $table) {
@@ -106,7 +107,7 @@ return new class extends Migration
             $table->decimal('discount_percentage', 5, 2);
             $table->timestamps();
         });
-        
+
         // Wishlist table
         Schema::create('wishlist', function (Blueprint $table) {
             $table->id();

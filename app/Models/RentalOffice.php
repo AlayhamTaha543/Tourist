@@ -42,4 +42,9 @@ class RentalOffice extends Model
             'category_id' // Local key on RentalVehicle table
         )->distinct();
     }
+
+    public function feedbacks()
+    {
+        return $this->morphMany(FeedBack::class, 'feedbackable');
+    }
 }

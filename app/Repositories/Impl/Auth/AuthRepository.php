@@ -49,7 +49,6 @@ class authRepository implements AuthInterface
     public function signup(RegisterRequest $request)
     {
         $validatedData = $request->validated(); // No need for $request->all() here
-
         $imagePath = null;
         if ($request->hasFile('image')) {
             $imageName = $request->file('image')->getClientOriginalName();
@@ -59,7 +58,6 @@ class authRepository implements AuthInterface
                 'public'
             );
         }
-
         // Create user
         $user = User::create([
             'first_name' => $validatedData['first_name'],
@@ -69,24 +67,25 @@ class authRepository implements AuthInterface
             'password' => Hash::make($validatedData['password']),
             'image' => $imagePath,
         ]);
-
         if (!$user) {
             return $this->error('Registration failed', 400);
         }
-
         // Generate token
         $token = $user->createToken('API Token')->plainTextToken;
         if (!$token) {
             return $this->error('Unable to create token', 400);
         }
-
         // Send OTP
         $user->generateCode();
         $user->notify(new OTPNotification());
-
+        
+        // Add image_url to user data
+        $userData = $user->toArray();
+        $userData['image_url'] = $user->image ? asset('storage/' . $user->image) : null;
+        
         return $this->success('Registration successful', [
             'token' => $token,
-            'user' => $user,
+            'user' => $userData,
         ], 201);
     }
 
@@ -121,7 +120,6 @@ class authRepository implements AuthInterface
     {
         $user = auth()->user();
         $user->currentAccessToken()->delete();
-
         return $this->ok('Logout successful', 200);
     }
     public function userInfo()

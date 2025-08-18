@@ -154,18 +154,7 @@ class RestaurantRepository implements RestaurantInterface
                 ->where('applicable_type', 5)
                 ->first();
 
-            return [
-                'restaurant' => $restaurantData->toArray(request()),
-                // 'categories' => $restaurant->menuCategories,
-                // 'is_favourited' => $isFavourited,
-                // 'promotion' => $promotion ? [
-                //     'promotion_code' => $promotion->promotion_code,
-                //     'description' => $promotion->description,
-                //     'discount_type' => $promotion->discount_type,
-                //     'discount_value' => $promotion->discount_value,
-                //     'minimum_purchase' => $promotion->minimum_purchase,
-                // ] : null,
-            ];
+            return $restaurantData->toArray(request());
         });
 
         return $this->success('Restaurants retrieved successfully', [

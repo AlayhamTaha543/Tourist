@@ -14,4 +14,6 @@ interface ServiceInterface
     public function submitFeedback(FeedBackRequest $request);
     public function getAvailablePromotions();
     public function requestTourAdmin(Request $request);
+    public function getAllFeedbacks();
+    public function getFeedbacksByType(Request $request);
 }

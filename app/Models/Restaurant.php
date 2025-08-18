@@ -75,4 +75,9 @@ class Restaurant extends Model
     {
         return $this->belongsTo(Location::class);
     }
+
+    public function feedbacks()
+    {
+        return $this->morphMany(FeedBack::class, 'feedbackable');
+    }
 }

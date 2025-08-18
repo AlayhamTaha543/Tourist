@@ -24,6 +24,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('userRank', 'userRank');
         Route::get('discountPoints', 'discountPoints');
         Route::post('addRating', 'addRating');
+        Route::get('getAllFeedbacks', 'getAllFeedbacks');
+        Route::get('getFeedbacksByType', 'getFeedbacksByType');
         Route::post('submitFeedback', 'submitFeedback');
         Route::get('getAvailablePromotions', 'getAvailablePromotions');
         Route::post('requestTourAdmin', 'requestTourAdmin');
