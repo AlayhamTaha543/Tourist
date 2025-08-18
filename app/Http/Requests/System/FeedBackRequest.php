@@ -23,7 +23,8 @@ class FeedBackRequest extends FormRequest
     {
         return [
             'feedback_text' => 'required|string',
-            'feedback_type' => 'required|in:1,2,3',
+            'feedbackable_type' => 'required|string',
+            'feedbackable_id' => 'required|integer',
         ];
     }
 }

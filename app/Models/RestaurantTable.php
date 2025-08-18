@@ -32,4 +32,8 @@ class RestaurantTable extends Model
     {
         return $this->hasMany(RestaurantBooking::class, 'table_id', 'id');
     }
+    public function availability(): HasMany
+{
+    return $this->hasMany(TableAvailability::class, 'table_id', 'id');
+}
 }

@@ -20,6 +20,8 @@ class HotelResource extends JsonResource
             'price' => $this->getLowestRoomPrice(),
             'image' => $this->main_image ? asset('storage/' . $this->main_image) : null,
             'rating' => $this->average_rating,
+            'reviews' => FeedbackResource::collection($this->feedbacks ?? collect()),
+
         ];
     }
 

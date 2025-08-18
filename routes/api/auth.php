@@ -22,7 +22,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // --- User Services ---
     Route::prefix('auth')->controller(ServiceController::class)->group(function () {
         Route::get('userRank', 'userRank');
-        Route::get('discountPoints', 'discountPoints');
+        Route::get('discountPoints', 'getFeedbacksByType');
         Route::post('addRating', 'addRating');
         Route::get('getAllFeedbacks', 'getAllFeedbacks');
         Route::get('getFeedbacksByType', 'getFeedbacksByType');

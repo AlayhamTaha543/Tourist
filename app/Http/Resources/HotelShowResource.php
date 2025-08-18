@@ -38,7 +38,7 @@ class HotelShowResource extends JsonResource
                         ->values(), // Reset array keys after filtering
                 ];
             }),
-            'reviews' => FeedbackResource::collection($this->whenLoaded('feedbacks')),
+            'reviews' => FeedbackResource::collection($this->feedbacks ?? collect()),
         ];
     }
 }

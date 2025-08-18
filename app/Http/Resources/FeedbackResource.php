@@ -15,9 +15,9 @@ class FeedbackResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'user_fullname' => $this->user->first_name . ' ' . $this->user->last_name,
-            'feedback_text' => $this->feedback_text,
-            'feedback_date' => $this->feedback_date,
+            'fullname' => $this->user->first_name . ' ' . $this->user->last_name,
+            'text' => $this->feedback_text,
+            'date' => $this->feedback_date,
         ];
     }
 }

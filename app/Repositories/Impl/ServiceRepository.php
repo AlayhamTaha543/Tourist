@@ -4,6 +4,7 @@ namespace App\Repositories\Impl;
 
 use App\Http\Requests\System\FeedBackRequest;
 use App\Http\Requests\System\RatingRequest;
+use App\Http\Resources\FeedbackResource;
 use App\Models\Admin;
 use App\Models\FeedBack;
 use App\Models\PointRule;
@@ -87,7 +88,7 @@ class ServiceRepository implements ServiceInterface
     public function getAllFeedbacks()
     {
         try {
-            $feedbacks = FeedBack::with('user:id,name,email')
+            $feedbacks = FeedBack::with('user:id,first_name,last_name', 'feedbackable')
                 ->orderBy('feedback_date', 'desc')
                 ->get();
 
@@ -95,7 +96,7 @@ class ServiceRepository implements ServiceInterface
                 return $this->error('No feedbacks found', 404);
             }
 
-            return $this->success('All feedbacks retrieved successfully', $feedbacks, 200);
+            return $this->success('All feedbacks retrieved successfully', FeedbackResource::collection($feedbacks), 200);
         } catch (\Exception $e) {
             return $this->error('Failed to retrieve feedbacks: ' . $e->getMessage(), 500);
         }
@@ -105,33 +106,37 @@ class ServiceRepository implements ServiceInterface
     {
         try {
             $request->validate([
-                'feedback_type' => 'required|in:App,Taxi,Rental,Restaurant,Hotel,Tour,Other'
+                'feedbackable_type' => 'required|string',
+                'feedbackable_id' => 'required|integer',
             ]);
 
-            $feedbackType = $request->feedback_type;
+            $feedbackableType = $request->feedbackable_type;
+            $feedbackableId = $request->feedbackable_id;
 
-            $feedbacks = FeedBack::with('user:id,name,email')
-                ->where('feedback_type', $feedbackType)
+            $feedbacks = FeedBack::with('user:id,first_name,last_name')
+                ->where('feedbackable_type', $feedbackableType)
+                ->where('feedbackable_id', $feedbackableId)
                 ->orderBy('feedback_date', 'desc')
                 ->get();
 
             if ($feedbacks->isEmpty()) {
-                return $this->error('No feedbacks found for type: ' . $feedbackType, 404);
+                return $this->error('No feedbacks found for the specified type and ID', 404);
             }
 
-            return $this->success('Feedbacks for type ' . $feedbackType . ' retrieved successfully', $feedbacks, 200);
+            return $this->success('Feedbacks retrieved successfully', FeedbackResource::collection($feedbacks), 200);
         } catch (\Exception $e) {
             return $this->error('Failed to retrieve feedbacks by type: ' . $e->getMessage(), 500);
         }
     }
     public function submitFeedback(FeedBackRequest $request)
     {
-        $validatedData = $request->validated(); // Fixed validation call
+        $validatedData = $request->validated();
 
         $feedback = FeedBack::create([
             'user_id' => Auth::id(),
+            'feedbackable_id' => $validatedData['feedbackable_id'],
+            'feedbackable_type' => $validatedData['feedbackable_type'],
             'feedback_text' => $validatedData['feedback_text'],
-            'feedback_type' => $validatedData['feedback_type'],
             'feedback_date' => now(),
             'status' => 'Unread'
         ]);

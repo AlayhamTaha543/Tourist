@@ -87,6 +87,23 @@ return new class extends Migration {
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
+        Schema::create('table_availabilities', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('table_id')->constrained('restaurant_tables')->onDelete('cascade');
+            $table->date('date');
+            $table->time('time_slot');
+            $table->boolean('is_available')->default(true);
+            $table->boolean('is_blocked')->default(false);
+            $table->decimal('price_multiplier', 3, 2)->default(1.00);
+            $table->timestamps();
+            
+            // Ensure uniqueness for table, date, and time slot combination
+            $table->unique(['table_id', 'date', 'time_slot']);
+            
+            // Add indexes for better query performance
+            $table->index(['date', 'time_slot']);
+            $table->index(['is_available', 'is_blocked']);
+        });
     }
 
     /**
@@ -99,5 +116,6 @@ return new class extends Migration {
         Schema::dropIfExists('menu_categories');
         Schema::dropIfExists('restaurant_images');
         Schema::dropIfExists('restaurants');
+        Schema::dropIfExists('table_availabilities');
     }
 };
