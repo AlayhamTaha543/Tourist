@@ -4,10 +4,14 @@ use App\Http\Controllers\Api\Journey\JourneyController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('journey')->group(function () {
-    Route::get('/flights/countries', [JourneyController::class, 'getFlightsByCountries']);
+    Route::get('/flights/landingPage/countries', [JourneyController::class, 'getFlightsByCountries']);
     Route::get('/flights/country/{country}', [JourneyController::class, 'getFlightsForCountry']);
     Route::get('/destinations', [JourneyController::class, 'getDestinations']);
     Route::get('/flights/search', [JourneyController::class, 'searchFlights']);
+});
+
+Route::middleware('auth:sanctum')->prefix('journey')->group(function () {
+    Route::get('/flights/countries', [JourneyController::class, 'getFlightsByCountries']);
 });
 
 

@@ -34,60 +34,71 @@ class RestaurantResource extends JsonResource
     /**
      * Get 7-day chair availability data grouped by location and date.
      */
-    private function getSevenDayChairAvailability(): array
-    {
-        $groupedAvailability = [];
-        $allChairTypes = $this->chairs()->get();
+    /**
+ * Get 7-day chair availability data grouped by location and date.
+ */
+private function getSevenDayChairAvailability(): array
+{
+    $groupedAvailability = [];
+    $allChairTypes = $this->chairs()->get();
 
-        // Generate time slots for the restaurant
-        $timeSlots = $this->generateTimeSlots();
+    // Generate time slots for the restaurant
+    $timeSlots = $this->generateTimeSlots();
 
-        // Initialize structure for each location
-        foreach ($allChairTypes->unique('location') as $chairType) {
-            $groupedAvailability[$chairType->location] = [];
-        }
+    // Initialize structure for each location
+    foreach ($allChairTypes->unique('location') as $chairType) {
+        $groupedAvailability[$chairType->location] = [];
+    }
 
-        for ($i = 0; $i < 7; $i++) {
-            $date = Carbon::now()->addDays($i);
-            $dateString = $date->toDateString();
-            $dayName = $date->format('l');
+    for ($i = 0; $i < 7; $i++) {
+        $date = Carbon::now()->addDays($i);
+        $dateString = $date->toDateString();
+        $dayName = $date->format('l');
 
-            foreach ($allChairTypes as $chairType) {
-                if (!isset($groupedAvailability[$chairType->location][$dateString])) {
-                    $groupedAvailability[$chairType->location][$dateString] = [
-                        'date' => $dateString,
-                        'day_name' => $dayName,
-                        'time_slots' => []
+        foreach ($allChairTypes as $chairType) {
+            if (!isset($groupedAvailability[$chairType->location][$dateString])) {
+                $groupedAvailability[$chairType->location][$dateString] = [
+                    'date' => $dateString,
+                    'day_name' => $dayName,
+                    'time_slots' => []
+                ];
+            }
+
+            foreach ($timeSlots as $timeSlot) {
+                $availableCount = $chairType->availability()
+                    ->where('date', $dateString)
+                    ->where('time_slot', $timeSlot)
+                    ->first();
+                
+                $availableChairs = $availableCount ? $availableCount->available_chairs_count : 0;
+
+                if ($availableChairs > 0) { // Only include time slots with available chairs
+                    $groupedAvailability[$chairType->location][$dateString]['time_slots'][] = [
+                        'time' => Carbon::parse($timeSlot)->format('H:i'),
+                        'available_chairs' => $availableChairs,
+                        'price' => $chairType->cost,
                     ];
-                }
-
-                foreach ($timeSlots as $timeSlot) {
-                    $availableCount = $chairType->availability()
-                        ->where('date', $dateString)
-                        ->where('time_slot', $timeSlot)
-                        ->first();
-                    
-                    $availableChairs = $availableCount ? $availableCount->available_chairs_count : 0;
-
-                    if ($availableChairs > 0) { // Only include time slots with available chairs
-                        $groupedAvailability[$chairType->location][$dateString]['time_slots'][] = [
-                            'time' => Carbon::parse($timeSlot)->format('H:i'),
-                            'available_chairs' => $availableChairs,
-                            // 'total_chairs_for_slot' => $chairType->total_chairs,
-                            'price' => $chairType->cost,
-                        ];
-                    }
                 }
             }
         }
-
-        // Convert associative array to indexed array for dates within each location
-        foreach ($groupedAvailability as $location => $dates) {
-            $groupedAvailability[$location] = array_values($dates);
-        }
-
-        return $groupedAvailability;
     }
+
+    // Convert associative array to indexed array for dates within each location
+    foreach ($groupedAvailability as $location => $dates) {
+        $groupedAvailability[$location] = array_values($dates);
+    }
+
+    // Transform the structure to include location as a property
+    $result = [];
+    foreach ($groupedAvailability as $location => $availability) {
+        $result[] = [
+            'location' => $location,
+            'availability' => $availability
+        ];
+    }
+
+    return $result;
+}
 
     /**
      * Generate time slots based on restaurant hours

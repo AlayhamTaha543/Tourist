@@ -345,7 +345,6 @@ class JourneyService
         \Log::info("Searching for country: " . $countryName);
     
         $country = Country::where('name', $countryName)->first();
-        dd($country);
         if (!$country) {
             // Debug: Log if country not found
             \Log::info("Country not found in database: " . $countryName);
@@ -372,7 +371,6 @@ class JourneyService
         // Additional debugging - let's see what favorites this user actually has
         $userFavorites = Favourite::where('user_id', $user->id)->get();
         \Log::info("User favorites:", $userFavorites->toArray());
-    dd($userFavorites->toArray());
         return $isFavorite;
     }
 }
