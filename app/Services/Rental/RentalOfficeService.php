@@ -35,7 +35,7 @@ class RentalOfficeService
                 'location',
                 'manager',
                 'vehicles',
-                'vehicles.category',  // This loads the category for each vehicle
+                'vehicles.category',  
             ]);
         }
         return $this->officeRepository->find($id);

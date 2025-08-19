@@ -20,6 +20,7 @@ class Tour extends Model
         'duration_hours',
         'duration_days',
         'base_price',
+        'language',
         'discount_percentage',
         'max_capacity',
         'min_participants',

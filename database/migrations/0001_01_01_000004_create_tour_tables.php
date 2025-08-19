@@ -39,6 +39,7 @@ return new class extends Migration
             $table->enum('difficulty_level', ['easy', 'moderate', 'difficult'])->default('easy');
             $table->decimal('average_rating', 3, 2)->default(0);
             $table->integer('total_ratings')->default(0);
+            $table->string('language')->nullable();
             $table->string('main_image')->nullable();
             $table->boolean('is_active')->default(true);
             $table->boolean('is_featured')->default(false);

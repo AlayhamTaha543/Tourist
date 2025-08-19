@@ -72,5 +72,89 @@ class TourSeeder extends Seeder
         FacadesDB::table('tour_category_mapping')->insert([
             ['tour_id' => $tour1->id, 'category_id' => $category1->id],
         ]);
+
+        $tour2 = Tour::updateOrCreate([
+            'name' => 'Coastal Kayaking',
+            'description' => 'Explore the beautiful coastline by kayak.',
+            'short_description' => 'A scenic kayaking tour.',
+            'location_id' => 2,
+            'duration_hours' => 4,
+            'duration_days' => 0,
+            'base_price' => 80.00,
+            'discount_percentage' => 5,
+            'max_capacity' => 15,
+            'min_participants' => 2,
+            'difficulty_level' => 2,
+            'average_rating' => 4.8,
+            'total_ratings' => 75,
+            'is_active' => true,
+            'is_featured' => false,
+            'admin_id' => 7,
+        ]);
+
+        $schedule2 = TourSchedule::updateOrCreate([
+            'tour_id' => $tour2->id,
+            'start_date' => '2025-07-10',
+            'end_date' => '2025-07-10',
+            'start_time' => '10:00:00',
+            'available_spots' => 15,
+            'price' => 80.00,
+            'is_active' => true,
+        ]);
+
+        TourActivity::updateOrCreate([
+            'schedule_id' => $schedule2->id,
+            'activity_id' => $activity2->id,
+            'is_active' => true,
+        ]);
+
+        FacadesDB::table('tour_category_mapping')->insert([
+            ['tour_id' => $tour2->id, 'category_id' => $category1->id],
+        ]);
+
+        $tour3 = Tour::updateOrCreate([
+            'name' => 'Historic City Walk',
+            'description' => 'A guided walk through the historic parts of the city.',
+            'short_description' => 'Discover the city\'s history.',
+            'location_id' => 3,
+            'duration_hours' => 3,
+            'duration_days' => 0,
+            'base_price' => 50.00,
+            'discount_percentage' => 0,
+            'max_capacity' => 25,
+            'min_participants' => 4,
+            'difficulty_level' => 1,
+            'average_rating' => 4.6,
+            'total_ratings' => 120,
+            'is_active' => true,
+            'is_featured' => true,
+            'admin_id' => 7,
+        ]);
+
+        $schedule3 = TourSchedule::updateOrCreate([
+            'tour_id' => $tour3->id,
+            'start_date' => '2025-08-05',
+            'end_date' => '2025-08-05',
+            'start_time' => '09:30:00',
+            'available_spots' => 25,
+            'price' => 50.00,
+            'is_active' => true,
+        ]);
+
+        $activity3 = Activity::updateOrCreate([
+            'name' => 'City Tour',
+            'description' => 'A guided tour of the city\'s main attractions.',
+            'image' => 'city_tour_image.png',
+        ]);
+
+        TourActivity::updateOrCreate([
+            'schedule_id' => $schedule3->id,
+            'activity_id' => $activity3->id,
+            'is_active' => true,
+        ]);
+
+        FacadesDB::table('tour_category_mapping')->insert([
+            ['tour_id' => $tour3->id, 'category_id' => $category1->id],
+        ]);
     }
 }

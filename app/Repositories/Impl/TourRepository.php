@@ -8,6 +8,7 @@ use App\Models\DiscountPoint;
 use App\Models\Favourite;
 use App\Models\Policy;
 use App\Models\Promotion;
+use App\Http\Resources\TourResource;
 use App\Models\Tour;
 use App\Models\TourBooking;
 use App\Models\UserRank;
@@ -23,35 +24,24 @@ class TourRepository implements TourInterface
 
     public function showAllTour()
     {
-        $tours = Tour::with(['images', 'schedules', 'location.city.country'])
-            ->get()
-            ->filter(fn($tour) => $tour->schedules->isNotEmpty())
-            ->values();
+        $tours = Tour::with(['location.city.country', 'admin', 'schedules'])
+            ->whereHas('schedules', function ($query) {
+                $query->where('start_date', '>=', Carbon::now());
+            })
+            ->get();
 
         $result = $tours->map(function ($tour) {
             // Get the full location name using the fullName method
             $locationName = $tour->location ? $tour->location->fullName() : null;
-
+            $defaultImage="images/admin/a.png";
             return [
                 'tour' => [
-                    'name' => $tour->name,
-                    'description' => $tour->description,
+                    'id' => $tour->id,
+                    'name' => $tour->admin ? $tour->admin->name : $tour->name, // Use admin name if available
                     'location' => $locationName,
-                    'duration_hours' => $tour->duration_hours,
-                    'duration_days' => $tour->duration_days,
-                    'price' => $tour->base_price, // Changed from base_price to price
-                    'discount_percentage' => $tour->discount_percentage,
-                    'language' => $tour->language,
-                    'coin' => $tour->coin,
-                    'max_capacity' => $tour->max_capacity,
-                    'min_participants' => $tour->min_participants,
-                    'difficulty_level' => $tour->difficulty_level,
                     'rating' => $tour->average_rating,
-                    'main_image' => $tour->main_image,
+                    'main_image' => $tour->admin ? $tour->admin->image ? asset('storage/' . $tour->admin->image):asset('storage/' . $defaultImage) : $tour->main_image, // Use admin image if available
                     'is_active' => $tour->is_active,
-                    'is_featured' => $tour->is_featured,
-                    'images' => $tour->images,
-                    'schedules' => $tour->schedules,
                 ],
             ];
         });
@@ -65,22 +55,13 @@ class TourRepository implements TourInterface
     {
         $tour = Tour::with(['images', 'schedules', 'location.city.country', 'admin'])
             ->where('id', $id)
+            ->whereHas('schedules', function ($query) {
+                $query->where('start_date', '>=', Carbon::now());
+            })
             ->first();
 
-        if (!$tour || $tour->schedules->isEmpty()) {
+        if (!$tour) {
             return $this->error('Tour not found', 404);
-        }
-
-        // Get the full location name using the fullName method
-        $locationName = $tour->location ? $tour->location->fullName() : null;
-
-        // Get admin information
-        $adminInfo = null;
-        if ($tour->admin) {
-            $adminInfo = [
-                'name' => $tour->admin->name,
-                'image' => $tour->admin->image, // Assuming the admin model has an 'image' field
-            ];
         }
 
         $policies = Policy::where('service_type', 4)->get()->map(function ($policy) {
@@ -91,28 +72,8 @@ class TourRepository implements TourInterface
             ];
         });
 
-        return $this->success('Store retrieved successfully', [
-            'tour' => [
-                'name' => $tour->name,
-                'description' => $tour->description,
-                'location' => $locationName,
-                'duration_hours' => $tour->duration_hours,
-                'duration_days' => $tour->duration_days,
-                'price' => $tour->base_price,
-                'discount_percentage' => $tour->discount_percentage,
-                'language' => $tour->language,
-                'coin' => $tour->coin,
-                'max_capacity' => $tour->max_capacity,
-                'min_participants' => $tour->min_participants,
-                'difficulty_level' => $tour->difficulty_level,
-                'average_rating' => $tour->average_rating,
-                'main_image' => $tour->main_image,
-                'is_active' => $tour->is_active,
-                'is_featured' => $tour->is_featured,
-                'images' => $tour->images,
-                'schedules' => $tour->schedules,
-                'admin' => $adminInfo,
-            ],
+        return $this->success('Tour retrieved successfully', [
+            'tour' => new TourResource($tour),
             'policies' => $policies,
         ]);
     }
@@ -134,7 +95,7 @@ class TourRepository implements TourInterface
         $now = Carbon::now();
         $startDate = Carbon::parse($schedule->start_date);
 
-        if ($now->greaterThanOrEqualTo($startDate->subDay())) {
+        if ($now->greaterThanOrEqualTo($startDate)) {
             return $this->error('Booking must be made at least one day before the tour start date.', 400);
         }
 
@@ -187,6 +148,8 @@ class TourRepository implements TourInterface
         $userRank->points_earned -= $rule->required_points;
         $userRank->save();
 
+        $schedule->decrement('available_spots', $newBookingCount);
+
         return $this->success('Tour booked successfully with discount applied.', [
             'booking_reference' => $booking->booking_reference,
             'reservation_id' => $tourReservation->id,
@@ -215,7 +178,7 @@ class TourRepository implements TourInterface
         $now = Carbon::now();
         $startDate = Carbon::parse($schedule->start_date);
 
-        if ($now->greaterThanOrEqualTo($startDate->subDay())) {
+        if ($now->greaterThanOrEqualTo($startDate)) {
             return $this->error('Booking must be made at least one day before the tour start date.', 400);
         }
 
@@ -296,6 +259,8 @@ class TourRepository implements TourInterface
         }
 
         $this->addPointsFromAction(auth('sanctum')->user(), 'book_tour', $newBookingCount);
+
+        $schedule->decrement('available_spots', $newBookingCount);
 
         return $this->success('Tour booked successfully', [
             'booking_reference' => $booking->booking_reference,

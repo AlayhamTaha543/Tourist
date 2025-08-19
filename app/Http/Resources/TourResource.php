@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Carbon\Carbon;
 
 class TourResource extends JsonResource
 {
@@ -13,17 +14,35 @@ class TourResource extends JsonResource
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
-    {
+    {        
+        $defaultImage="images/tour/t.png";
+
+
+
         return [
-            'name' => $this->name,
+            'name' => $this->admin->name,
             'description' => $this->description,
             'location' => $this->location ? $this->location->fullName() : null,
-            'duration_hours' => $this->duration_hours,
-            'duration_days' => $this->duration_days,
-            'base_price' => $this->base_price,
+            // 'duration_hours' => $this->duration_hours,
+            // 'duration_days' => $this->duration_days,
+            'price' => $this->base_price,
+            'discount_percentage' => $this->discount_percentage,
+            'language' => $this->language,
             'average_rating' => $this->average_rating,
-            'main_image' => $this->main_image ? asset('storage/' . $this->main_image) : null,
-            'reviews' => FeedbackResource::collection($this->feedbacks ?? collect()),
+            'main_image' => $this->main_image ? asset('storage/' . $this->main_image) : asset('storage/' . $defaultImage),
+            'images' => $this->images,
+            'schedules' => $this->schedules->map(function ($schedule) {
+                return [
+                    'id' => $schedule->id,
+                    'tour_id' => $schedule->tour_id,
+                    'start_date' => Carbon::parse($schedule->start_date)->format('Y-m-d'),
+                    'end_date' => Carbon::parse($schedule->end_date)->format('Y-m-d'),
+                    'start_time' => Carbon::parse($schedule->start_time)->format('H:i:s'),
+                    'available_spots' => $schedule->available_spots,
+                    'price' => $schedule->price,
+                ];
+            }),
+            'reviews' => FeedbackResource::collection($this->whenLoaded('feedbacks')),
         ];
     }
 }
