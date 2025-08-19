@@ -14,6 +14,6 @@ interface RestaurantInterface
     public function showNearByRestaurant(Request $request);
     public function showMenuCategory();
     public function showMenuItem($id);
-    public function bookTable($id, RestaurantBookingRequest $request);
-    public function showAviableTable($id);
+    public function bookChairs($id, RestaurantBookingRequest $request);
+    public function showAviableChairs($id);
 }

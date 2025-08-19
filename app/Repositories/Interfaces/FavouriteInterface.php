@@ -11,5 +11,6 @@ interface FavouriteInterface
     public function addTourToFavourite($id);
     public function addPackageToFavourite($id);
     public function removeFromFavouriteById($id);
+    public function addCountryToFavourite($id);
 
 }

@@ -15,11 +15,11 @@ class RestaurantChair extends Model
 
     protected $fillable = [
         'restaurant_id',
-        'number',
         'location',
         'is_reservable',
         'is_active',
-        'cost'
+        'cost',
+        'total_chairs'
     ];
 
     protected $casts = [
@@ -39,6 +39,6 @@ class RestaurantChair extends Model
 
     public function availability(): HasMany
     {
-        return $this->hasMany(ChairAvailability::class, 'chair_id', 'id');
+        return $this->hasMany(ChairAvailability::class, 'restaurant_chair_id', 'id');
     }
 }

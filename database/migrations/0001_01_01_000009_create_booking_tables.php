@@ -73,12 +73,11 @@ return new class extends Migration
             $table->foreignId('booking_id')->constrained('bookings', 'id');
             $table->foreignId('user_id')->constrained('users');
             $table->foreignId('restaurant_id')->constrained('restaurants');
-            $table->integer('table_id');
-            $table->json('order')->nullable();
+            $table->foreignId('restaurant_chair_id')->constrained('restaurant_chairs', 'id'); // Changed from table_id
             $table->date('reservation_date');
             $table->time('reservation_time');
             $table->integer('number_of_guests');
-            $table->string('location')->nullable();
+            $table->integer('duration_time')->default(1); // Added duration_time
             $table->decimal('cost')->nullable();
             $table->timestamps();
         });

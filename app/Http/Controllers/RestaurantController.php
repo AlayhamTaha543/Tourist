@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\RestaurantBookingRequest;
+use App\Http\Requests\Restaurant\RestaurantBookingRequest;
 use App\Http\Requests\RestaurantOrderRequest;
-use App\Interface\RestaurantInterface;
+use App\Repositories\Interfaces\RestaurantInterface;
 use Illuminate\Http\Request;
 
 class RestaurantController extends Controller

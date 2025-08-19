@@ -6,8 +6,10 @@ use App\Models\TravelFlight;
 use App\Models\Country;
 use App\Models\Rating;
 use App\Models\TravelBooking;
+use App\Models\Favourite;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class JourneyService
 {
@@ -39,11 +41,13 @@ class JourneyService
 
             // Get random tour image for this country
             $randomImage = $this->getRandomTourImageForCountry($countryName);
+            $isFavorite = $this->isCountryFavorite($countryName);
 
             return [
                 'country' => $countryName,
                 'average_rating' => $averageRating,
                 'country_image' => $randomImage,
+                'is_favorite' => $isFavorite,
                 'flights' => $countryFlights->map(function ($flight) {
                     return $this->formatFlightDataSimple($flight);
                 })->values()
@@ -259,14 +263,14 @@ class JourneyService
             })->pluck('id');
 
             if ($flightIds->isEmpty()) {
-                return null;
+                return 1.5;
             }
 
             // Get booking IDs for flights to this country
             $bookingIds = TravelBooking::whereIn('flight_id', $flightIds)->pluck('id');
 
             if ($bookingIds->isEmpty()) {
-                return null;
+                return 2.5;
             }
 
             // Get average rating from ratings related to these bookings
@@ -297,8 +301,8 @@ class JourneyService
             })
                 ->inRandomOrder()
                 ->first();
-
-            return $tourImage ? $tourImage->image : null;
+             $default="images/countries/default.png";
+            return $tourImage ? asset('storage/' . $tourImage->image) : asset('storage/'.$default );
 
         } catch (\Exception $e) {
             // \Log::warning('Failed to get random tour image for country: ' . $e->getMessage());
@@ -322,5 +326,53 @@ class JourneyService
         }
 
         return "{$mins}m";
+    }
+
+    /**
+     * Check if a country is marked as favorite by the authenticated user.
+     *
+     * @param string $countryName
+     * @return bool
+     */
+    private function isCountryFavorite(string $countryName): bool
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return false; // Not authenticated, so no favorites
+        }
+    
+        // Debug: Log the country name being searched
+        \Log::info("Searching for country: " . $countryName);
+    
+        $country = Country::where('name', $countryName)->first();
+        dd($country);
+        if (!$country) {
+            // Debug: Log if country not found
+            \Log::info("Country not found in database: " . $countryName);
+            
+            // Try case-insensitive search
+            $country = Country::whereRaw('LOWER(name) = ?', [strtolower($countryName)])->first();
+            if (!$country) {
+                \Log::info("Country still not found with case-insensitive search");
+                return false;
+            }
+        }
+    
+        // Debug: Log the country ID found
+        \Log::info("Country found with ID: " . $country->id);
+    
+        $isFavorite = Favourite::where('user_id', $user->id)
+            ->where('favoritable_id', $country->id)
+            ->where('favoritable_type', Country::class)
+            ->exists();
+    
+        // Debug: Log the favorite check result
+        \Log::info("Is favorite for user {$user->id}: " . ($isFavorite ? 'true' : 'false'));
+    
+        // Additional debugging - let's see what favorites this user actually has
+        $userFavorites = Favourite::where('user_id', $user->id)->get();
+        \Log::info("User favorites:", $userFavorites->toArray());
+    dd($userFavorites->toArray());
+        return $isFavorite;
     }
 }

@@ -11,5 +11,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('tour/{id}', 'addTourToFavourite');
         Route::post('package/{id}', 'addPackageToFavourite');
         Route::post('delete/{id}', 'removeFromFavouriteById');
+        Route::post('country/{id}', 'addCountryToFavourite');
     });
 });

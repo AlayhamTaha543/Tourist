@@ -12,24 +12,19 @@ class ChairAvailability extends Model
     protected $table = 'chair_availabilities'; // Explicitly set table name
 
     protected $fillable = [
-        'chair_id',
+        'restaurant_chair_id',
         'date',
         'time_slot',
-        'is_available',
-        'is_blocked',
-        'price_multiplier' // For peak hours pricing
+        'available_chairs_count',
     ];
 
     protected $casts = [
         'date' => 'date',
         'time_slot' => 'datetime',
-        'is_available' => 'boolean',
-        'is_blocked' => 'boolean',
-        'price_multiplier' => 'decimal:2',
     ];
 
-    public function chair(): BelongsTo
+    public function restaurantChair(): BelongsTo
     {
-        return $this->belongsTo(RestaurantChair::class, 'chair_id', 'id');
+        return $this->belongsTo(RestaurantChair::class, 'restaurant_chair_id', 'id');
     }
 }

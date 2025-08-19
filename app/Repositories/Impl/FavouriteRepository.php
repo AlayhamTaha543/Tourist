@@ -7,8 +7,10 @@ use App\Models\Restaurant;
 use App\Models\Tour;
 use App\Models\TravelPackage;
 use App\Models\User;
+use App\Models\Country;
 use App\Repositories\Interfaces\FavouriteInterface;
 use App\Traits\ApiResponse;
+use Illuminate\Support\Facades\Auth;
 
 class FavouriteRepository implements FavouriteInterface
 {
@@ -16,36 +18,47 @@ class FavouriteRepository implements FavouriteInterface
 
     public function showFavourite($id){
         $user = auth()->user();
-        $favourite=Favourite::where([
-            'id'=>$id,
-            'user_id'=>$user->id
-            ])->first();
+        $favourite = Favourite::where([
+            'id' => $id,
+            'user_id' => $user->id
+        ])->with('favoritable')->first();
+        
         if(!$favourite){
-             return $this->error('favourite not found', 404);
+            return $this->error('favourite not found', 404);
         }
-        return $this->success('Store retrieved successfully', [
-            'favourite ' => $favourite,
-        ]);
+        
+        // Prepare the response data
+        $responseData = [
+            'user' => $user->first_name . ' ' . $user->last_name, // Adjust field names as needed
+            'name' => $favourite->favoritable->name ?? $favourite->favoritable->title ?? 'Unknown', // Get name or title based on the favoritable type
+            'type' => class_basename($favourite->favoritable_type),
 
+        ];
+        
+        return $this->success('Store retrieved successfully', [
+            'favourite' => $responseData,
+        ]);
     }
+    
     public function showAllFavourite(){
         $user = auth()->user();
+        $favourites = Favourite::where('user_id', $user->id)
+            ->with('favoritable')
+            ->get();
+            
+        $result = $favourites->map(function ($favourite) use ($user) {
+            return [
+                'id' => $favourite->id,
+                'user' => $user->first_name . ' ' . $user->last_name, // Adjust field names as needed
+                'name' => $favourite->favoritable->name ?? $favourite->favoritable->title ?? 'Unknown', // Get name or title based on the favoritable type
+                'type' => class_basename($favourite->favoritable_type),
 
-    $favourites = Favourite::where('user_id', $user->id)
-        ->with('favoritable')
-        ->get();
-
-    $result = $favourites->map(function ($favourite) {
-        return [
-            'id' => $favourite->id,
-            'type' => class_basename($favourite->favoritable_type),
-            'data' => $favourite->favoritable,
-        ];
-    });
-
-    return $this->success('Favorites retrieved successfully', [
-        'favourites' => $result,
-    ]);
+            ];
+        });
+        
+        return $this->success('Favorites retrieved successfully', [
+            'favourites' => $result,
+        ]);
     }
     public function addRestaurantToFavourite($id)
     {
@@ -166,4 +179,30 @@ class FavouriteRepository implements FavouriteInterface
         return $this->success('Removed from favourites.');
     }
 
+    public function addCountryToFavourite($id)
+    {
+        $user = Auth::user();
+        $country = Country::find($id);
+        if (!$country) {
+            return $this->error('Country not found', 404);
+        }
+
+        $alreadyExists = Favourite::where([
+            'user_id' => $user->id,
+            'favoritable_id' => $country->id,
+            'favoritable_type' => Country::class,
+        ])->exists();
+
+        if ($alreadyExists) {
+            return $this->error('This country is already in your favourites.', 400);
+        }
+
+        $favourite = Favourite::create([
+            'user_id' => $user->id,
+            'favoritable_id' => $country->id,
+            'favoritable_type' => Country::class,
+        ]);
+
+        return $this->success('Country added to favourites.', ['favourite' => $favourite]);
+    }
 }

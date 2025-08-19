@@ -14,13 +14,12 @@ class RestaurantBooking extends Model
         'booking_id',
         'user_id',
         'restaurant_id',
-        'table_id',
-        'order',
+        'restaurant_chair_id',
         'reservation_date',
         'reservation_time',
         'number_of_guests',
-        'location',
-        'cost'
+        'cost',
+        'duration_time'
     ];
 
     protected $casts = [
@@ -42,8 +41,8 @@ class RestaurantBooking extends Model
         return $this->belongsTo(Restaurant::class, 'restaurant_id', 'id');
     }
 
-    public function table(): BelongsTo
+    public function restaurantChair(): BelongsTo
     {
-        return $this->belongsTo(RestaurantTable::class, 'table_id', 'id');
+        return $this->belongsTo(RestaurantChair::class, 'restaurant_chair_id', 'id');
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Interface\FavouriteInterface;
+use App\Repositories\Interfaces\FavouriteInterface;
 use Illuminate\Http\Request;
 
 class FavouriteController extends Controller
@@ -32,5 +32,9 @@ class FavouriteController extends Controller
     }
     public function removeFromFavouriteById($id){
         return $this->favouriteRepository->removeFromFavouriteById($id);
+    }
+
+    public function addCountryToFavourite($id){
+        return $this->favouriteRepository->addCountryToFavourite($id);
     }
 }

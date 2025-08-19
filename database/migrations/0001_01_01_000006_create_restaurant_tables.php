@@ -81,9 +81,9 @@ return new class extends Migration {
         Schema::create('restaurant_chairs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('restaurant_id')->constrained('restaurants', 'id');
-            $table->string('number')->notNull();
             $table->integer('cost')->notNull();
             $table->enum('location', ['indoor', 'outdoor', 'private'])->nullable();
+            $table->integer('total_chairs')->default(0);
             $table->boolean('is_active')->default(true);
             $table->boolean('is_reservable')->default(false);
             
@@ -91,20 +91,17 @@ return new class extends Migration {
         });
         Schema::create('chair_availabilities', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('chair_id')->constrained('restaurant_chairs')->onDelete('cascade');
+            $table->foreignId('restaurant_chair_id')->constrained('restaurant_chairs')->onDelete('cascade');
             $table->date('date');
             $table->time('time_slot');
-            $table->boolean('is_available')->default(true);
-            $table->boolean('is_blocked')->default(false);
-            $table->decimal('price_multiplier', 3, 2)->default(1.00);
+            $table->integer('available_chairs_count')->default(0);
             $table->timestamps();
             
-            // Ensure uniqueness for chair, date, and time slot combination
-            $table->unique(['chair_id', 'date', 'time_slot']);
+            // Ensure uniqueness for restaurant_chair_id, date, and time_slot combination
+            $table->unique(['restaurant_chair_id', 'date', 'time_slot']);
             
             // Add indexes for better query performance
             $table->index(['date', 'time_slot']);
-            $table->index(['is_available', 'is_blocked']);
         });
     }
 

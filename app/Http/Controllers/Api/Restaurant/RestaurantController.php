@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Restaurant;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Restaurants\RestaurantBookingRequest;
+use App\Http\Requests\Restaurant\RestaurantBookingRequest;
 use App\Http\Resources\ShowAllRestaurantsResource;
 use App\Models\Restaurant;
 use App\Repositories\Interfaces\RestaurantInterface;
@@ -32,10 +32,6 @@ class RestaurantController extends Controller
     {
         $user = auth()->user();
         return $this->restaurantRepository->showAllRestaurant(false, $user);
-        // $restaurants = Restaurant::with('location')->get();
-        // return response()->json([
-        //     'restaurants' => ShowAllRestaurantsResource::collection($restaurants),
-        // ]);
     }
     public function showNearByRestaurant(Request $request)
     {
@@ -54,12 +50,12 @@ class RestaurantController extends Controller
     {
         return $this->restaurantRepository->showMenuItem($id);
     }
-    public function showAviableTable($id)
+    public function showAviableChairs($id)
     {
-        return $this->restaurantRepository->showAviableTable($id);
+        return $this->restaurantRepository->showAviableChairs($id);
     }
-    public function bookTable($id, RestaurantBookingRequest $request)
+    public function bookChairs($id, RestaurantBookingRequest $request)
     {
-        return $this->restaurantRepository->bookTable($id, $request);
+        return $this->restaurantRepository->bookChairs($id, $request);
     }
 }

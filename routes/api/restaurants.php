@@ -12,7 +12,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('showRestaurantByLocation', 'showRestaurantByLocation');
         Route::get('showMenuItem/{id}', 'showMenuItem');
         Route::get('showMenuCategory/{id}', 'showMenuCategory');
-        Route::get('showAvailableTable/{id}', 'showAvailableTable');
-        Route::post('bookTable/{id}', 'bookTable');
+        Route::get('showAvailableChairs/{id}', 'showAviableChairs'); // Changed route name
+        Route::post('bookChairs/{id}', 'bookChairs'); // Changed route name
     });
 });

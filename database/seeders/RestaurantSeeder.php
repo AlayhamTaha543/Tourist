@@ -120,48 +120,55 @@ class RestaurantSeeder extends Seeder
                 'is_featured' => false,
             ]);
 
-            // Chair
-            $chair = RestaurantChair::updateOrCreate([
+            // Create Indoor Chairs
+            $indoorChairs = RestaurantChair::updateOrCreate([
                 'restaurant_id' => $restaurant->id,
-                'number' => 'C' . ($index + 1), // Changed to 'C' for Chair
-            ], [
-                'cost' => rand(50, 150),
                 'location' => 'Indoor',
+            ], [
+                'total_chairs' => 20,
+                'cost' => rand(50, 150),
                 'is_active' => true,
-                'is_reservable' => true, // Set is_reservable to true
+                'is_reservable' => true,
+            ]);
+
+            // Create Outdoor Chairs
+            $outdoorChairs = RestaurantChair::updateOrCreate([
+                'restaurant_id' => $restaurant->id,
+                'location' => 'Outdoor',
+            ], [
+                'total_chairs' => 30,
+                'cost' => rand(50, 150),
+                'is_active' => true,
+                'is_reservable' => true,
             ]);
 
             // --- Add Chair Availability Seeding ---
-            $tables = $restaurant->chairs()->get(); // Get all chairs for this restaurant
+            $chairTypes = [$indoorChairs, $outdoorChairs];
 
             // Generate availability for the next 7 days
             for ($dayOffset = 0; $dayOffset < 7; $dayOffset++) {
                 $currentDate = Carbon::now()->addDays($dayOffset);
+                $dateString = $currentDate->format('Y-m-d');
 
-                // Get opening and closing times from the restaurant model
-                // Ensure these are Carbon instances for comparison
+                // Generate time slots for the restaurant
                 $openingTime = Carbon::parse($restaurant->opening_time);
                 $closingTime = Carbon::parse($restaurant->closing_time);
+                $timeSlots = [];
+                $current = clone $openingTime;
+                while ($current < $closingTime) {
+                    $timeSlots[] = $current->format('H:i:s');
+                    $current->addHour();
+                }
 
-                // Generate hourly time slots
-                // We iterate up to, but not including, the closing time.
-                // For example, if closing time is 23:00, we generate slots up to 22:00.
-                while ($openingTime->lt($closingTime)) {
-                    $fullDateTime = $currentDate->copy()->setTimeFrom($openingTime);
-
-                    foreach ($tables as $currentTable) {
-                        // Create ChairAvailability record
-                        // Using create since we are truncating the table first.
+                foreach ($chairTypes as $chairType) {
+                    foreach ($timeSlots as $timeSlot) {
                         ChairAvailability::create([
-                            'chair_id' => $currentTable->id,
-                            'date' => $fullDateTime->format('Y-m-d'),
-                            'time_slot' => $fullDateTime,
-                            'is_available' => true,
-                            'is_blocked' => false,
-                            'price_multiplier' => 1.00,
+                            'restaurant_chair_id' => $chairType->id,
+                            'date' => $dateString,
+                            'time_slot' => $timeSlot,
+                            'available_chairs_count' => $chairType->total_chairs,
                         ]);
                     }
-                    $openingTime->addHour(); // Move to the next hour
                 }
             }
             // --- End Chair Availability Seeding ---
