@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Journey;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\CountryFlightCollection;
 use Illuminate\Http\Request;
 use App\Services\Journey\JourneyService;
 use Illuminate\Http\JsonResponse;
@@ -37,10 +38,18 @@ class JourneyController extends Controller
 
             $result = $this->journeyService->getFlightsByArrivalCountries($filters);
 
+            // Use resource collection to format response
+            $resource = new CountryFlightCollection(
+                collect($result['countries'])
+            );
+            
+            // Pass total_flights as additional data
+            $resource->additional(['total_flights' => $result['total_flights']]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Flights grouped by countries retrieved successfully',
-                'data' => $result
+                'data' => $resource
             ]);
 
         } catch (\Exception $e) {
@@ -51,6 +60,7 @@ class JourneyController extends Controller
             ], 500);
         }
     }
+
 
     /**
      * Get flights for a specific country

@@ -32,7 +32,7 @@ class JourneyService
 
         $flights = $query->get();
 
-        // Group flights by arrival country
+        // Group flights by arrival country (no need for token handling here)
         $flightsByCountry = $flights->groupBy(function ($flight) {
             return $flight->arrival?->city?->country?->name ?? 'Unknown';
         })->map(function ($countryFlights, $countryName) {
@@ -41,13 +41,11 @@ class JourneyService
 
             // Get random tour image for this country
             $randomImage = $this->getRandomTourImageForCountry($countryName);
-            $isFavorite = $this->isCountryFavorite($countryName);
-
+            
             return [
                 'country' => $countryName,
                 'average_rating' => $averageRating,
                 'country_image' => $randomImage,
-                'is_favorite' => $isFavorite,
                 'flights' => $countryFlights->map(function ($flight) {
                     return $this->formatFlightDataSimple($flight);
                 })->values()
@@ -60,6 +58,7 @@ class JourneyService
             'total_flights' => $flights->count()
         ];
     }
+    
 
     /**
      * Get flights for a specific country
@@ -328,49 +327,5 @@ class JourneyService
         return "{$mins}m";
     }
 
-    /**
-     * Check if a country is marked as favorite by the authenticated user.
-     *
-     * @param string $countryName
-     * @return bool
-     */
-    private function isCountryFavorite(string $countryName): bool
-    {
-        $user = Auth::user();
-        if (!$user) {
-            return false; // Not authenticated, so no favorites
-        }
-    
-        // Debug: Log the country name being searched
-        \Log::info("Searching for country: " . $countryName);
-    
-        $country = Country::where('name', $countryName)->first();
-        if (!$country) {
-            // Debug: Log if country not found
-            \Log::info("Country not found in database: " . $countryName);
-            
-            // Try case-insensitive search
-            $country = Country::whereRaw('LOWER(name) = ?', [strtolower($countryName)])->first();
-            if (!$country) {
-                \Log::info("Country still not found with case-insensitive search");
-                return false;
-            }
-        }
-    
-        // Debug: Log the country ID found
-        \Log::info("Country found with ID: " . $country->id);
-    
-        $isFavorite = Favourite::where('user_id', $user->id)
-            ->where('favoritable_id', $country->id)
-            ->where('favoritable_type', Country::class)
-            ->exists();
-    
-        // Debug: Log the favorite check result
-        \Log::info("Is favorite for user {$user->id}: " . ($isFavorite ? 'true' : 'false'));
-    
-        // Additional debugging - let's see what favorites this user actually has
-        $userFavorites = Favourite::where('user_id', $user->id)->get();
-        \Log::info("User favorites:", $userFavorites->toArray());
-        return $isFavorite;
-    }
+   
 }
