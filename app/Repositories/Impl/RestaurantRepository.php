@@ -233,7 +233,8 @@ class RestaurantRepository implements RestaurantInterface
             return $this->error("No chairs found for location {$location} at this restaurant", 404);
         }
 
-        // Check and decrement availability for each hour of the duration
+        // Check availability for all hours of the duration first
+        $availabilityRecordsToUpdate = [];
         for ($i = 0; $i < $durationTime; $i++) {
             $currentTimeSlot = $reservationTime->copy()->addHours($i)->format('H:i:s');
 
@@ -245,6 +246,11 @@ class RestaurantRepository implements RestaurantInterface
             if (!$chairAvailability || $chairAvailability->available_chairs_count < $numberOfGuests) {
                 return $this->error('Not enough chairs available for the selected date, time, and location for the entire duration', 400);
             }
+            $availabilityRecordsToUpdate[] = $chairAvailability;
+        }
+
+        // If all checks passed, decrement the available chairs count for each hour
+        foreach ($availabilityRecordsToUpdate as $chairAvailability) {
             $chairAvailability->decrement('available_chairs_count', $numberOfGuests);
         }
 
