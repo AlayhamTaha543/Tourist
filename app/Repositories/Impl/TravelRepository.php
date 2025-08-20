@@ -63,13 +63,13 @@ class TravelRepository implements TravelInterface
                 ->avg('rating') ?? 0;
 
             // Format departure and arrival locations
-            $departureLocation = $flight->departure->name . ', ' .
-                ($flight->departure->city->name ?? '') . ', ' .
-                ($flight->departure->city->country->name ?? '');
+            $departureLocation = 
+                substr($flight->departure->city->name, 0, 1)  .
+                ($flight->departure->city->country->code ?? '');
 
-            $arrivalLocation = $flight->arrival->name . ', ' .
-                ($flight->arrival->city->name ?? '') . ', ' .
-                ($flight->arrival->city->country->name ?? '');
+            $arrivalLocation = 
+                substr($flight->arrival->city->name, 0, 1)  .
+                ($flight->arrival->city->country->code ?? '');
 
             return [
                 'flight' => [
