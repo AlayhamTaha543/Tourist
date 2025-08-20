@@ -354,6 +354,8 @@ class TravelRepository implements TravelInterface
             return $this->error('Not enough available seats. Only ' . $remaining_seats . ' remaining.', 400);
         }
 
+        $flight->decrement('available_seats', $request->number_of_people);
+
         $return_flight = null;
         if ($request->ticket_type === 'round_trip') {
             $return_flight = TravelFlight::where('departure_id', $flight->arrival_id)
@@ -371,10 +373,14 @@ class TravelRepository implements TravelInterface
             $return_seats = TravelBooking::where('flight_id', $return_flight->id)
                 ->where('status', '!=', 'cancelled')
                 ->sum('number_of_people');
-            $return_remaining = $return_flight->available_seats - $return_seats;
-            if ($request->number_of_people > $return_remaining) {
-                return $this->error("Not enough return flight seats. Only $return_remaining remaining.", 400);
-            }
+        $return_remaining = $return_flight->available_seats - $return_seats;
+
+        if ($request->number_of_people > $return_remaining) {
+            return $this->error("Not enough return flight seats. Only $return_remaining remaining.", 400);
+        }
+        if ($return_flight) {
+            $return_flight->decrement('available_seats', $request->number_of_people);
+        }
         }
 
         $booking_reference = 'FB-' . strtoupper(uniqid());
