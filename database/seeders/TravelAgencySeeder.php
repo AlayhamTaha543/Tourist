@@ -17,7 +17,7 @@ class TravelAgencySeeder extends Seeder
      */
     public function run(): void
     {
-        $agency = TravelAgency::updateOrCreate([
+        $agency1 = TravelAgency::updateOrCreate([
             'name' => 'Global Explorer Travel Agency',
             'description' => 'We provide international travel and tourism services.',
             'location_id' => 1,
@@ -29,10 +29,10 @@ class TravelAgencySeeder extends Seeder
         ]);
 
         TravelFlight::updateOrCreate([
-            'agency_id' => $agency->id,
+            'agency_id' => $agency1->id,
             'flight_number' => 'GE' . strtoupper(uniqid()),
             'departure_id' => 1,
-            'arrival_id' => 1,
+            'arrival_id' => 2,
             'departure_time' => now()->addDays(3)->setTime(10, 30),
             'arrival_time' => now()->addDays(3)->setTime(14, 15),
             'duration_minutes' => 225,
@@ -40,8 +40,21 @@ class TravelAgencySeeder extends Seeder
             'available_seats' => 120,
             'status' => 'scheduled',
         ]);
+        TravelFlight::updateOrCreate([
+            'agency_id' => $agency1->id,
+            'flight_number' => 'GE' . strtoupper(uniqid()),
+            'departure_id' => 2,
+            'arrival_id' => 1,
+            'departure_time' => now()->addDays(4)->setTime(18, 00),
+            'arrival_time' => now()->addDays(4)->setTime(22, 45),
+            'duration_minutes' => 285,
+            'price' => 400.00,
+            'available_seats' => 100,
+            'status' => 'scheduled',
+        ]);
+
         $package = TravelPackage::updateOrCreate([
-            'agency_id' => $agency->id,
+            'agency_id' => $agency1->id,
             'name' => 'Amazing Europe Tour',
             'description' => '10-day guided tour across France, Italy, and Switzerland.',
             'duration_days' => 10,
@@ -73,6 +86,78 @@ class TravelAgencySeeder extends Seeder
             'inclusion_type' => 2,
             'description' => 'Airport pickup and inter-city travel',
             'is_highlighted' => false,
+        ]);
+
+        $agency2 = TravelAgency::updateOrCreate([
+            'name' => 'Adventure Seekers Inc.',
+            'description' => 'Your gateway to thrilling adventures worldwide.',
+            'location_id' => 2,
+            'website' => 'https://adventureseekers.com',
+            'phone' => '+1 555-987-6543',
+            'email' => 'info@adventureseekers.com',
+            'is_active' => true,
+            'admin_id' => 9,
+        ]);
+
+        TravelFlight::updateOrCreate([
+            'agency_id' => $agency2->id,
+            'flight_number' => 'AS' . strtoupper(uniqid()),
+            'departure_id' => 3,
+            'arrival_id' => 4,
+            'departure_time' => now()->addDays(5)->setTime(8, 00),
+            'arrival_time' => now()->addDays(5)->setTime(11, 30),
+            'duration_minutes' => 210,
+            'price' => 280.00,
+            'available_seats' => 80,
+            'status' => 'scheduled',
+        ]);
+        TravelFlight::updateOrCreate([
+            'agency_id' => $agency2->id,
+            'flight_number' => 'AS' . strtoupper(uniqid()),
+            'departure_id' => 4,
+            'arrival_id' => 3,
+            'departure_time' => now()->addDays(6)->setTime(15, 00),
+            'arrival_time' => now()->addDays(6)->setTime(18, 30),
+            'duration_minutes' => 210,
+            'price' => 290.00,
+            'available_seats' => 70,
+            'status' => 'scheduled',
+        ]);
+
+        $agency3 = TravelAgency::updateOrCreate([
+            'name' => 'Luxury Escapes Ltd.',
+            'description' => 'Experience unparalleled luxury in travel.',
+            'location_id' => 3,
+            'website' => 'https://luxuryescapes.com',
+            'phone' => '+1 555-555-5555',
+            'email' => 'support@luxuryescapes.com',
+            'is_active' => true,
+            'admin_id' => 9,
+        ]);
+
+        TravelFlight::updateOrCreate([
+            'agency_id' => $agency3->id,
+            'flight_number' => 'LE' . strtoupper(uniqid()),
+            'departure_id' => 5,
+            'arrival_id' => 6,
+            'departure_time' => now()->addDays(7)->setTime(12, 00),
+            'arrival_time' => now()->addDays(7)->setTime(16, 00),
+            'duration_minutes' => 240,
+            'price' => 600.00,
+            'available_seats' => 50,
+            'status' => 'scheduled',
+        ]);
+        TravelFlight::updateOrCreate([
+            'agency_id' => $agency3->id,
+            'flight_number' => 'LE' . strtoupper(uniqid()),
+            'departure_id' => 6,
+            'arrival_id' => 5,
+            'departure_time' => now()->addDays(8)->setTime(9, 00),
+            'arrival_time' => now()->addDays(8)->setTime(13, 00),
+            'duration_minutes' => 240,
+            'price' => 620.00,
+            'available_seats' => 45,
+            'status' => 'scheduled',
         ]);
     }
 }
