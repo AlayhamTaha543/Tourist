@@ -42,7 +42,7 @@ class TourRepository implements TourInterface
                     'rating' => $tour->average_rating,
                     'main_image' => $tour->admin ? $tour->admin->image ? asset('storage/' . $tour->admin->image):asset('storage/' . $defaultImage) : $tour->main_image, // Use admin image if available
                     'is_active' => $tour->is_active,
-                ,
+                
             ];
         });
 
