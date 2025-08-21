@@ -72,7 +72,8 @@ class TravelRepository implements TravelInterface
                 ($flight->arrival->city->country->code ?? '');
 
             return [
-                'flight' => [
+                [
+                    'id' => $flight->id,
                     'flight_number' => $flight->flight_number,
                     'departure' => $departureLocation,
                     'arrival' => $arrivalLocation,
