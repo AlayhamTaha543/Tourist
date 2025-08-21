@@ -35,14 +35,14 @@ class TourRepository implements TourInterface
             $locationName = $tour->location ? $tour->location->fullName() : null;
             $defaultImage="images/admin/a.png";
             return [
-                'tour' => [
+                
                     'id' => $tour->id,
                     'name' => $tour->admin ? $tour->admin->name : $tour->name, // Use admin name if available
                     'location' => $locationName,
                     'rating' => $tour->average_rating,
                     'main_image' => $tour->admin ? $tour->admin->image ? asset('storage/' . $tour->admin->image):asset('storage/' . $defaultImage) : $tour->main_image, // Use admin image if available
                     'is_active' => $tour->is_active,
-                ],
+                ,
             ];
         });
 
