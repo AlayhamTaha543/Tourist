@@ -53,11 +53,11 @@ class TourRepository implements TourInterface
 
     public function showTour($id)
     {
-        $tour = Tour::with(['images', 'schedules', 'location.city.country', 'admin'])
+        $tour = Tour::with(['images', 'location.city.country', 'admin', 'schedules' => function ($query) {
+                $query->where('start_date', '>=', Carbon::now())
+                      ->where('available_spots', '>', 0);
+            }])
             ->where('id', $id)
-            ->whereHas('schedules', function ($query) {
-                $query->where('start_date', '>=', Carbon::now());
-            })
             ->first();
 
         if (!$tour) {
@@ -86,10 +86,10 @@ class TourRepository implements TourInterface
             return $this->error('Tour not found', 404);
         }
 
-        $schedule = $tour->schedules()->where('is_active', true)->first();
+        $schedule = $tour->schedules()->find($request->schedule_id);
 
-        if (!$schedule) {
-            return $this->error('No active schedule found for this tour.', 404);
+        if (!$schedule || !$schedule->is_active) {
+            return $this->error('Selected schedule not found or is not active for this tour.', 404);
         }
 
         $now = Carbon::now();

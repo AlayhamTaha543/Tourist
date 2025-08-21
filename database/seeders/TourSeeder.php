@@ -6,6 +6,7 @@ use App\Models\Activity;
 use App\Models\Tour;
 use App\Models\TourActivity;
 use App\Models\TourCategory;
+use App\Models\TourImage;
 use App\Models\TourSchedule;
 use DB;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -42,6 +43,23 @@ class TourSeeder extends Seeder
             'is_active' => true,
             'is_featured' => true,
             'admin_id' => 7,
+        ]);
+
+        // Seed Tour Images for tour1
+        TourImage::updateOrCreate([
+            'tour_id' => $tour1->id,
+            'image' => 'images/tour/1.jpg',
+            'display_order' => 1,
+        ]);
+        TourImage::updateOrCreate([
+            'tour_id' => $tour1->id,
+            'image' => 'images/tour/2.jpg',
+            'display_order' => 2,
+        ]);
+        TourImage::updateOrCreate([
+            'tour_id' => $tour1->id,
+            'image' => 'images/tour/3.jpg',
+            'display_order' => 3,
         ]);
 
         $schedule1 = TourSchedule::updateOrCreate([

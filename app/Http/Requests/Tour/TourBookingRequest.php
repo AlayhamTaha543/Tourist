@@ -22,8 +22,10 @@ class TourBookingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'number_of_adults' => 'required',
-            'number_of_children' => 'required',
+            'number_of_adults' => 'required|integer|min:0',
+            'number_of_children' => 'required|integer|min:0',
+            'schedule_id' => 'required|integer|exists:tour_schedules,id',
+            'promotion_code' => 'nullable|string',
         ];
     }
 }

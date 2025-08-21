@@ -30,7 +30,12 @@ class TourResource extends JsonResource
             'language' => $this->language,
             'average_rating' => $this->average_rating,
             'main_image' => $this->main_image ? asset('storage/' . $this->main_image) : asset('storage/' . $defaultImage),
-            'images' => $this->images,
+            'images' => $this->images->map(function ($image) {
+                return [
+                    'image_path' => asset('storage/' . $image->image),
+                    'display_order' => $image->display_order,
+                ];
+            }),
             'schedules' => $this->schedules->map(function ($schedule) {
                 return [
                     'id' => $schedule->id,
