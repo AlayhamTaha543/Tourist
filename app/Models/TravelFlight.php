@@ -37,4 +37,9 @@ class TravelFlight extends Model
     {
         return $this->belongsTo(Location::class, 'arrival_id');
     }
+
+    public function flightTypes()
+    {
+        return $this->hasMany(FlightType::class);
+    }
 }

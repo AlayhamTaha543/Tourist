@@ -85,6 +85,13 @@ class TravelRepository implements TravelInterface
                     'is_popular' => $flight->is_popular,
                     'status' => $flight->status,
                     'rating' => round($averageRating, 1), // Round to 1 decimal place
+                    'flight_types' => $flight->flightTypes->map(function ($type) {
+                        return [
+                            'flight_type' => $type->flight_type,
+                            'price' => $type->price,
+                            'available_seats' => $type->available_seats,
+                        ];
+                    }),
                 ],
                 // 'is_favourited' => $isFavourited,
                 // 'promotion' => $promotion ? [
@@ -144,6 +151,38 @@ class TravelRepository implements TravelInterface
             ($flight->arrival->city->name ?? '') . ', ' .
             ($flight->arrival->city->country->name ?? '');
 
+        // Find tour guide based on arrival location or country
+        $tourGuide = null;
+        $nearestTourPrice = null;
+
+        $tours = \App\Models\Tour::with('admin')
+            ->where('location_id', $flight->arrival_id)
+            ->orderBy('base_price', 'asc')
+            ->get();
+
+        if ($tours->isEmpty() && $flight->arrival->city->country) {
+            $arrivalCountryId = $flight->arrival->city->country->id;
+            $tours = \App\Models\Tour::with('admin.location.city.country')
+                ->whereHas('location.city.country', function ($query) use ($arrivalCountryId) {
+                    $query->where('id', $arrivalCountryId);
+                })
+                ->orderBy('base_price', 'asc')
+                ->get();
+        }
+        $defaultImage="images/admin/a.png";
+
+        if ($tours->isNotEmpty()) {
+            $nearestTour = $tours->first();
+            if ($nearestTour->admin) {
+                $tourGuide = [
+                    'id' => $nearestTour->admin->id,
+                    'name' => $nearestTour->admin->name,
+                    'image' => $nearestTour->admin->image ? asset('storage/' . $nearestTour->admin->image) : asset('storage/' . $defaultImage), // Assuming admin has an image field
+                    'price' => $nearestTour->base_price,
+                ];
+            }
+        }
+
         return $this->success('Flight retrieved successfully', [
             'flight' => [
                 'flight_number' => $flight->flight_number,
@@ -151,14 +190,18 @@ class TravelRepository implements TravelInterface
                 'arrival' => $arrivalLocation,
                 'departure_time' => $flight->departure_time,
                 'arrival_time' => $flight->arrival_time,
-                'duration_minutes' => $flight->duration_minutes,
                 'price' => $flight->price,
                 'available_seats' => $flight->available_seats,
-                'is_popular' => $flight->is_popular,
-                'status' => $flight->status,
                 'rating' => round($averageRating, 1),
-                'agency_name' => $flight->agency->name ?? null,
+                'flight_types' => $flight->flightTypes->map(function ($type) {
+                    return [
+                        'flight_type' => $type->flight_type,
+                        'price' => $type->price,
+                        'available_seats' => $type->available_seats,
+                    ];
+                }),
             ],
+            'tour_guide' => $tourGuide,
             'is_favourited' => $isFavourited,
             'promotion' => $promotion ? [
                 'promotion_code' => $promotion->promotion_code,

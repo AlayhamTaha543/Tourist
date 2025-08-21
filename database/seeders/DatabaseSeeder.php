@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
             RentalVehicleCategorySeeder::class,
             RentalVehicleSeeder::class,
             RentalVehicleStatusHistorySeeder::class,
+            FlightTypeSeeder::class, // Added for flight types
             UserSeeder::class,
             FeedbackSeeder::class,
         ]);
