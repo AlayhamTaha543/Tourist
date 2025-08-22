@@ -159,38 +159,46 @@ class TravelRepository implements TravelInterface
             ($flight->arrival->city->name ?? '') . ', ' .
             ($flight->arrival->city->country->name ?? '');
 
-        // Find tour guide based on arrival location or country
-        $tourGuide = null;
-        $nearestTourPrice = null;
+        // Find tour guides based on arrival location or country
+        $tourGuides = [];
+        $defaultImage = "images/admin/a.png";
 
-        $tours = \App\Models\Tour::with('admin')
+        $tourGuides = [];
+        $defaultImage = "images/admin/a.png";
+
+        // Get tours directly associated with the arrival location
+        $toursByLocation = \App\Models\Tour::with('admin')
             ->where('location_id', $flight->arrival_id)
-            ->orderBy('base_price', 'asc')
             ->get();
 
-        if ($tours->isEmpty() && $flight->arrival->city->country) {
+        // Get tours associated with locations in the arrival country
+        $toursByCountry = collect();
+        if ($flight->arrival->city->country) {
             $arrivalCountryId = $flight->arrival->city->country->id;
-            $tours = \App\Models\Tour::with('admin.location.city.country')
-                ->whereHas('location.city.country', function ($query) use ($arrivalCountryId) {
-                    $query->where('id', $arrivalCountryId);
+            $toursByCountry = \App\Models\Tour::with('admin')
+                ->whereHas('location', function ($query) use ($arrivalCountryId) {
+                    $query->whereHas('city.country', function ($subQuery) use ($arrivalCountryId) {
+                        $subQuery->where('id', $arrivalCountryId);
+                    });
                 })
-                ->orderBy('base_price', 'asc')
                 ->get();
         }
-        $defaultImage="images/admin/a.png";
 
-        if ($tours->isNotEmpty()) {
-            $nearestTour = $tours->first();
-            if ($nearestTour->admin) {
-                $tourGuide = [
-                    'id' => $nearestTour->admin->id,
-                    'name' => $nearestTour->admin->name,
-                    'image' => $nearestTour->admin->image ? asset('storage/' . $nearestTour->admin->image) : asset('storage/' . $defaultImage), // Assuming admin has an image field
-                    'price' => $nearestTour->base_price,
+        // Merge and get unique tours, then extract unique tour guides
+        $allTours = $toursByLocation->merge($toursByCountry)->unique('id');
+
+        foreach ($allTours as $tour) {
+            if ($tour->admin) {
+                // Use admin ID to ensure unique tour guides
+                $tourGuides[$tour->admin->id] = [
+                    'id' => $tour->admin->id,
+                    'name' => $tour->admin->name,
+                    'image' => $tour->admin->image ? asset('storage/' . $tour->admin->image) : asset('storage/' . $defaultImage),
+                    'price' => $tour->base_price, // This will show the price of one of their tours
                 ];
             }
         }
-
+        $tourGuides = array_values($tourGuides); // Reset array keys to get a clean array
         $userPoints = $this->serviceRepository->getUserPoints();
 
         return $this->success('Flight retrieved successfully', [
@@ -211,7 +219,7 @@ class TravelRepository implements TravelInterface
                     ];
                 }),
             ],
-            'tour_guide' => $tourGuide,
+            'tour_guides' => $tourGuides, // Changed to tour_guides (plural)
             'is_favourited' => $isFavourited,
             'promotion' => $promotion ? [
                 'promotion_code' => $promotion->promotion_code,
@@ -303,6 +311,11 @@ class TravelRepository implements TravelInterface
         $user_rank = $user->rank ?? new UserRank(['user_id' => $user->id]);
         $user_points = $user_rank->points_earned ?? 0;
 
+        $passportImagePath = null;
+        if ($request->hasFile('passport_image')) {
+            $passportImagePath = $request->file('passport_image')->store('passports', 'public');
+        }
+
         $rule = DiscountPoint::where('action', 'book_flight')->first();
 
         if (!$rule || $user_points < $rule->required_points) {
@@ -359,6 +372,7 @@ class TravelRepository implements TravelInterface
             'discount_amount' => $discount,
             'payment_status' => 1,
             'status' => 'confirmed',
+            'passport_image' => $passportImagePath,
         ]);
 
         if ($return_flight) {
@@ -407,6 +421,11 @@ class TravelRepository implements TravelInterface
         $remaining_seats = $flight->available_seats - $already_booked_seats;
         if ($request->number_of_people > $remaining_seats) {
             return $this->error('Not enough available seats. Only ' . $remaining_seats . ' remaining.', 400);
+        }
+
+        $passportImagePath = null;
+        if ($request->hasFile('passport_image')) {
+            $passportImagePath = $request->file('passport_image')->store('passports', 'public');
         }
 
         $flight->decrement('available_seats', $request->number_of_people);
@@ -502,6 +521,7 @@ class TravelRepository implements TravelInterface
             'total_price' => $totalCost_afterDiscount,
             'discount_amount' => $discount_amount,
             'status' => 'confirmed',
+            'passport_image' => $passportImagePath,
         ]);
 
         if ($return_flight) {

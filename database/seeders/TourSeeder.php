@@ -196,7 +196,7 @@ class TourSeeder extends Seeder
             [
                 'description' => 'An exciting desert safari adventure.',
                 'short_description' => 'Explore the dunes and enjoy a desert camp.',
-                'location_id' => 4,
+                'location_id' => 3,
                 'duration_hours' => 6,
                 'duration_days' => 0,
                 'base_price' => 120.00,

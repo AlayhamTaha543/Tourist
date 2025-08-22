@@ -24,6 +24,7 @@ class TravelBookingRequest extends FormRequest
         return [
             'number_of_people' => 'required|integer|min:1',
             'ticket_type' => 'required|in:one_way,round_trip',
+            'passport_image' => 'required|image|max:2048', // Add this line for passport image validation
         ];
     }
 }

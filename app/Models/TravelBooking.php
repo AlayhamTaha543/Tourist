@@ -14,6 +14,9 @@ class TravelBooking extends Model
         'number_of_people',
         'total_price',
         'status',
+        'passport_image',
+        'ticket_type',
+        'discount_amount',
     ];
 
     public function user()
