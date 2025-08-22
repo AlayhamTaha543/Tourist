@@ -17,6 +17,7 @@ class TravelBooking extends Model
         'passport_image',
         'ticket_type',
         'discount_amount',
+        'flight_type_name',
     ];
 
     public function user()
