@@ -22,10 +22,18 @@ use Auth;
 use Carbon\Carbon;
 use DB;
 use Illuminate\Http\Request;
+use App\Repositories\Interfaces\ServiceInterface;
 
 class TravelRepository implements TravelInterface
 {
     use ApiResponse, HandlesUserPoints;
+
+    protected $serviceRepository;
+
+    public function __construct(ServiceInterface $serviceRepository)
+    {
+        $this->serviceRepository = $serviceRepository;
+    }
 
     public function getAllFlights()
     {
@@ -183,6 +191,8 @@ class TravelRepository implements TravelInterface
             }
         }
 
+        $userPoints = $this->serviceRepository->getUserPoints();
+
         return $this->success('Flight retrieved successfully', [
             'flight' => [
                 'flight_number' => $flight->flight_number,
@@ -210,6 +220,7 @@ class TravelRepository implements TravelInterface
                 'discount_value' => $promotion->discount_value,
                 'minimum_purchase' => $promotion->minimum_purchase,
             ] : null,
+            'user_points' => $userPoints->getData()->data->points ?? 0,
         ]);
     }
 

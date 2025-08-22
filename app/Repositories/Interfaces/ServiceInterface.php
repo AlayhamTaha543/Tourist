@@ -16,4 +16,5 @@ interface ServiceInterface
     public function requestTourAdmin(Request $request);
     public function getAllFeedbacks();
     public function getFeedbacksByType(Request $request);
+    public function getUserPoints();
 }

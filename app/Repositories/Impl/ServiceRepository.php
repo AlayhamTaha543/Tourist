@@ -33,6 +33,20 @@ class ServiceRepository implements ServiceInterface
 
         return $points; // Returns just the number
     }
+
+    public function getUserPoints()
+    {
+        $user = auth('sanctum')->user();
+        if (!$user) {
+            return $this->error('User not authenticated', 401);
+        }
+
+        $rank = UserRank::where('user_id', $user->id)->first();
+        $points = $rank ? $rank->points_earned : 10;
+
+        return $this->success('User points retrieved successfully', ['points' => $points]);
+    }
+
     public function discountPoints()
     {
         $discountActions = PointRule::select('action', 'points')->get();
