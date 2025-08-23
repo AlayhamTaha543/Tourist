@@ -13,6 +13,7 @@ class TourGuideSkill extends Model
     protected $fillable = [
         'admin_id',
         'skills',
+        'age',
     ];
 
     protected $casts = [

@@ -187,9 +187,12 @@ class TourSeeder extends Seeder
         // Seed Tour Guide Skills
         \App\Models\TourGuideSkill::updateOrCreate(
             ['admin_id' => 7],
-            ['skills' => json_encode(['funny', 'sociable', 'knowledgeable', 'energetic'])]
+            ['skills' => ['funny', 'sociable', 'knowledgeable', 'energetic'], 'age' => 30]
         );
-
+        \App\Models\TourGuideSkill::updateOrCreate(
+            ['admin_id' => 6],
+            ['skills' => ['funny', 'sociable', 'handsum'], 'age' => 30]
+        );
         // Tours for admin_id = 6
         $tour4 = Tour::updateOrCreate(
             ['name' => 'Desert Safari'],

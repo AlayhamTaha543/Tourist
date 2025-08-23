@@ -65,4 +65,9 @@ class Admin extends Authenticatable
         $this->expire_at = null;
         $this->save();
     }
+
+    public function tourGuideSkill()
+    {
+        return $this->hasOne(TourGuideSkill::class);
+    }
 }

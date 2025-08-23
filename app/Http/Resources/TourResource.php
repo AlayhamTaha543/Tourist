@@ -21,9 +21,10 @@ class TourResource extends JsonResource
 
         return [
             'name' => $this->admin->name,
+            'age' => $this->admin->tourGuideSkill->age,
+            'skills' => $this->admin->tourGuideSkill->skills,
             'description' => $this->description,
             'location' => $this->location ? $this->location->fullName() : null,
-            // 'duration_hours' => $this->duration_hours,
             // 'duration_days' => $this->duration_days,
             'price' => $this->base_price,
             'discount_percentage' => $this->discount_percentage,
