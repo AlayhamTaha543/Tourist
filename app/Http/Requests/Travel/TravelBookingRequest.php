@@ -23,7 +23,7 @@ class TravelBookingRequest extends FormRequest
     {
         return [
             'flight_type_name' => 'required|string|exists:flight_types,flight_type',
-            'passport_image' => 'required|image|max:2048',
+            'passport_image' => ['required', 'image', 'max:2048', new \App\Rules\ValidatePassportImage()],
             'ticket_type' => 'required|in:one_way,round_trip',
         ];
     }
