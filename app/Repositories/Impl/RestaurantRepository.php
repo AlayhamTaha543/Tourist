@@ -9,6 +9,7 @@ use App\Http\Resources\ShowAllRestaurantsResource;
 use App\Models\Booking;
 use App\Models\Favourite;
 use App\Models\MenuCategory;
+use App\Models\Payment;
 use App\Models\MenuItem;
 use App\Models\Policy;
 use App\Models\Promotion;
@@ -22,6 +23,7 @@ use App\Traits\HandlesUserPoints;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Traits\ApiResponse;
+use Illuminate\Support\Facades\Auth;
 
 class RestaurantRepository implements RestaurantInterface
 {
@@ -308,6 +310,14 @@ class RestaurantRepository implements RestaurantInterface
             return $this->error('Failed to create booking', 500);
         }
 
+        Payment::create([
+            'booking_id' => $booking->id,
+            'amount' => $totalPriceAfterDiscount,
+            'payment_date' => now(),
+            'payment_method' => 'credit_card', // or get from request
+            'status' => 'completed',
+        ]);
+
         $tableReservation = RestaurantBooking::create([
             'booking_id' => $booking->id,
             'user_id' => auth('sanctum')->id(),
@@ -404,22 +414,22 @@ class RestaurantRepository implements RestaurantInterface
     private function generateTimeSlots($restaurant)
     {
         $timeSlots = [];
-        
+
         if (!$restaurant->opening_time || !$restaurant->closing_time) {
             // Default time slots if not specified
             return ['12:00:00', '13:00:00', '14:00:00', '18:00:00', '19:00:00', '20:00:00', '21:00:00'];
         }
-        
+
         $openingTime = Carbon::parse($restaurant->opening_time);
         $closingTime = Carbon::parse($restaurant->closing_time);
-        
+
         $current = clone $openingTime;
-        
+
         while ($current < $closingTime) {
             $timeSlots[] = $current->format('H:i:s');
             $current->addHour(); // 1-hour intervals
         }
-        
+
         return $timeSlots;
     }
 }

@@ -8,6 +8,7 @@ use App\Http\Resources\HotelShowResource;
 use App\Models\Booking;
 use App\Models\Favourite;
 use App\Models\Hotel;
+use App\Models\Payment;
 use App\Models\HotelBooking;
 use App\Models\Policy;
 use App\Models\Promotion;
@@ -279,6 +280,14 @@ class HotelRepository implements HotelInterface
             'total_price' => $totalAfterDiscount,
             'discount_amount' => $discountAmount,
             'payment_status' => 1,
+        ]);
+
+        Payment::create([
+            'booking_id' => $booking->id,
+            'amount' => $totalAfterDiscount,
+            'payment_date' => now(),
+            'payment_method' => 'credit_card', // or get from request
+            'status' => 'completed',
         ]);
 
         $RoomReservation = HotelBooking::create([

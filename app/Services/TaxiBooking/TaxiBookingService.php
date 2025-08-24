@@ -7,6 +7,7 @@ use App\Events\TaxiBookingDriverAssigned;
 use App\Exceptions\NoDriversAvailableException;
 use App\Exceptions\TaxiBookingException;
 use App\Models\Booking;
+use App\Models\Payment;
 use App\Models\Promotion;
 use App\Models\TaxiBooking;
 use App\Models\TaxiService;
@@ -51,7 +52,6 @@ class TaxiBookingService
             $this->validateBookingData($data);
             $booking = $this->taxiBookingRepository->create($data);
 
-            event(new TaxiBookingCreated($booking));
             return $booking;
         });
     }
@@ -89,7 +89,6 @@ class TaxiBookingService
             $updated = $this->taxiBookingRepository->update($bookingId, $updateData);
             $this->driverService->markBusy($driverId);
 
-            event(new TaxiBookingDriverAssigned($updated, $booking->driver));
             return $updated;
         });
     }
@@ -232,6 +231,14 @@ class TaxiBookingService
                 'total_price' => $totalAfterDiscount,
                 'discount_amount' => $discountAmount,
                 'payment_status' => 'pending',
+            ]);
+
+            Payment::create([
+                'booking_id' => $booking->id,
+                'amount' => $totalAfterDiscount,
+                'payment_date' => now(),
+                'payment_method' => 'credit_card', // or get from request
+                'status' => 'completed',
             ]);
 
             // Create the specific TaxiBooking record

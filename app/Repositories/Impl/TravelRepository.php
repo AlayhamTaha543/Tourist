@@ -6,6 +6,7 @@ use App\Http\Requests\Travel\TravelBookingRequest;
 use App\Http\Resources\NearestFlightResource;
 use App\Models\Booking;
 use App\Models\DiscountPoint;
+use App\Models\Payment;
 use App\Models\Promotion;
 use App\Models\TravelAgency;
 use App\Models\TravelBooking;
@@ -18,7 +19,7 @@ use App\Models\UserRank;
 use App\Repositories\Interfaces\TravelInterface;
 use App\Traits\ApiResponse;
 use App\Traits\HandlesUserPoints;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use DB;
 use Illuminate\Http\Request;
@@ -522,6 +523,14 @@ class TravelRepository implements TravelInterface
         if (!$booking) {
             return $this->error('Failed to create booking', 500);
         }
+
+        Payment::create([
+            'booking_id' => $booking->id,
+            'amount' => $totalCost_afterDiscount,
+            'payment_date' => now(),
+            'payment_method' => 'credit_card', // or get from request
+            'status' => 'completed',
+        ]);
 
         $travel_booking = TravelBooking::create([
             'user_id' => auth('sanctum')->id(),

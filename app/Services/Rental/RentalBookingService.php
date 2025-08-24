@@ -3,6 +3,8 @@
 namespace App\Services\Rental;
 
 use App\Enum\RentalBookingStatus;
+use App\Models\Booking;
+use App\Models\Payment;
 use App\Repositories\Interfaces\Rent\RentalBookingRepositoryInterface;
 use App\Services\Rental\RentalVehicleService;
 use Carbon\Carbon;
@@ -16,7 +18,8 @@ class RentalBookingService
     public function __construct(
         protected RentalBookingRepositoryInterface $bookingRepository,
         protected RentalVehicleService $vehicleService
-    ) {}
+    ) {
+    }
 
     public function getAllBookings(): Collection
     {
@@ -49,10 +52,28 @@ class RentalBookingService
             }
 
             $data['daily_rate'] = $vehicle->category->price_per_day;
-            $data['total_price'] = $days * $vehicle->category->price_per_day;
+            $totalPrice = $days * $vehicle->category->price_per_day;
+            $data['total_price'] = $totalPrice;
             $data['status'] = RentalBookingStatus::RESERVED;
 
-            $booking = $this->bookingRepository->create($data);
+            $booking = Booking::create([
+                'booking_reference' => 'RB-' . strtoupper(uniqid()),
+                'user_id' => $data['customer_id'],
+                'booking_type' => 'rental',
+                'total_price' => $totalPrice,
+                'payment_status' => 'pending',
+            ]);
+
+            Payment::create([
+                'booking_id' => $booking->id,
+                'amount' => $totalPrice,
+                'payment_date' => now(),
+                'payment_method' => 'credit_card', // or get from request
+                'status' => 'completed',
+            ]);
+
+            $data['booking_id'] = $booking->id;
+            $rentalBooking = $this->bookingRepository->create($data);
 
             // Update vehicle status to reserved
             $this->vehicleService->updateVehicleStatus(
@@ -60,7 +81,7 @@ class RentalBookingService
                 \App\Enum\RentalVehicleStatus::RESERVED
             );
 
-            return $booking;
+            return $rentalBooking;
         });
     }
 
@@ -162,10 +183,11 @@ class RentalBookingService
             $bookingPickup = Carbon::parse($booking->pickup_date);
             $bookingReturn = Carbon::parse($booking->return_date);
 
-            if ($pickup->between($bookingPickup, $bookingReturn) ||
+            if (
+                $pickup->between($bookingPickup, $bookingReturn) ||
                 $return->between($bookingPickup, $bookingReturn) ||
-                ($pickup->lte($bookingPickup) && $return->gte($bookingReturn)))
-            {
+                ($pickup->lte($bookingPickup) && $return->gte($bookingReturn))
+            ) {
                 return false;
             }
         }

@@ -7,6 +7,7 @@ use App\Models\Admin;
 use App\Models\Booking;
 use App\Models\DiscountPoint;
 use App\Models\Favourite;
+use App\Models\Payment;
 use App\Models\Policy;
 use App\Models\Promotion;
 use App\Http\Resources\TourResource;
@@ -149,6 +150,14 @@ class TourRepository implements TourInterface
             'status' => 'confirmed',
         ]);
 
+        Payment::create([
+            'booking_id' => $booking->id,
+            'amount' => $totalCost,
+            'payment_date' => now(),
+            'payment_method' => 'points',
+            'status' => 'completed',
+        ]);
+
         $tourReservation = TourBooking::create([
             'user_id' => $user->id,
             'tour_id' => $tour->id,
@@ -257,6 +266,14 @@ class TourRepository implements TourInterface
         if (!$booking) {
             return $this->error('Failed to create booking', 500);
         }
+
+        Payment::create([
+            'booking_id' => $booking->id,
+            'amount' => $totalCostAfterDiscount,
+            'payment_date' => now(),
+            'payment_method' => 'credit_card', // or get from request
+            'status' => 'completed',
+        ]);
 
         $tourReservation = TourBooking::create([
             'user_id' => auth('sanctum')->id(),

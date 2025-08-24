@@ -44,6 +44,9 @@ class SuperAdminPanelProvider extends PanelProvider
                 \App\Filament\SuperAdmin\Widgets\AdminsCountWidget::class,
                 \App\Filament\SuperAdmin\Widgets\RestaurantsCountWidget::class,
                 \App\Filament\SuperAdmin\Widgets\HotelsCountWidget::class,
+                \App\Filament\SuperAdmin\Widgets\ToursCountWidget::class,
+                \App\Filament\SuperAdmin\Widgets\FlightsCountWidget::class,
+                \App\Filament\SuperAdmin\Widgets\TaxisCountWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

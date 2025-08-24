@@ -2,16 +2,16 @@
 
 namespace App\Filament\SuperAdmin\Widgets;
 
-use App\Models\Tour;
+use App\Models\TaxiService;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
-class ToursCountWidget extends BaseWidget
+class TaxisCountWidget extends BaseWidget
 {
     protected function getStats(): array
     {
         return [
-            Stat::make('Total Tours', Tour::count()),
+            Stat::make('Total Taxis', TaxiService::count()),
         ];
     }
 }
