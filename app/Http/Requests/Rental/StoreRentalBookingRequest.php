@@ -14,11 +14,11 @@ class StoreRentalBookingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'customer_id' => 'required|exists:users,id',
             'vehicle_id' => 'required|exists:rental_vehicles,id',
             'office_id' => 'required|exists:rental_offices,id',
             'pickup_date' => 'required|date|after_or_equal:today',
             'return_date' => 'required|date|after:pickup_date',
+            'payment_method' => 'nullable|string',
         ];
     }
 }

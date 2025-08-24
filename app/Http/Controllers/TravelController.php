@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\TravelBookingRequest;
-use App\Interface\TravelInterface;
+use App\Repositories\Interfaces\TravelInterface;
 use Illuminate\Http\Request;
 
 class TravelController extends Controller
@@ -37,13 +37,13 @@ class TravelController extends Controller
     {
         return $this->travelRepository->getAllAgency();
     }
-    public function bookFlight($id,TravelBookingRequest $request)
+    public function bookFlight($id, TravelBookingRequest $request)
     {
-        return $this->travelRepository->bookFlight($id,$request);
+        return $this->travelRepository->bookFlight($id, $request);
     }
-    public function bookFlightByPoint($id,TravelBookingRequest $request)
+    public function bookFlightByPoint($id, TravelBookingRequest $request)
     {
-        return $this->travelRepository->bookFlightByPoint($id,$request);
+        return $this->travelRepository->bookFlightByPoint($id, $request);
     }
-   
+
 }

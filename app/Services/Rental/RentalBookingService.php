@@ -10,6 +10,7 @@ use App\Services\Rental\RentalVehicleService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -58,7 +59,7 @@ class RentalBookingService
 
             $booking = Booking::create([
                 'booking_reference' => 'RB-' . strtoupper(uniqid()),
-                'user_id' => $data['customer_id'],
+                'user_id' => Auth::id(),
                 'booking_type' => 'rental',
                 'total_price' => $totalPrice,
                 'payment_status' => 'pending',
@@ -69,7 +70,7 @@ class RentalBookingService
                 'payment_reference' => 'PAY-' . strtoupper(uniqid()),
                 'amount' => $totalPrice,
                 'payment_date' => now(),
-                'payment_method' => 'credit_card', // or get from request
+                'payment_method' => $data['payment_method'] ?? 'credit_card',
                 'status' => 'completed',
             ]);
 

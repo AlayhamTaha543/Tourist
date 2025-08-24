@@ -5,14 +5,18 @@ namespace App\Http\Controllers\Api\Travel;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Travel\TravelBookingRequest;
 use App\Repositories\Interfaces\TravelInterface;
+use App\Repositories\Interfaces\TourInterface;
 use Illuminate\Http\Request;
 
 class TravelController extends Controller
 {
     protected $travelRepository;
-    public function __construct(TravelInterface $travelRepository)
+    protected $tourRepository;
+
+    public function __construct(TravelInterface $travelRepository, TourInterface $tourRepository)
     {
         $this->travelRepository = $travelRepository;
+        $this->tourRepository = $tourRepository;
     }
     public function getAllFlights()
     {
@@ -40,7 +44,20 @@ class TravelController extends Controller
     }
     public function bookFlight($id, TravelBookingRequest $request)
     {
-        return $this->travelRepository->bookFlight($id, $request);
+        $bookingResult = $this->travelRepository->bookFlight($id, $request);
+
+        if ($request->filled('number_of_adults') && $request->filled('schedule_id')) {
+            $tourBookingRequest = new \App\Http\Requests\Tour\TourBookingRequest();
+            $tourBookingRequest->merge([
+                'number_of_adults' => $request->number_of_adults,
+                'schedule_id' => $request->schedule_id,
+            ]);
+
+            $tourId = \App\Models\TourSchedule::find($request->schedule_id)->tour_id;
+            $this->tourRepository->bookTour($tourId, $tourBookingRequest);
+        }
+
+        return $bookingResult;
     }
     public function bookFlightByPoint($id, TravelBookingRequest $request)
     {
