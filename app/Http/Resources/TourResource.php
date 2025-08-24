@@ -20,6 +20,7 @@ class TourResource extends JsonResource
 
 
         return [
+            'id' => $this->id,
             'name' => $this->admin->name,
             'age' => $this->admin->tourGuideSkill->age,
             'skills' => $this->admin->tourGuideSkill->skills,
