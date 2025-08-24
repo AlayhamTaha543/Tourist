@@ -526,6 +526,15 @@ class TravelRepository implements TravelInterface
 
         Payment::create([
             'booking_id' => $booking->id,
+            'payment_reference' => 'PAY-' . strtoupper(uniqid()),
+            'amount' => $totalCost_afterDiscount,
+            'payment_date' => now(),
+            'payment_method' => 'credit_card', // or get from request
+            'status' => 'completed',
+        ]);
+        Payment::create([
+            'booking_id' => $booking->id,
+            'payment_reference' => 'PAY-' . strtoupper(uniqid()),
             'amount' => $totalCost_afterDiscount,
             'payment_date' => now(),
             'payment_method' => 'credit_card', // or get from request

@@ -312,6 +312,7 @@ class RestaurantRepository implements RestaurantInterface
 
         Payment::create([
             'booking_id' => $booking->id,
+            'payment_reference' => 'PAY-' . strtoupper(uniqid()),
             'amount' => $totalPriceAfterDiscount,
             'payment_date' => now(),
             'payment_method' => 'credit_card', // or get from request

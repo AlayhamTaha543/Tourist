@@ -152,6 +152,7 @@ class TourRepository implements TourInterface
 
         Payment::create([
             'booking_id' => $booking->id,
+            'payment_reference' => 'PAY-' . strtoupper(uniqid()),
             'amount' => $totalCost,
             'payment_date' => now(),
             'payment_method' => 'points',
@@ -269,6 +270,7 @@ class TourRepository implements TourInterface
 
         Payment::create([
             'booking_id' => $booking->id,
+            'payment_reference' => 'PAY-' . strtoupper(uniqid()),
             'amount' => $totalCostAfterDiscount,
             'payment_date' => now(),
             'payment_method' => 'credit_card', // or get from request

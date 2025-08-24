@@ -284,6 +284,7 @@ class HotelRepository implements HotelInterface
 
         Payment::create([
             'booking_id' => $booking->id,
+            'payment_reference' => 'PAY-' . strtoupper(uniqid()),
             'amount' => $totalAfterDiscount,
             'payment_date' => now(),
             'payment_method' => 'credit_card', // or get from request
