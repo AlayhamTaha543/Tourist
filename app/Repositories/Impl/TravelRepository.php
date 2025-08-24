@@ -71,12 +71,12 @@ class TravelRepository implements TravelInterface
                 ->avg('rating') ?? 0;
 
             // Format departure and arrival locations
-            $departureLocation = 
-                substr($flight->departure->city->name, 0, 1)  .
+            $departureLocation =
+                substr($flight->departure->city->name, 0, 1) .
                 ($flight->departure->city->country->code ?? '');
 
-            $arrivalLocation = 
-                substr($flight->arrival->city->name, 0, 1)  .
+            $arrivalLocation =
+                substr($flight->arrival->city->name, 0, 1) .
                 ($flight->arrival->city->country->code ?? '');
 
             return [
@@ -167,7 +167,7 @@ class TravelRepository implements TravelInterface
         $defaultImage = "images/admin/a.png";
 
         // Get tours directly associated with the arrival location
-        $toursByLocation = \App\Models\Tour::with('admin')
+        $toursByLocation = \App\Models\Tour::with(['admin', 'schedules'])
             ->where('location_id', $flight->arrival_id)
             ->get();
 
@@ -175,7 +175,7 @@ class TravelRepository implements TravelInterface
         $toursByCountry = collect();
         if ($flight->arrival->city->country) {
             $arrivalCountryId = $flight->arrival->city->country->id;
-            $toursByCountry = \App\Models\Tour::with('admin')
+            $toursByCountry = \App\Models\Tour::with(['admin', 'schedules'])
                 ->whereHas('location', function ($query) use ($arrivalCountryId) {
                     $query->whereHas('city.country', function ($subQuery) use ($arrivalCountryId) {
                         $subQuery->where('id', $arrivalCountryId);
@@ -184,21 +184,34 @@ class TravelRepository implements TravelInterface
                 ->get();
         }
 
-        // Merge and get unique tours, then extract unique tour guides
+        // Merge and get unique tours
         $allTours = $toursByLocation->merge($toursByCountry)->unique('id');
 
-        foreach ($allTours as $tour) {
-            if ($tour->admin) {
-                // Use admin ID to ensure unique tour guides
-                $tourGuides[$tour->admin->id] = [
+        $tours = $allTours->map(function ($tour) use ($defaultImage) {
+            return [
+                'id' => $tour->id,
+                'name' => $tour->name,
+                'base_price' => $tour->base_price,
+                'admin' => $tour->admin ? [
                     'id' => $tour->admin->id,
                     'name' => $tour->admin->name,
                     'image' => $tour->admin->image ? asset('storage/' . $tour->admin->image) : asset('storage/' . $defaultImage),
-                    'price' => $tour->base_price, // This will show the price of one of their tours
-                ];
-            }
-        }
-        $tourGuides = array_values($tourGuides); // Reset array keys to get a clean array
+                ] : null,
+                'schedules' => $tour->schedules->map(function ($schedule) {
+                    return [
+                        'id' => $schedule->id,
+                        'tour_id' => $schedule->tour_id,
+                        'start_date' => Carbon::parse($schedule->start_date)->format('Y-m-d'),
+                        'end_date' => Carbon::parse($schedule->end_date)->format('Y-m-d'),
+                        'start_time' => Carbon::parse($schedule->start_time)->format('H:i:s'),
+                        'available_spots' => $schedule->available_spots,
+                        'price' => $schedule->price,
+                        'is_active' => $schedule->is_active,
+                    ];
+                }),
+            ];
+        });
+
         $userPoints = $this->serviceRepository->getUserPoints();
 
         return $this->success('Flight retrieved successfully', [
@@ -219,7 +232,7 @@ class TravelRepository implements TravelInterface
                     ];
                 }),
             ],
-            'tour_guides' => $tourGuides, // Changed to tour_guides (plural)
+            'tours' => $tours,
             'is_favourited' => $isFavourited,
             'promotion' => $promotion ? [
                 'promotion_code' => $promotion->promotion_code,

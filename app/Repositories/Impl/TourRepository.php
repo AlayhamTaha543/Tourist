@@ -3,6 +3,7 @@
 namespace App\Repositories\Impl;
 
 use App\Http\Requests\Tour\TourBookingRequest;
+use App\Models\Admin;
 use App\Models\Booking;
 use App\Models\DiscountPoint;
 use App\Models\Favourite;
@@ -53,17 +54,25 @@ class TourRepository implements TourInterface
 
     public function showTour($id)
     {
-        $tour = Tour::with([
+        $tourQuery = Tour::with([
             'images',
             'location.city.country',
             'admin',
-            'schedules' => function ($query) {
-                $query->where('start_date', '>=', Carbon::now())
-                    ->where('available_spots', '>', 0);
-            }
-        ])
-            ->where('id', $id)
-            ->first();
+        ]);
+
+        $user = auth('sanctum')->user();
+
+        if ($user && $user instanceof Admin) {
+            $tourQuery->with('schedules');
+        } else {
+            $tourQuery->with([
+                'schedules' => function ($query) {
+                    $query->where('start_date', '>=', Carbon::now())
+                        ->where('available_spots', '>', 0);
+                }
+            ]);
+        }
+        $tour = $tourQuery->where('id', $id)->first();
 
         if (!$tour) {
             return $this->error('Tour not found', 404);

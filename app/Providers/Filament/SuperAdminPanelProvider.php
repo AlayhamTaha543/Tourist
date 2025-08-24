@@ -40,6 +40,10 @@ class SuperAdminPanelProvider extends PanelProvider
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
+                \App\Filament\SuperAdmin\Widgets\UsersCountWidget::class,
+                \App\Filament\SuperAdmin\Widgets\AdminsCountWidget::class,
+                \App\Filament\SuperAdmin\Widgets\RestaurantsCountWidget::class,
+                \App\Filament\SuperAdmin\Widgets\HotelsCountWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
