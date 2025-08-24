@@ -2,10 +2,6 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\RestaurantSubAdmin\Widgets\RestaurantBookingPanelChart;
-use App\Filament\Widgets\AdminPanelOverview;
-use App\Filament\Widgets\RestaurantOverview;
-use App\Filament\Widgets\RestaurantPanelChart;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -29,35 +25,20 @@ class RestaurantAdminPanelProvider extends PanelProvider
         return $panel
             ->id('restaurantAdmin')
             ->path('restaurantAdmin')
+            ->login()
             ->authGuard('admin')
-            ->login(false)
             ->colors([
-                'danger' => Color::Red,
-                'gray' => Color::Slate,
-                'info' => Color::Blue,
-                'primary' => Color::Indigo,
-                'success' => Color::Emerald,
-                'warning' => Color::Orange,
+                'primary' => Color::Amber,
             ])
-            ->font('Roboto Mono')
-            ->brandName('PILOT')
-            // ->brandLogo(asset('images/logo.svg'))
-            // ->favicon(asset('images/profile.jpg'))
             ->discoverResources(in: app_path('Filament/RestaurantAdmin/Resources'), for: 'App\\Filament\\RestaurantAdmin\\Resources')
             ->discoverPages(in: app_path('Filament/RestaurantAdmin/Pages'), for: 'App\\Filament\\RestaurantAdmin\\Pages')
             ->pages([
-                Pages\Dashboard::class,
-            ])
-            ->resources([
-                \App\Filament\RestaurantAdmin\Resources\RestaurantResource::class,
-                \App\Filament\RestaurantAdmin\Resources\RestaurantBookingResource::class,
-                \App\Filament\Resources\AdminResource::class,
+                \App\Filament\RestaurantAdmin\Pages\Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/RestaurantAdmin/Widgets'), for: 'App\\Filament\\RestaurantAdmin\\Widgets')
             ->widgets([
-                RestaurantPanelChart::class,
-                RestaurantBookingPanelChart::class,
-                RestaurantOverview::class
+                Widgets\AccountWidget::class,
+                Widgets\FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

@@ -25,13 +25,15 @@ class RentSubAdminPanelProvider extends PanelProvider
         return $panel
             ->id('rentSubAdmin')
             ->path('rentSubAdmin')
+            ->login()
+            ->authGuard('admin')
             ->colors([
                 'primary' => Color::Amber,
             ])
             ->discoverResources(in: app_path('Filament/RentSubAdmin/Resources'), for: 'App\\Filament\\RentSubAdmin\\Resources')
             ->discoverPages(in: app_path('Filament/RentSubAdmin/Pages'), for: 'App\\Filament\\RentSubAdmin\\Pages')
             ->pages([
-                Pages\Dashboard::class,
+                \App\Filament\RentSubAdmin\Pages\Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/RentSubAdmin/Widgets'), for: 'App\\Filament\\RentSubAdmin\\Widgets')
             ->widgets([

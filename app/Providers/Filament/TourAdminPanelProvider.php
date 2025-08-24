@@ -2,10 +2,6 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\TourAdmin\Pages\NotificationsPage;
-use App\Filament\TourAdmin\Pages\TourAdminNotifications;
-use App\Filament\TourAdmin\Widgets\TourBookingPanelChart;
-use App\Filament\TourAdmin\Widgets\TourPanelChart;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -29,37 +25,20 @@ class TourAdminPanelProvider extends PanelProvider
         return $panel
             ->id('tourAdmin')
             ->path('tourAdmin')
+            ->login()
             ->authGuard('admin')
-            ->login(false)
             ->colors([
-                'danger' => Color::Red,
-                'gray' => Color::Slate,
-                'info' => Color::Blue,
-                'primary' => Color::Indigo,
-                'success' => Color::Emerald,
-                'warning' => Color::Orange,
+                'primary' => Color::Amber,
             ])
-            ->font('Roboto Mono')
-            ->brandName('PILOT')
             ->discoverResources(in: app_path('Filament/TourAdmin/Resources'), for: 'App\\Filament\\TourAdmin\\Resources')
             ->discoverPages(in: app_path('Filament/TourAdmin/Pages'), for: 'App\\Filament\\TourAdmin\\Pages')
             ->pages([
-                Pages\Dashboard::class,
-                
-            NotificationsPage::class
+                \App\Filament\TourAdmin\Pages\Dashboard::class,
             ])
-
-            ->resources([
-                \App\Filament\TourAdmin\Resources\TourResource::class,
-                \App\Filament\TourAdmin\Resources\TourBookingResource::class,
-                \App\Filament\TourAdmin\Resources\TourCategoryResource::class,
-                \App\Filament\Resources\AdminResource::class,
-            ])
-            // ->discoverWidgets(in: app_path('Filament/TourAdmin/Widgets'), for: 'App\\Filament\\TourAdmin\\Widgets')
+            ->discoverWidgets(in: app_path('Filament/TourAdmin/Widgets'), for: 'App\\Filament\\TourAdmin\\Widgets')
             ->widgets([
-                TourBookingPanelChart::class,
-                TourPanelChart::class,
-
+                Widgets\AccountWidget::class,
+                Widgets\FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

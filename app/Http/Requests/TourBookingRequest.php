@@ -23,7 +23,8 @@ class TourBookingRequest extends FormRequest
     {
         return [
             'number_of_adults' => 'required',
-            'number_of_children' => 'required',
+            'number_of_children' => 'nullable',
+            'schedule_id' => 'required',
         ];
     }
 }

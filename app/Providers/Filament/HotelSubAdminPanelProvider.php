@@ -2,9 +2,6 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\HotelSubAdmin\Widgets\HotelBookingPanelChart;
-use App\Filament\Widgets\HotelOverview;
-use App\Filament\Widgets\HotelPanelChart;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -28,42 +25,21 @@ class HotelSubAdminPanelProvider extends PanelProvider
         return $panel
             ->id('hotelSubAdmin')
             ->path('hotelSubAdmin')
+            ->login()
             ->authGuard('admin')
-            ->login(false)
             ->colors([
-                'danger' => Color::Red,
-                'gray' => Color::Slate,
-                'info' => Color::Blue,
-                'primary' => Color::Indigo,
-                'success' => Color::Emerald,
-                'warning' => Color::Orange,
+                'primary' => Color::Amber,
             ])
-            ->font('Roboto Mono')
-            ->brandName('PILOT')
-            ->brandName(function () {
-                $hotel = \App\Models\Hotel::where('admin_id', auth()->id())->first();
-                return $hotel?->name ?? 'hotel';
-            })
             ->discoverResources(in: app_path('Filament/HotelSubAdmin/Resources'), for: 'App\\Filament\\HotelSubAdmin\\Resources')
             ->discoverPages(in: app_path('Filament/HotelSubAdmin/Pages'), for: 'App\\Filament\\HotelSubAdmin\\Pages')
             ->pages([
-                Pages\Dashboard::class,
+                \App\Filament\HotelSubAdmin\Pages\Dashboard::class,
             ])
-            ->resources([
-                \App\Filament\HotelSubAdmin\Resources\RoomTypeResource::class,
-                \App\Filament\HotelSubAdmin\Resources\HotelImageResource::class,
-                \App\Filament\HotelAdmin\Resources\HotelBookingResource::class,
-                \App\Filament\HotelSubAdmin\Resources\HotelAmenityMapResource::class,
-                \App\Filament\Resources\AdminResource::class,
-            ])
+            ->discoverWidgets(in: app_path('Filament/HotelSubAdmin/Widgets'), for: 'App\\Filament\\HotelSubAdmin\\Widgets')
             ->widgets([
-                // Widgets\AccountWidget::class,
-                // Widgets\FilamentInfoWidget::class,
-                HotelBookingPanelChart::class,
-                HotelPanelChart::class,
-                HotelOverview::class
+                Widgets\AccountWidget::class,
+                Widgets\FilamentInfoWidget::class,
             ])
-            // ->discoverWidgets(in: app_path('Filament/HotelSubAdmin/Widgets'), for: 'App\\Filament\\HotelSubAdmin\\Widgets')
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

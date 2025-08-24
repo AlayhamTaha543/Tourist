@@ -25,14 +25,15 @@ class TaxiAdminPanelProvider extends PanelProvider
         return $panel
             ->id('taxiAdmin')
             ->path('taxiAdmin')
+            ->login()
+            ->authGuard('admin')
             ->colors([
                 'primary' => Color::Amber,
             ])
-
             ->discoverResources(in: app_path('Filament/TaxiAdmin/Resources'), for: 'App\\Filament\\TaxiAdmin\\Resources')
             ->discoverPages(in: app_path('Filament/TaxiAdmin/Pages'), for: 'App\\Filament\\TaxiAdmin\\Pages')
             ->pages([
-                Pages\Dashboard::class,
+                \App\Filament\TaxiAdmin\Pages\Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/TaxiAdmin/Widgets'), for: 'App\\Filament\\TaxiAdmin\\Widgets')
             ->widgets([
@@ -50,10 +51,8 @@ class TaxiAdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
-
             ->authMiddleware([
                 Authenticate::class,
             ]);
-
     }
 }

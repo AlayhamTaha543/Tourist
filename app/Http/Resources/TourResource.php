@@ -14,8 +14,8 @@ class TourResource extends JsonResource
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
-    {        
-        $defaultImage="images/tour/t.png";
+    {
+        $defaultImage = "images/tour/t.png";
 
 
 
@@ -23,12 +23,12 @@ class TourResource extends JsonResource
             'name' => $this->admin->name,
             'age' => $this->admin->tourGuideSkill->age,
             'skills' => $this->admin->tourGuideSkill->skills,
+            'language' => $this->language,
             'description' => $this->description,
             'location' => $this->location ? $this->location->fullName() : null,
             // 'duration_days' => $this->duration_days,
             'price' => $this->base_price,
             'discount_percentage' => $this->discount_percentage,
-            'language' => $this->language,
             'average_rating' => $this->average_rating,
             'main_image' => $this->main_image ? asset('storage/' . $this->main_image) : asset('storage/' . $defaultImage),
             'images' => $this->images->map(function ($image) {
@@ -48,7 +48,7 @@ class TourResource extends JsonResource
                     'price' => $schedule->price,
                 ];
             }),
-            'reviews' => FeedbackResource::collection($this->whenLoaded('feedbacks')),
+            'reviews' => FeedbackResource::collection($this->feedbacks ?? collect()),
         ];
     }
 }

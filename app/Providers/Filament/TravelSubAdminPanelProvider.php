@@ -25,34 +25,15 @@ class TravelSubAdminPanelProvider extends PanelProvider
         return $panel
             ->id('travelSubAdmin')
             ->path('travelSubAdmin')
+            ->login()
             ->authGuard('admin')
-            ->login(false)
             ->colors([
-                'danger' => Color::Red,
-                'gray' => Color::Slate,
-                'info' => Color::Blue,
-                'primary' => Color::Indigo,
-                'success' => Color::Emerald,
-                'warning' => Color::Orange,
+                'primary' => Color::Amber,
             ])
-            ->font('Roboto Mono')
-            ->brandName('PILOT')
-            ->brandName(function () {
-                $travel = \App\Models\TravelAgency::where('admin_id', auth()->id())->first();
-                return $travel?->name ?? 'travel';
-            })
             ->discoverResources(in: app_path('Filament/TravelSubAdmin/Resources'), for: 'App\\Filament\\TravelSubAdmin\\Resources')
             ->discoverPages(in: app_path('Filament/TravelSubAdmin/Pages'), for: 'App\\Filament\\TravelSubAdmin\\Pages')
             ->pages([
-                Pages\Dashboard::class,
-            ])
-            ->resources([
-                \App\Filament\TravelSubAdmin\Resources\TravelFlightResource::class,
-                \App\Filament\TravelSubAdmin\Resources\TravelPackageResource::class,
-                \App\Filament\TravelSubAdmin\Resources\PackageDestinationResource::class,
-                \App\Filament\TravelSubAdmin\Resources\PackageInclusionResource::class,
-                \App\Filament\TravelAdmin\Resources\TravelBookingResource::class,
-                \App\Filament\Resources\AdminResource::class,
+                \App\Filament\TravelSubAdmin\Pages\Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/TravelSubAdmin/Widgets'), for: 'App\\Filament\\TravelSubAdmin\\Widgets')
             ->widgets([

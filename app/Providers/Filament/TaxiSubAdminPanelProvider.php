@@ -25,13 +25,15 @@ class TaxiSubAdminPanelProvider extends PanelProvider
         return $panel
             ->id('taxiSubAdmin')
             ->path('taxiSubAdmin')
+            ->login()
+            ->authGuard('admin')
             ->colors([
                 'primary' => Color::Amber,
             ])
             ->discoverResources(in: app_path('Filament/TaxiSubAdmin/Resources'), for: 'App\\Filament\\TaxiSubAdmin\\Resources')
             ->discoverPages(in: app_path('Filament/TaxiSubAdmin/Pages'), for: 'App\\Filament\\TaxiSubAdmin\\Pages')
             ->pages([
-                Pages\Dashboard::class,
+                \App\Filament\TaxiSubAdmin\Pages\Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/TaxiSubAdmin/Widgets'), for: 'App\\Filament\\TaxiSubAdmin\\Widgets')
             ->widgets([

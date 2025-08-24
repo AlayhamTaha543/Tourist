@@ -25,13 +25,15 @@ class RentAdminPanelProvider extends PanelProvider
         return $panel
             ->id('rentAdmin')
             ->path('rentAdmin')
+            ->login()
+            ->authGuard('admin')
             ->colors([
                 'primary' => Color::Amber,
             ])
             ->discoverResources(in: app_path('Filament/RentAdmin/Resources'), for: 'App\\Filament\\RentAdmin\\Resources')
             ->discoverPages(in: app_path('Filament/RentAdmin/Pages'), for: 'App\\Filament\\RentAdmin\\Pages')
             ->pages([
-                Pages\Dashboard::class,
+                \App\Filament\RentAdmin\Pages\Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/RentAdmin/Widgets'), for: 'App\\Filament\\RentAdmin\\Widgets')
             ->widgets([

@@ -33,16 +33,16 @@ class TourRepository implements TourInterface
         $result = $tours->map(function ($tour) {
             // Get the full location name using the fullName method
             $locationName = $tour->location ? $tour->location->fullName() : null;
-            $defaultImage="images/admin/a.png";
+            $defaultImage = "images/admin/a.png";
             return [
-                
-                    'id' => $tour->id,
-                    'name' => $tour->admin ? $tour->admin->name : $tour->name, // Use admin name if available
-                    'location' => $locationName,
-                    'rating' => $tour->average_rating,
-                    'main_image' => $tour->admin ? $tour->admin->image ? asset('storage/' . $tour->admin->image):asset('storage/' . $defaultImage) : $tour->main_image, // Use admin image if available
-                    'is_active' => $tour->is_active,
-                
+
+                'id' => $tour->id,
+                'name' => $tour->admin ? $tour->admin->name : $tour->name, // Use admin name if available
+                'location' => $locationName,
+                'rating' => $tour->average_rating,
+                'main_image' => $tour->admin ? $tour->admin->image ? asset('storage/' . $tour->admin->image) : asset('storage/' . $defaultImage) : $tour->main_image, // Use admin image if available
+                'is_active' => $tour->is_active,
+
             ];
         });
 
@@ -53,10 +53,15 @@ class TourRepository implements TourInterface
 
     public function showTour($id)
     {
-        $tour = Tour::with(['images', 'location.city.country', 'admin', 'schedules' => function ($query) {
+        $tour = Tour::with([
+            'images',
+            'location.city.country',
+            'admin',
+            'schedules' => function ($query) {
                 $query->where('start_date', '>=', Carbon::now())
-                      ->where('available_spots', '>', 0);
-            }])
+                    ->where('available_spots', '>', 0);
+            }
+        ])
             ->where('id', $id)
             ->first();
 
@@ -102,7 +107,7 @@ class TourRepository implements TourInterface
         $existingBookings = TourBooking::where('tour_id', $tour->id)
             ->sum(DB::raw('number_of_adults + number_of_children'));
 
-        $newBookingCount = $request->number_of_adults + $request->number_of_children;
+        $newBookingCount = $request->number_of_adults + ($request->number_of_children ?? 0);
         $totalAfterBooking = $existingBookings + $newBookingCount;
 
         if ($totalAfterBooking > $tour->max_capacity) {
@@ -140,7 +145,7 @@ class TourRepository implements TourInterface
             'tour_id' => $tour->id,
             'schedule_id' => $schedule->id,
             'number_of_adults' => $request->number_of_adults,
-            'number_of_children' => $request->number_of_children,
+            'number_of_children' => $request->number_of_children ?? 0,
             'booking_id' => $booking->id,
             'cost' => $totalCost,
         ]);
@@ -184,7 +189,7 @@ class TourRepository implements TourInterface
 
         $existingBookings = TourBooking::where('tour_id', $tour->id)->sum(DB::raw('number_of_adults + number_of_children'));
 
-        $newBookingCount = $request->number_of_adults + $request->number_of_children;
+        $newBookingCount = $request->number_of_adults + ($request->number_of_children ?? 0);
         $totalAfterBooking = $existingBookings + $newBookingCount;
 
         if ($totalAfterBooking > $tour->max_capacity) {
@@ -249,7 +254,7 @@ class TourRepository implements TourInterface
             'tour_id' => $tour->id,
             'schedule_id' => $schedule->id,
             'number_of_adults' => $request->number_of_adults,
-            'number_of_children' => $request->number_of_children,
+            'number_of_children' => $request->number_of_children ?? 0,
             'booking_id' => $booking->id,
             'cost' => $totalCostAfterDiscount,
         ]);

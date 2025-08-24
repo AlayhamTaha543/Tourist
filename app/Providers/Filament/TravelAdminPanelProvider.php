@@ -2,8 +2,6 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\TravelAdmin\Widgets\TravelBookingPanelChart;
-use App\Filament\Widgets\TravelOverview;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -27,32 +25,20 @@ class TravelAdminPanelProvider extends PanelProvider
         return $panel
             ->id('travelAdmin')
             ->path('travelAdmin')
+            ->login()
             ->authGuard('admin')
-            ->login(false)
             ->colors([
-                'danger' => Color::Red,
-                'gray' => Color::Slate,
-                'info' => Color::Blue,
-                'primary' => Color::Indigo,
-                'success' => Color::Emerald,
-                'warning' => Color::Orange,
+                'primary' => Color::Amber,
             ])
-            ->font('Roboto Mono')
-            ->brandName('PILOT')
             ->discoverResources(in: app_path('Filament/TravelAdmin/Resources'), for: 'App\\Filament\\TravelAdmin\\Resources')
             ->discoverPages(in: app_path('Filament/TravelAdmin/Pages'), for: 'App\\Filament\\TravelAdmin\\Pages')
             ->pages([
-                Pages\Dashboard::class,
-            ])
-            ->resources([
-                \App\Filament\TravelAdmin\Resources\TravelAgencyResource::class,
-                \App\Filament\TravelAdmin\Resources\TravelBookingResource::class,
-                \App\Filament\Resources\AdminResource::class,
+                \App\Filament\TravelAdmin\Pages\Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/TravelAdmin/Widgets'), for: 'App\\Filament\\TravelAdmin\\Widgets')
             ->widgets([
-                TravelBookingPanelChart::class,
-                TravelOverview::class
+                Widgets\AccountWidget::class,
+                Widgets\FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

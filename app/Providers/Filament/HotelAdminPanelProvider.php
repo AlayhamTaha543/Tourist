@@ -2,10 +2,6 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Widgets\AdminPanelOverview;
-use App\Filament\Widgets\HotelPanelChart;
-use App\Filament\Widgets\UserPanelChart;
-use App\Http\Middleware\AuthMiddleware;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -29,34 +25,20 @@ class HotelAdminPanelProvider extends PanelProvider
         return $panel
             ->id('hotelAdmin')
             ->path('hotelAdmin')
+            ->login()
             ->authGuard('admin')
-            ->login(false)
             ->colors([
-                'danger' => Color::Red,
-                'gray' => Color::Slate,
-                'info' => Color::Blue,
-                'primary' => Color::Indigo,
-                'success' => Color::Emerald,
-                'warning' => Color::Orange,
-            ])
-            ->font('Roboto Mono')
-            ->brandName('PILOT')
-            ->resources([
-                \App\Filament\HotelAdmin\Resources\HotelAmenityResource::class,
-                \App\Filament\HotelAdmin\Resources\HotelBookingResource::class,
-                \App\Filament\HotelAdmin\Resources\HotelResource::class,
-                \App\Filament\Resources\AdminResource::class,
+                'primary' => Color::Amber,
             ])
             ->discoverResources(in: app_path('Filament/HotelAdmin/Resources'), for: 'App\\Filament\\HotelAdmin\\Resources')
             ->discoverPages(in: app_path('Filament/HotelAdmin/Pages'), for: 'App\\Filament\\HotelAdmin\\Pages')
             ->pages([
-                Pages\Dashboard::class,
+                \App\Filament\HotelAdmin\Pages\Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/HotelAdmin/Widgets'), for: 'App\\Filament\\HotelAdmin\\Widgets')
             ->widgets([
-                HotelPanelChart::class,
-                AdminPanelOverview::class,
-                UserPanelChart::class
+                Widgets\AccountWidget::class,
+                Widgets\FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -68,7 +50,6 @@ class HotelAdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                // AuthMiddleware::class
             ])
             ->authMiddleware([
                 Authenticate::class,

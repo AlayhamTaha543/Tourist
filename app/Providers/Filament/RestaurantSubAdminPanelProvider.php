@@ -2,10 +2,6 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\RestaurantSubAdmin\Widgets\RestaurantBookingPanelChart;
-use App\Filament\Widgets\RestaurantOverview;
-use App\Filament\Widgets\RestaurantPanelChart;
-use App\Http\Middleware\AuthMiddleware;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -29,44 +25,20 @@ class RestaurantSubAdminPanelProvider extends PanelProvider
         return $panel
             ->id('restaurantSubAdmin')
             ->path('restaurantSubAdmin')
+            ->login()
             ->authGuard('admin')
-            ->login(false)
             ->colors([
-                'danger' => Color::Red,
-                'gray' => Color::Slate,
-                'info' => Color::Blue,
-                'primary' => Color::Indigo,
-                'success' => Color::Emerald,
-                'warning' => Color::Orange,
+                'primary' => Color::Amber,
             ])
-            ->font('Roboto Mono')
-            ->brandName('PILOT')
-            ->brandName(function () {
-                $restaurant = \App\Models\Restaurant::where('admin_id', auth()->id())->first();
-                return $restaurant?->name ?? 'Restaurant';
-            })
             ->discoverResources(in: app_path('Filament/RestaurantSubAdmin/Resources'), for: 'App\\Filament\\RestaurantSubAdmin\\Resources')
             ->discoverPages(in: app_path('Filament/RestaurantSubAdmin/Pages'), for: 'App\\Filament\\RestaurantSubAdmin\\Pages')
             ->pages([
-                Pages\Dashboard::class,
-                \App\Filament\RestaurantSubAdmin\Pages\RestaurantDiscountEdit::class,
+                \App\Filament\RestaurantSubAdmin\Pages\Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/RestaurantSubAdmin/Widgets'), for: 'App\\Filament\\RestaurantSubAdmin\\Widgets')
             ->widgets([
-                RestaurantPanelChart::class,
-                RestaurantBookingPanelChart::class,
-                RestaurantOverview::class,
-                
-                // \App\Filament\RestaurantSubAdmin\Pages\RestaurantDiscountEdit::class,
-                
-            ])
-            ->resources([
-                \App\Filament\RestaurantSubAdmin\Resources\MenuCategoryResource::class,
-                \App\Filament\RestaurantSubAdmin\Resources\MenuItemResource::class,
-                \App\Filament\RestaurantAdmin\Resources\RestaurantBookingResource::class,
-                \App\Filament\RestaurantSubAdmin\Resources\RestaurantImageResource::class,
-                \App\Filament\RestaurantSubAdmin\Resources\RestaurantTableResource::class,
-                \App\Filament\Resources\AdminResource::class,
+                Widgets\AccountWidget::class,
+                Widgets\FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -78,7 +50,6 @@ class RestaurantSubAdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                // AuthMiddleware::class
             ])
             ->authMiddleware([
                 Authenticate::class,
