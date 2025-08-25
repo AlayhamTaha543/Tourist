@@ -18,7 +18,6 @@ class TravelBooking extends Model
         'ticket_type',
         'discount_amount',
         'flight_type_name',
-        'additional_bag_fines',
     ];
 
     public function user()

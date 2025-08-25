@@ -27,7 +27,6 @@ class TravelBookingRequest extends FormRequest
             'ticket_type' => 'required|in:one_way,round_trip',
             'number_of_adults' => 'nullable|integer|min:1',
             'schedule_id' => 'nullable|integer|exists:tour_schedules,id',
-            'additional_bag_fines' => 'nullable|numeric|min:0',
         ];
     }
 

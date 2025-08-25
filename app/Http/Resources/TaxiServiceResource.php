@@ -14,8 +14,7 @@ class TaxiServiceResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-
-        $defaultImage = "images/taxi/t.png";
+        $defaultImage="images/taxi/t.png";
 
         return [
             // 'id' => $this->id,

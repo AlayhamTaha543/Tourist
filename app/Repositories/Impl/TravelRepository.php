@@ -243,6 +243,8 @@ class TravelRepository implements TravelInterface
                 'minimum_purchase' => $promotion->minimum_purchase,
             ] : null,
             'user_points' => $userPoints->getData()->data->points ?? 0,
+            'user_name' => $user ? $user->first_name . ' ' . $user->last_name : 'user', // Added user name
+            'location_name' => $user->location ? $user->location : 'location', // Added departure location name
         ]);
     }
 

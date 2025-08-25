@@ -12,7 +12,6 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Forms\Components\MapPickerField; // Import your custom field
 
 class LocationResource extends Resource
 {
@@ -25,23 +24,13 @@ class LocationResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')->required()->maxLength(255),
+                Forms\Components\TextInput::make('latitude')->numeric()->required(),
+                Forms\Components\TextInput::make('longitude')->numeric()->required(),
                 Forms\Components\Select::make('city_id')
                     ->relationship('city', 'name')
                     ->required(),
                 Forms\Components\TextInput::make('region')->maxLength(255),
                 Forms\Components\Toggle::make('is_popular'),
-                // Use your custom MapPickerField
-                MapPickerField::make('location_picker') // This is a virtual field name for the component
-                    ->label('Select Location on Map')
-                    ->columnSpanFull(),
-                Forms\Components\TextInput::make('latitude')
-                    ->numeric()
-                    ->required()
-                    ->hidden(), // Keep hidden, updated by MapPickerField
-                Forms\Components\TextInput::make('longitude')
-                    ->numeric()
-                    ->required()
-                    ->hidden(), // Keep hidden, updated by MapPickerField
             ]);
     }
 
