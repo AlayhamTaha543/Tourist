@@ -14,12 +14,14 @@ class TaxiServiceCollection extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $defaultImage = "images/taxi/t.png";
+
         return [
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
 
-            'logo_url' => $this->logo_url ? asset('storage/' . $this->main_image) : null,
+            'logo_url' => $this->logo_url ? asset('storage/' . $this->logo_url) : asset('storage/' . $defaultImage),
             'website' => $this->website,
             // 'phone' => $this->phone,
             // 'email' => $this->email,
