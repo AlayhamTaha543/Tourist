@@ -46,7 +46,7 @@ class TravelRepository implements TravelInterface
             ->get();
 
         $result = $flights->map(function ($flight) {
-            $user = auth()->user();
+            $user = auth('sanctum')->user();
             $isFavourited = false;
 
             if ($user) {
@@ -126,7 +126,7 @@ class TravelRepository implements TravelInterface
             return $this->error('Flight not found', 404);
         }
 
-        $user = auth()->user();
+        $user = auth('sanctum')->user();
         $isFavourited = false;
 
         if ($user) {
@@ -386,6 +386,7 @@ class TravelRepository implements TravelInterface
             'status' => 'confirmed',
             'passport_image' => $passportImagePath,
             'flight_type_name' => $request->flight_type_name,
+            'additional_bag_fines' => $request->additional_bag_fines,
         ]);
 
         $flightType->decrement('available_seats', 1);
@@ -555,6 +556,7 @@ class TravelRepository implements TravelInterface
             'status' => 'confirmed',
             'passport_image' => $passportImagePath,
             'flight_type_name' => $request->flight_type_name,
+            'additional_bag_fines' => $request->additional_bag_fines,
         ]);
 
         $flightType->decrement('available_seats', 1);
