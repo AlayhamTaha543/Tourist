@@ -28,6 +28,9 @@ use App\Repositories\Interfaces\TourInterface;
 use App\Repositories\Interfaces\TravelInterface;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\File;
+use Webbingbrasil\FilamentMaps\Widgets\MapWidget;
+use Illuminate\Support\Facades\Config;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -106,5 +109,13 @@ class AppServiceProvider extends ServiceProvider
         }
 
         $this->loadMigrationsFrom($migrationDirs);
+
+        MapWidget::configureUsing(function (MapWidget $widget) {
+            $apiKey = Config::get('services.geoapify.key');
+            $widget->tileLayerUrl("https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey={$apiKey}");
+            $widget->tileLayerOptions([
+                'attribution' => 'Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a> | © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
+            ]);
+        });
     }
 }

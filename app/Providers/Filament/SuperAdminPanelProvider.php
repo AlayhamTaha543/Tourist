@@ -36,17 +36,14 @@ class SuperAdminPanelProvider extends PanelProvider
             ->pages([
                 \App\Filament\SuperAdmin\Pages\Dashboard::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/SuperAdmin/Widgets'), for: 'App\\Filament\\SuperAdmin\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
-                \App\Filament\SuperAdmin\Widgets\UsersCountWidget::class,
-                \App\Filament\SuperAdmin\Widgets\AdminsCountWidget::class,
-                \App\Filament\SuperAdmin\Widgets\RestaurantsCountWidget::class,
-                \App\Filament\SuperAdmin\Widgets\HotelsCountWidget::class,
-                \App\Filament\SuperAdmin\Widgets\ToursCountWidget::class,
-                \App\Filament\SuperAdmin\Widgets\FlightsCountWidget::class,
-                \App\Filament\SuperAdmin\Widgets\TaxisCountWidget::class,
+                \App\Filament\SuperAdmin\Widgets\ServicesTrendWidget::class,
+                \App\Filament\SuperAdmin\Widgets\BookingsCountTrendWidget::class,
+                \App\Filament\SuperAdmin\Widgets\PaymentsAmountTrendWidget::class,
+                \App\Filament\SuperAdmin\Widgets\AdminsAndUsersTrendWidget::class,
+
             ])
             ->middleware([
                 EncryptCookies::class,

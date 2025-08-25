@@ -19,15 +19,16 @@ class CountryFlightResource extends JsonResource
     {
         // Initialize auth helper
         AuthHelper::init($request);
-        
+
         $data = [
             'country' => $this->resource['country'],
             'average_rating' => $this->resource['average_rating'],
             'country_image' => $this->resource['country_image'],
-            'flights' => $this->resource['flights']
+            'price' => $this->resource['price'],
+            'is_favorite' => false, // Default to false
         ];
 
-        // Only add is_favorite if user is authenticated
+        // Only update is_favorite if user is authenticated
         if (AuthHelper::isAuthenticated()) {
             $data['is_favorite'] = $this->isCountryFavorite($this->resource['country']);
         }
@@ -41,13 +42,13 @@ class CountryFlightResource extends JsonResource
     private function isCountryFavorite(string $countryName): bool
     {
         $user = AuthHelper::user();
-        
+
         if (!$user) {
             return false;
         }
 
         $country = Country::where('name', $countryName)->first();
-        
+
         if (!$country) {
             $country = Country::whereRaw('LOWER(name) = ?', [strtolower($countryName)])->first();
             if (!$country) {

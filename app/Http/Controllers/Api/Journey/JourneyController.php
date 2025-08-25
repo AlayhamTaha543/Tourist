@@ -42,7 +42,7 @@ class JourneyController extends Controller
             $resource = new CountryFlightCollection(
                 collect($result['countries'])
             );
-            
+
             // Pass total_flights as additional data
             $resource->additional(['total_flights' => $result['total_flights']]);
 
@@ -165,6 +165,39 @@ class JourneyController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Flight search failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get details for a specific country
+     *
+     * @param string $countryName
+     * @return JsonResponse
+     */
+    public function getCountryDetails(string $countryName): JsonResponse
+    {
+        try {
+            $country = $this->journeyService->getCountryDetails($countryName);
+
+            if (!$country) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Country not found',
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "Details for {$countryName} retrieved successfully",
+                'data' => $country
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => "Failed to retrieve details for {$countryName}",
                 'error' => $e->getMessage()
             ], 500);
         }

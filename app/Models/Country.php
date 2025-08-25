@@ -15,7 +15,10 @@ class Country extends Model
         'code',
         'continent_code',
         'phone_code',
-        'is_active'
+        'is_active',
+        'language',
+        'currency',
+        'description'
     ];
 
     protected $casts = [

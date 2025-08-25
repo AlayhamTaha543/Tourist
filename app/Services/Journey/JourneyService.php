@@ -41,14 +41,13 @@ class JourneyService
 
             // Get random tour image for this country
             $randomImage = $this->getRandomTourImageForCountry($countryName);
-            
             return [
                 'country' => $countryName,
                 'average_rating' => $averageRating,
                 'country_image' => $randomImage,
-                'flights' => $countryFlights->map(function ($flight) {
-                    return $this->formatFlightDataSimple($flight);
-                })->values()
+                'price' => $countryFlights->min('price'),
+                'is_favorite' => false,
+                'flights' => [], // Added an empty flights array to prevent "Undefined array key" error
             ];
         })->values();
 
@@ -58,7 +57,7 @@ class JourneyService
             'total_flights' => $flights->count()
         ];
     }
-    
+
 
     /**
      * Get flights for a specific country
@@ -87,7 +86,8 @@ class JourneyService
             'total_flights' => $flights->count(),
             'flights' => $flights->map(function ($flight) {
                 return $this->formatFlightDataSimple($flight);
-            })
+            }),
+            'arrival_country_name' => $countryName, // Added arrival country name
         ];
     }
 
@@ -300,8 +300,8 @@ class JourneyService
             })
                 ->inRandomOrder()
                 ->first();
-             $default="images/countries/default.png";
-            return $tourImage ? asset('storage/' . $tourImage->image) : asset('storage/'.$default );
+            $default = "images/countries/default.png";
+            return $tourImage ? asset('storage/' . $tourImage->image) : asset('storage/' . $default);
 
         } catch (\Exception $e) {
             // \Log::warning('Failed to get random tour image for country: ' . $e->getMessage());
@@ -327,5 +327,63 @@ class JourneyService
         return "{$mins}m";
     }
 
-   
+    /**
+     * Get details for a specific country
+     *
+     * @param string $countryName
+     * @return array|null
+     */
+    public function getCountryDetails(string $countryName): ?array
+    {
+        $country = Country::where('name', $countryName)
+            ->orWhere('code', $countryName)
+            ->first();
+
+        if (!$country) {
+            return null;
+        }
+
+        return [
+            'id' => $country->id,
+            'name' => $country->name,
+            'code' => $country->code,
+            'continent_code' => $country->continent_code,
+            'phone_code' => $country->phone_code,
+            'is_active' => $country->is_active,
+            'language' => $country->language,
+            'currency' => $country->currency,
+            'description' => $country->description,
+            'average_rating' => (string) $this->getAverageRatingForCountry($country->name),
+            'price' => TravelFlight::whereHas('arrival.city.country', function ($q) use ($country) {
+                $q->where('id', $country->id);
+            })->min('price'),
+            'is_favorite' => Auth::check() ? $this->isCountryFavorite($country->name) : false,
+        ];
+    }
+
+    /**
+     * Check if country is favorite for authenticated user
+     */
+    private function isCountryFavorite(string $countryName): bool
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return false;
+        }
+
+        $country = Country::where('name', $countryName)->first();
+
+        if (!$country) {
+            $country = Country::whereRaw('LOWER(name) = ?', [strtolower($countryName)])->first();
+            if (!$country) {
+                return false;
+            }
+        }
+
+        return Favourite::where('user_id', $user->id)
+            ->where('favoritable_id', $country->id)
+            ->where('favoritable_type', Country::class)
+            ->exists();
+    }
 }

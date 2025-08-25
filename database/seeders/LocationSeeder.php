@@ -25,6 +25,9 @@ class LocationSeeder extends Seeder
                 'country' => 'France',
                 'region' => 'Île-de-France',
                 'is_popular' => true,
+                'language' => 'French',
+                'currency' => 'EUR',
+                'description' => 'France, in Western Europe, encompasses medieval cities, alpine villages and Mediterranean beaches. Paris, its capital, is famed for its fashion houses, classical art museums including the Louvre and monuments like the Eiffel Tower.'
             ],
             [
                 'name' => 'New York',
@@ -34,6 +37,9 @@ class LocationSeeder extends Seeder
                 'country' => 'USA',
                 'region' => 'New York',
                 'is_popular' => true,
+                'language' => 'English',
+                'currency' => 'USD',
+                'description' => 'The United States is a large country in North America with a diverse landscape, culture, and economy. It is known for its iconic cities, national parks, and influence on global culture.'
             ],
             [
                 'name' => 'Tokyo',
@@ -43,6 +49,9 @@ class LocationSeeder extends Seeder
                 'country' => 'Japan',
                 'region' => 'Kantō',
                 'is_popular' => true,
+                'language' => 'Japanese',
+                'currency' => 'JPY',
+                'description' => 'Japan is an island nation in East Asia. It is known for its vibrant cities, ancient traditions, beautiful natural landscapes, and technological advancements.'
             ],
             [
                 'name' => 'Cairo',
@@ -52,6 +61,9 @@ class LocationSeeder extends Seeder
                 'country' => 'Egypt',
                 'region' => 'Cairo Governorate',
                 'is_popular' => true,
+                'language' => 'Arabic',
+                'currency' => 'EGP',
+                'description' => 'Egypt, a country linking northeast Africa with the Middle East, dates to the time of the pharaohs. Millennia-old monuments sit along the fertile Nile River Valley, including the colossal Pyramids of Giza and Great Sphinx as well as the Luxor\'s hieroglyph-lined Karnak Temple and Valley of the Kings tombs.'
             ],
 
             // Locations from HotelSeeder (1-5)
@@ -63,6 +75,9 @@ class LocationSeeder extends Seeder
                 'country' => 'USA',
                 'region' => 'New York',
                 'is_popular' => true,
+                'language' => 'English',
+                'currency' => 'USD',
+                'description' => 'The United States is a large country in North America with a diverse landscape, culture, and economy. It is known for its iconic cities, national parks, and influence on global culture.'
             ],
             [
                 'name' => 'Pacific Beachfront',
@@ -72,6 +87,9 @@ class LocationSeeder extends Seeder
                 'country' => 'USA',
                 'region' => 'California',
                 'is_popular' => true,
+                'language' => 'English',
+                'currency' => 'USD',
+                'description' => 'The United States is a large country in North America with a diverse landscape, culture, and economy. It is known for its iconic cities, national parks, and influence on global culture.'
             ],
             [
                 'name' => 'Rocky Mountains',
@@ -81,6 +99,9 @@ class LocationSeeder extends Seeder
                 'country' => 'USA',
                 'region' => 'Colorado',
                 'is_popular' => false,
+                'language' => 'English',
+                'currency' => 'USD',
+                'description' => 'The United States is a large country in North America with a diverse landscape, culture, and economy. It is known for its iconic cities, national parks, and influence on global culture.'
             ],
             [
                 'name' => 'Urban Downtown District',
@@ -90,6 +111,9 @@ class LocationSeeder extends Seeder
                 'country' => 'USA',
                 'region' => 'Illinois',
                 'is_popular' => true,
+                'language' => 'English',
+                'currency' => 'USD',
+                'description' => 'The United States is a large country in North America with a diverse landscape, culture, and economy. It is known for its iconic cities, national parks, and influence on global culture.'
             ],
             [
                 'name' => 'Historic City Center',
@@ -99,13 +123,21 @@ class LocationSeeder extends Seeder
                 'country' => 'UK',
                 'region' => 'England',
                 'is_popular' => true,
+                'language' => 'English',
+                'currency' => 'GBP',
+                'description' => 'The United Kingdom, made up of England, Scotland, Wales and Northern Ireland, is an island nation in northwestern Europe. England – birthplace of Shakespeare and The Beatles – is home to the capital, London, a globally influential centre of finance and culture.'
             ],
         ];
 
         foreach ($locations as $data) {
             $country = Country::firstOrCreate(
                 ['name' => $data['country']],
-                ['code' => strtoupper(substr($data['country'], 0, 2))]
+                [
+                    'code' => strtoupper(substr($data['country'], 0, 2)),
+                    'language' => $data['language'] ?? null,
+                    'currency' => $data['currency'] ?? null,
+                    'description' => $data['description'] ?? null,
+                ]
             );
 
             $city = City::firstOrCreate(
