@@ -543,7 +543,6 @@ class TravelRepository implements TravelInterface
             'payment_method' => 'credit_card', // or get from request
             'status' => 'completed',
         ]);
-
         $travel_booking = TravelBooking::create([
             'user_id' => auth('sanctum')->id(),
             'booking_id' => $booking->id,
