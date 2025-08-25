@@ -20,9 +20,7 @@
 
             const latitudeInput = document.getElementById('data.latitude');
             const longitudeInput = document.getElementById('data.longitude');
-            const cityInput = document.getElementById('data.city');
-            const regionInput = document.getElementById('data.region');
-            const countryInput = document.getElementById('data.country');
+            const nameInput = document.getElementById('data.name');
             const locationNameElement = document.getElementById('location-name');
 
             // ✅ عرض الموقع إن وجدت الإحداثيات
@@ -52,13 +50,9 @@
                             locationNameElement.textContent = fullLocation;
                         }
 
-                        if (cityInput) cityInput.value = city;
-                        if (regionInput) regionInput.value = region;
-                        if (countryInput) countryInput.value = country;
+                        if (nameInput) nameInput.value = fullLocation;
 
-                        cityInput?.dispatchEvent(new Event('input'));
-                        regionInput?.dispatchEvent(new Event('input'));
-                        countryInput?.dispatchEvent(new Event('input'));
+                        nameInput?.dispatchEvent(new Event('input'));
                     })
                     .catch(error => {
                         console.error('فشل في جلب اسم الموقع:', error);
@@ -92,5 +86,5 @@
             map.on('click', onMapClick);
         });
     </script>
-    
+
 @endpush

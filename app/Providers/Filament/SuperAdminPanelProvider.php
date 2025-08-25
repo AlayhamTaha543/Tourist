@@ -32,6 +32,7 @@ class SuperAdminPanelProvider extends PanelProvider
                 'primary' => Color::Amber,
             ])
             ->discoverResources(in: app_path('Filament/SuperAdmin/Resources'), for: 'App\\Filament\\SuperAdmin\\Resources')
+            ->discoverResources(in: app_path('Filament/SuperAdmin/Resources/SuperAdmin'), for: 'App\\Filament\\SuperAdmin\\Resources\\SuperAdmin')
             ->discoverPages(in: app_path('Filament/SuperAdmin/Pages'), for: 'App\\Filament\\SuperAdmin\\Pages')
             ->pages([
                 \App\Filament\SuperAdmin\Pages\Dashboard::class,

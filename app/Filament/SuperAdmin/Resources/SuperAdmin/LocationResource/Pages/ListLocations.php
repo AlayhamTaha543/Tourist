@@ -16,11 +16,4 @@ class ListLocations extends ListRecords
             Actions\CreateAction::make(),
         ];
     }
-
-    protected function getHeaderWidgets(): array
-    {
-        return [
-            \App\Filament\SuperAdmin\Widgets\LocationMapWidget::class,
-        ];
-    }
 }

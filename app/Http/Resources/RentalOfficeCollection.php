@@ -15,11 +15,15 @@ class RentalOfficeCollection extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $defaultImage = "images/rental/r.png";
+
         return [
             'id' => $this->id,
             'name' => $this->name,
             'location' => $this->location->fullName(),
-            'image' => $this->image,
+            'description' => $this->address,
+            'image' => $this->image ? asset('storage/' . $this->image) : asset('storage/' . $defaultImage),
+
             'rating' => (float) $this->rating,
         ];
     }
