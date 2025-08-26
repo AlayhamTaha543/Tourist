@@ -19,6 +19,8 @@ class TaxiServiceSeeder extends Seeder
                 'phone' => '+1234567890',
                 'email' => 'info@citycabs.example.com',
                 'is_active' => true,
+                'open_time' => '06:00:00',
+                'close_time' => '22:00:00',
             ],
             [
                 'name' => 'Metro Taxis',
@@ -29,6 +31,8 @@ class TaxiServiceSeeder extends Seeder
                 'phone' => '+1987654321',
                 'email' => 'contact@metrotaxis.example.com',
                 'is_active' => true,
+                'open_time' => '07:00:00',
+                'close_time' => '23:00:00',
             ],
             [
                 'name' => 'Elite Rides',
@@ -39,11 +43,16 @@ class TaxiServiceSeeder extends Seeder
                 'phone' => '+1122334455',
                 'email' => 'support@eliterides.example.com',
                 'is_active' => true,
+                'open_time' => '08:00:00',
+                'close_time' => '00:00:00',
             ],
         ];
 
         foreach ($services as $service) {
-            TaxiService::updateOrCreate($service);
+            TaxiService::updateOrCreate(
+                ['name' => $service['name'], 'email' => $service['email']],
+                $service
+            );
         }
     }
 }

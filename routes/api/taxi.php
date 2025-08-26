@@ -47,7 +47,7 @@ Route::middleware('auth:sanctum')->prefix('taxi-services')->group(function () {
     Route::post('/', [TaxiServiceController::class, 'store'])->name('taxi-services.store');
 
     // Show a specific taxi service (ID in body)
-    Route::get('/show', [TaxiServiceController::class, 'show'])->name('taxi-services.show');
+    Route::get('/show/{id}', [TaxiServiceController::class, 'show'])->name('taxi-services.show');
 
     // Update a taxi service (ID in body)
     Route::post('/update', [TaxiServiceController::class, 'update'])->name('taxi-services.update');
@@ -88,7 +88,7 @@ Route::middleware('auth:sanctum')->prefix('vehicles')->group(function () {
     Route::get('/available', [VehicleController::class, 'available'])->name('api.vehicles.available');
 
     // Get vehicles by taxi service (taxiServiceId in body)
-    Route::get('/by-taxi-service', [VehicleController::class, 'getByTaxiService'])->name('api.vehicles.by-taxi-service');
+    Route::get('/by-taxi-service/{id}', [VehicleController::class, 'getByTaxiService'])->name('api.vehicles.by-taxi-service');
 
     // Show specific vehicle (ID in body)
     Route::post('/show', [VehicleController::class, 'show'])->name('api.vehicles.show');

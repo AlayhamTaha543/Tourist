@@ -18,14 +18,18 @@ class TaxiService extends Model
         'phone',
         'email',
         'is_active',
-        'manager_id'
+        'manager_id',
+        'open_time',
+        'close_time'
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'average_rating' => 'float',
         'total_ratings' => 'integer',
-        'deleted_at' => 'datetime'
+        'deleted_at' => 'datetime',
+        'open_time' => 'datetime',
+        'close_time' => 'datetime'
     ];
 
     protected $hidden = [
@@ -74,6 +78,20 @@ class TaxiService extends Model
     public function scopeWithLocation($query)
     {
         return $query->with(['location']);
+    }
+
+    public function getIsClosedAttribute(): bool
+    {
+        $currentTime = now();
+        $openTime = $this->open_time;
+        $closeTime = $this->close_time;
+
+        if (!$openTime || !$closeTime) {
+            return true; // Assume closed if times are not set
+        }
+
+        // Check if current time is outside opening hours
+        return $currentTime->lt($openTime) || $currentTime->gt($closeTime);
     }
 
     public function feedbacks()

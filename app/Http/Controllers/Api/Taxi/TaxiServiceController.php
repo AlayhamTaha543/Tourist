@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Taxi;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\TaxiServiceRequest;
-use App\Http\Requests\Taxi\ShowTaxiServiceRequest;
 use App\Http\Requests\Taxi\UpdateTaxiServiceRequest;
 use App\Http\Requests\Taxi\DeleteTaxiServiceRequest;
 use App\Http\Requests\Taxi\TaxiServicesByLocationRequest;
@@ -22,7 +21,7 @@ class TaxiServiceController extends Controller
     public function __construct(
         protected TaxiServiceManagementService $service
     ) {
-        // $this->middleware('auth:sanctum');
+        $this->middleware('auth:sanctum');
         // $this->middleware('can:manage_taxi_services')->except(['index', 'show', 'getByLocation']);
     }
 
@@ -75,10 +74,10 @@ class TaxiServiceController extends Controller
     /**
      * Get taxi service details
      */
-    public function show(ShowTaxiServiceRequest $request): JsonResponse
+    public function show(string $id): JsonResponse
     {
         try {
-            $service = $this->service->getFullServiceDetails($request->id);
+            $service = $this->service->getFullServiceDetails($id);
             return (new TaxiServiceResource($service))->response();
 
         } catch (ModelNotFoundException $e) {

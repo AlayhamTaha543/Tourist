@@ -40,7 +40,10 @@ class RentalOfficeSeeder extends Seeder
         ];
 
         foreach ($offices as $office) {
-            RentalOffice::updateOrCreate($office);
+            RentalOffice::updateOrCreate(
+                ['name' => $office['name'], 'address' => $office['address']],
+                $office
+            );
         }
     }
 }

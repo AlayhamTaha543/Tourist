@@ -13,7 +13,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/', [RentalOfficeController::class, 'showAllRentalOffice']);
             Route::get('/nextTrip', [RentalOfficeController::class, 'showNextTripRentalOffice']);
             Route::post('/', [RentalOfficeController::class, 'store']);
-            Route::get('/show', [RentalOfficeController::class, 'show']);
+            Route::get('/show/{id}', [RentalOfficeController::class, 'show']);
             Route::put('/{id}', [RentalOfficeController::class, 'update']);
             Route::delete('/{id}', [RentalOfficeController::class, 'destroy']);
             Route::get('/location/{locationId}', [RentalOfficeController::class, 'getByLocation']);

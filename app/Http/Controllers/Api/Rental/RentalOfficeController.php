@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\Rental;
 
 use App\Http\Controllers\BaseController;
-use App\Http\Requests\Rental\ShowRentalOfficeRequest;
 use App\Http\Requests\Rental\StoreRentalOfficeRequest;
 use App\Http\Requests\Rental\UpdateRentalOfficeRequest;
 use App\Http\Resources\RentalOfficeResource;
@@ -19,6 +18,7 @@ class RentalOfficeController extends BaseController
     public function __construct(RentalOfficeService $officeService)
     {
         $this->officeService = $officeService;
+        $this->middleware('auth:sanctum');
     }
 
     public function index(Request $request): AnonymousResourceCollection
@@ -58,16 +58,11 @@ class RentalOfficeController extends BaseController
         }
     }
 
-    public function show(ShowRentalOfficeRequest $request): JsonResponse
+    public function show(string $id): JsonResponse
     {
         try {
-            $office = $this->officeService->getOfficeById($request->id, true);
+            $office = $this->officeService->getOfficeById($id, true);
             return (new RentalOfficeResource($office))->response();
-
-            if (!$office) {
-                return $this->resourceNotFound('Rental office');
-            }
-
         } catch (\Exception $e) {
             return $this->handleException($e);
         }

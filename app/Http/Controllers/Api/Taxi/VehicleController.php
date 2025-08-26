@@ -218,12 +218,12 @@ class VehicleController extends Controller
      * @param  \App\Http\Requests\Vehicle\ByTaxiServiceRequest  $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getByTaxiService(Request $request): JsonResponse
+    public function getByTaxiService(string $id): JsonResponse
     {
 
         try {
             // Get vehicles by taxi service using service
-            $vehicles = $this->vehicleService->getVehiclesByTaxiService($request->taxi_service_id);
+            $vehicles = $this->vehicleService->getVehiclesByTaxiService($id);
 
             return response()->json([
                 'success' => true,
