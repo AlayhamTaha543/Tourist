@@ -15,26 +15,31 @@ use App\Services\Vehicle\VehicleTypeService;
 use App\Exceptions\NoDriversAvailableException;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
+use App\Services\GeoapifyService; // Import GeoapifyService
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Request;
+use App\Models\Location; // Import Location model
 
 class TaxiBookingController extends Controller
 {
     protected $taxiBookingService;
     protected $taxiServiceManagementService;
     protected $vehicleTypeService;
+    protected $geoapifyService; // Declare GeoapifyService
 
     public function __construct(
         TaxiBookingService $taxiBookingService,
         TaxiServiceManagementService $taxiServiceManagementService,
-        VehicleTypeService $vehicleTypeService
+        VehicleTypeService $vehicleTypeService,
+        GeoapifyService $geoapifyService // Inject GeoapifyService
     ) {
         $this->taxiBookingService = $taxiBookingService;
         $this->taxiServiceManagementService = $taxiServiceManagementService;
         $this->vehicleTypeService = $vehicleTypeService;
+        $this->geoapifyService = $geoapifyService; // Assign GeoapifyService
         // $this->middleware('auth');
     }
 
@@ -67,12 +72,66 @@ class TaxiBookingController extends Controller
             $data = $request->validated();
             $data['user_id'] = Auth::id();
 
+            $pickupLat = 0;
+            $pickupLng = 0;
+            $dropoffLat = 0;
+            $dropoffLng = 0;
+
+            // Resolve Pickup Location Coordinates
+            if (isset($data['pickup_location']['latitude']) && isset($data['pickup_location']['longitude'])) {
+                $pickupLat = $data['pickup_location']['latitude'];
+                $pickupLng = $data['pickup_location']['longitude'];
+            } elseif (isset($data['pickup_address'])) {
+                $geocodeResult = $this->geoapifyService->geocodeAddress($data['pickup_address']);
+                if ($geocodeResult) {
+                    $pickupLat = $geocodeResult['lat'];
+                    $pickupLng = $geocodeResult['lon'];
+                } else {
+                    return response()->json(['success' => false, 'error' => 'Could not geocode pickup address'], 422);
+                }
+            } elseif (isset($data['pickup_location_id'])) {
+                $location = Location::find($data['pickup_location_id']);
+                if ($location) {
+                    $pickupLat = $location->latitude;
+                    $pickupLng = $location->longitude;
+                } else {
+                    return response()->json(['success' => false, 'error' => 'Pickup location ID not found'], 422);
+                }
+            } else {
+                return response()->json(['success' => false, 'error' => 'Pickup location is required'], 422);
+            }
+
+            // Resolve Dropoff Location Coordinates
+            if (isset($data['dropoff_location']['latitude']) && isset($data['dropoff_location']['longitude'])) {
+                $dropoffLat = $data['dropoff_location']['latitude'];
+                $dropoffLng = $data['dropoff_location']['longitude'];
+            } elseif (isset($data['dropoff_address'])) {
+                $geocodeResult = $this->geoapifyService->geocodeAddress($data['dropoff_address']);
+                if ($geocodeResult) {
+                    $dropoffLat = $geocodeResult['lat'];
+                    $dropoffLng = $geocodeResult['lon'];
+                } else {
+                    return response()->json(['success' => false, 'error' => 'Could not geocode dropoff address'], 422);
+                }
+            } elseif (isset($data['dropoff_location_id'])) {
+                $location = Location::find($data['dropoff_location_id']);
+                if ($location) {
+                    $dropoffLat = $location->latitude;
+                    $dropoffLng = $location->longitude;
+                } else {
+                    return response()->json(['success' => false, 'error' => 'Dropoff location ID not found'], 422);
+                }
+            }
+            // If dropoff is not provided, it defaults to 0,0 which is handled by the service method.
+
             $taxiBooking = $this->taxiBookingService->bookTaxi(
                 $data['taxi_service_id'],
-                $data['pickup_date_time'], // Changed from pickup_time
-                $data['pickup_location']['Latitude'],
-                $data['pickup_location']['Longitude'],
-                $data['radius'] ?? 10, // Add default radius if not provided
+                $data['pickup_date_time'],
+                $pickupLat,
+                $pickupLng,
+                $dropoffLat,
+                $dropoffLng,
+                $data['radius'] ?? 10,
                 $data
             );
 

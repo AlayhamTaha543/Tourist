@@ -17,6 +17,7 @@ use App\Services\Driver\DriverService;
 use App\Services\Vehicle\VehicleService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use App\Services\GeoapifyService; // Import GeoapifyService
 use Illuminate\Support\Facades\DB;
 use App\Traits\HandlesUserPoints;
 use Illuminate\Support\Facades\Log;
@@ -29,7 +30,7 @@ class TaxiBookingService
         protected DriverService $driverService,
         protected VehicleService $vehicleService,
         protected TaxiBookingRepository $taxiBookingRepository,
-
+        protected GeoapifyService $geoapifyService // Inject GeoapifyService
     ) {
     }
 
@@ -174,11 +175,19 @@ class TaxiBookingService
         string $pickupTime,
         float $pickupLat,
         float $pickupLng,
+        float $dropoffLat, // New parameter
+        float $dropoffLng, // New parameter
         int $radius,
         array $bookingDetails
     ): TaxiBooking {
-
-        $totalCost = $this->calculateTaxiCost($taxiServiceId, $bookingDetails);
+        $totalCost = $this->calculateTaxiCost(
+            $taxiServiceId,
+            $pickupLat,
+            $pickupLng,
+            $dropoffLat,
+            $dropoffLng,
+            $bookingDetails
+        );
         $promotion = null;
         $promotionCode = $bookingDetails['promotion_code'] ?? null;
 
@@ -350,42 +359,41 @@ class TaxiBookingService
         }
     }
     // 5. Add helper method to calculate taxi cost (you'll need to implement this)
-    private function calculateTaxiCost(int $taxiServiceId, array $bookingDetails): float
-    {
-        // Implement your taxi pricing logic here
-        // This could be based on distance, time, vehicle type, etc.
-        // For example:
-
+    private function calculateTaxiCost(
+        int $taxiServiceId,
+        float $pickupLat,
+        float $pickupLng,
+        float $dropoffLat,
+        float $dropoffLng,
+        array $bookingDetails
+    ): float {
         $taxiService = TaxiService::find($taxiServiceId);
         $vehicleType = VehicleType::find($bookingDetails['vehicle_type_id']);
 
-        // Basic calculation example (you'll need to adjust based on your business logic)
+        if (!$taxiService || !$vehicleType) {
+            throw new \Exception('Taxi service or vehicle type not found for cost calculation.');
+        }
+
+        // Get real driving distance using Geoapify
+        $routeInfo = $this->geoapifyService->getRoute(
+            $pickupLat,
+            $pickupLng,
+            $dropoffLat,
+            $dropoffLng,
+            'drive'
+        );
+
+        if (!$routeInfo || !isset($routeInfo['distance'])) {
+            throw new \Exception('Could not calculate driving distance using Geoapify.');
+        }
+
+        $distanceKm = $routeInfo['distance'] / 1000; // Geoapify returns distance in meters
+
         $baseFare = $taxiService->base_fare ?? 10.00;
         $perKmRate = $vehicleType->per_km_rate ?? 2.00;
 
-        // Calculate distance if you have pickup and dropoff coordinates
-        $distance = $this->calculateDistance(
-            $bookingDetails['pickup_location']['Latitude'],
-            $bookingDetails['pickup_location']['Longitude'],
-            $bookingDetails['dropoff_location']['latitude'] ?? 0,
-            $bookingDetails['dropoff_location']['longitude'] ?? 0
-        );
-
-        return $baseFare + ($distance * $perKmRate);
+        return $baseFare + ($distanceKm * $perKmRate);
     }
 
-    // 6. Helper method to calculate distance between two points
-    private function calculateDistance($lat1, $lon1, $lat2, $lon2): float
-    {
-        $earthRadius = 6371; // km
-
-        $dLat = deg2rad($lat2 - $lat1);
-        $dLon = deg2rad($lon2 - $lon1);
-
-        $a = sin($dLat / 2) * sin($dLat / 2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon / 2) * sin($dLon / 2);
-        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
-
-        return $earthRadius * $c;
-    }
 
 }

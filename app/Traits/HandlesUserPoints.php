@@ -8,16 +8,16 @@ use App\Models\UserRank;
 
 trait HandlesUserPoints
 {
-    public function addPointsFromAction($user, float $totalPrice, float $discountAmount = 0): void
+    public function addPointsFromAction($user, float $totalPrice, float $discountAmount = 0): float
     {
         $calculatedPoints = $totalPrice - $discountAmount;
         $points_to_add = min($calculatedPoints, 20000); // Apply 20,000 point cap
 
         if ($points_to_add <= 0) {
-            return;
+            return 0.0;
         }
 
-        $userRank = $user->rank ?? new UserRank(['user_id' => $user->id]);
+        $userRank = $user->userRank ?? new UserRank(['user_id' => $user->id]);
 
         $userRank->points_earned += $points_to_add;
 
@@ -26,5 +26,7 @@ trait HandlesUserPoints
             ->first()?->id;
 
         $userRank->save();
+
+        return $points_to_add;
     }
 }

@@ -324,7 +324,11 @@ class TravelRepository implements TravelInterface
         }
 
         $user = auth('sanctum')->user();
-        $user_rank = $user->rank ?? new UserRank(['user_id' => $user->id]);
+        // Ensure user_rank exists or create a new one
+        $user_rank = UserRank::firstOrCreate(
+            ['user_id' => $user->id],
+            ['points_earned' => 0] // Default points if new
+        );
         $user_points = $user_rank->points_earned ?? 0;
 
         $passportImagePath = null;
@@ -332,16 +336,20 @@ class TravelRepository implements TravelInterface
             $passportImagePath = $request->file('passport_image')->store('passports', 'public');
         }
 
-        $rule = DiscountPoint::where('action', 'book_flight')->first();
+        // Retrieve the most applicable discount rule based on user's points
+        $rule = DiscountPoint::where('action', 'book_flight')
+            ->where('min_points', '<=', $user_points)
+            ->orderByDesc('min_points')
+            ->first();
 
-        if (!$rule || $user_points < $rule->required_points) {
-            return $this->error('You do not have enough reward points to book this flight. Minimum required: ' . ($rule->required_points ?? 'N/A'), 403);
+        if (!$rule) {
+            return $this->error('You do not have enough reward points to qualify for a discount.', 403);
         }
 
-        $discount = ($flightType->price) * ($rule->discount_percentage / 100);
-        $total_cost = ($flightType->price) - $discount;
-
+        $original_total_cost = $flightType->price;
         $return_flight = null;
+        $returnFlightType = null;
+
         if ($request->ticket_type === 'round_trip') {
             $return_flight = TravelFlight::where('departure_id', $flight->arrival_id)
                 ->where('arrival_id', $flight->departure_id)
@@ -363,14 +371,18 @@ class TravelRepository implements TravelInterface
             if (!$returnFlightType || $returnFlightType->available_seats < 1) {
                 return $this->error("Not enough return flight seats for this flight type. Only " . ($returnFlightType->available_seats ?? 0) . " remaining.", 400);
             }
+            $original_total_cost += $returnFlightType->price;
         }
+
+        $discount_amount = ($original_total_cost) * ($rule->discount_percentage / 100);
+        $total_cost_after_discount = ($original_total_cost) - $discount_amount;
 
         $booking = Booking::create([
             'booking_reference' => 'FB-' . strtoupper(uniqid()),
             'user_id' => $user->id,
             'booking_type' => 2,
-            'total_price' => $total_cost,
-            'payment_status' => 1,
+            'total_price' => $total_cost_after_discount,
+            'payment_status' => 1, // Assuming payment will be handled for the discounted amount
         ]);
 
         $travelBooking = TravelBooking::create([
@@ -380,8 +392,8 @@ class TravelRepository implements TravelInterface
             'ticket_type' => $request->ticket_type,
             'number_of_people' => 1, // Always 1 person per booking
             'booking_date' => now()->toDateString(),
-            'total_price' => $total_cost,
-            'discount_amount' => $discount,
+            'total_price' => $total_cost_after_discount, // This should be the discounted price for the entire booking
+            'discount_amount' => $discount_amount,
             'payment_status' => 1,
             'status' => 'confirmed',
             'passport_image' => $passportImagePath,
@@ -399,8 +411,8 @@ class TravelRepository implements TravelInterface
                 'ticket_type' => 'return',
                 'number_of_people' => 1, // Always 1 person per booking
                 'booking_date' => now()->toDateString(),
-                'total_price' => 0,
-                'discount_amount' => 0,
+                'total_price' => $returnFlightType->price, // Price of the return flight, not discounted again
+                'discount_amount' => 0, // Discount already applied to overall total
                 'payment_status' => 1,
                 'status' => 'confirmed',
                 'flight_type_name' => $request->flight_type_name,
@@ -408,7 +420,7 @@ class TravelRepository implements TravelInterface
             $returnFlightType->decrement('available_seats', 1);
         }
 
-        $user_rank->points_earned -= $rule->required_points;
+        $user_rank->points_earned -= $rule->required_points; // Deduct points for the applied rule
         $user_rank->save();
 
         return $this->success('Flight booked successfully with discount applied.', [
@@ -418,9 +430,9 @@ class TravelRepository implements TravelInterface
             'departure_time' => $flight->departure_time,
             'return_flight_id' => $return_flight?->id,
             'return_departure_time' => $return_flight?->departure_time,
-            'total_cost' => $total_cost,
+            'total_cost' => $total_cost_after_discount,
             'discount_applied' => true,
-            'discount_amount' => $discount,
+            'discount_amount' => $discount_amount,
             'flight_type_name' => $request->flight_type_name,
         ]);
     }

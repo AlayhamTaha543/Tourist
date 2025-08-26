@@ -40,13 +40,18 @@ class RentalBookingService
         return $this->bookingRepository->find($id);
     }
 
-    public function createBooking(array $data): object
+    public function createBooking(array $data): array
     {
         return DB::transaction(function () use ($data) {
-            // Calculate total price
             $pickupDate = Carbon::parse($data['pickup_date']);
             $returnDate = Carbon::parse($data['return_date']);
-            $days = $returnDate->diffInDays($pickupDate);
+
+            if (!$this->isVehicleAvailable($data['vehicle_id'], $pickupDate, $returnDate)) {
+                throw new \Exception('vehicle isn\'t available in the selected date');
+            }
+
+            // Calculate total price
+            $days = $pickupDate->diffInDays($returnDate);
 
             $vehicle = $this->vehicleService->getVehicleById($data['vehicle_id']);
 
@@ -84,9 +89,13 @@ class RentalBookingService
             );
 
             // Add points for the booking
-            $this->addPointsFromAction(Auth::user(), $totalPrice, 0); // Assuming no direct discount for rental bookings here
+            $pointsEarned = $this->addPointsFromAction(Auth::user(), $totalPrice, 0); // Assuming no direct discount for rental bookings here
 
-            return $rentalBooking;
+            return [
+                'booking_id' => $booking->id,
+                'total_price' => $totalPrice,
+                'points_earned' => $pointsEarned,
+            ];
         });
     }
 

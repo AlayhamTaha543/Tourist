@@ -32,8 +32,8 @@ class RentalBookingController extends BaseController
     {
         try {
             $validated = $request->validated();
-            $booking = $this->bookingService->createBooking($validated);
-            return $this->successResponse($booking, 'Booking created successfully', 201);
+            $result = $this->bookingService->createBooking($validated);
+            return $this->successResponse($result, 'Booking created successfully', 201);
         } catch (\Exception $e) {
             return $this->errorResponse('Booking creation failed: ' . $e->getMessage(), 422);
         }
