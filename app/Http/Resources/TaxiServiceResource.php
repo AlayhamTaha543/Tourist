@@ -17,7 +17,7 @@ class TaxiServiceResource extends JsonResource
         $defaultImage="images/taxi/t.png";
 
         return [
-            // 'id' => $this->id,
+            'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
             'logo_url' => $this->logo_url ? asset('storage/' . $this->logo_url) : asset('storage/' . $defaultImage),

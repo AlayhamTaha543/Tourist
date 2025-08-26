@@ -14,7 +14,14 @@ class RentalOffice extends Model
         'rating',
         'location_id',
         'manager_id',
-        'image'
+        'image',
+        'open_time',
+        'close_time'
+    ];
+
+    protected $casts = [
+        'open_time' => 'datetime',
+        'close_time' => 'datetime',
     ];
 
     public function location()
@@ -41,6 +48,20 @@ class RentalOffice extends Model
             'id', // Local key on RentalOffice table
             'category_id' // Local key on RentalVehicle table
         )->distinct();
+    }
+
+    public function getIsClosedAttribute(): bool
+    {
+        $currentTime = now();
+        $openTime = $this->open_time;
+        $closeTime = $this->close_time;
+
+        if (!$openTime || !$closeTime) {
+            return true; // Assume closed if times are not set
+        }
+
+        // Check if current time is outside opening hours
+        return $currentTime->lt($openTime) || $currentTime->gt($closeTime);
     }
 
     public function feedbacks()

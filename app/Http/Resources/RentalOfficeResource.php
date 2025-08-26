@@ -17,9 +17,12 @@ class RentalOfficeResource extends JsonResource
     {
         $defaultImage="images/rental/r.png";
         return [
+            'id' => $this->id,
             'name' => $this->name,
             'location' => $this->location->fullName(),
-            
+            'open_time' => $this->open_time ? $this->open_time->format('H:i') : null,
+            'close_time' => $this->close_time ? $this->close_time->format('H:i') : null,
+            'is_closed' => $this->is_closed,
             'logo_url' => $this->image ? asset('storage/' . $this->image) : asset('storage/' . $defaultImage),
             'rating' => (float) $this->rating,
 
