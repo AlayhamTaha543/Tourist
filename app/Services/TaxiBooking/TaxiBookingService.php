@@ -180,6 +180,9 @@ class TaxiBookingService
         int $radius,
         array $bookingDetails
     ): TaxiBooking {
+        $pickupDateTime = Carbon::parse($pickupTime);
+        $isImmediateBooking = $pickupDateTime->lessThanOrEqualTo(Carbon::now()->addMinutes(5));
+
         $totalCost = $this->calculateTaxiCost(
             $taxiServiceId,
             $pickupLat,
@@ -188,6 +191,7 @@ class TaxiBookingService
             $dropoffLng,
             $bookingDetails
         );
+
         $promotion = null;
         $promotionCode = $bookingDetails['promotion_code'] ?? null;
 
@@ -220,24 +224,49 @@ class TaxiBookingService
         }
 
         $totalAfterDiscount = $totalCost - $discountAmount;
-        $availableDrivers = $this->driverService->getAvailableDriversForBooking(
-            $taxiServiceId,
-            $pickupTime,
+
+        // Get estimated trip duration from Geoapify
+        $routeInfo = $this->geoapifyService->getRoute(
             $pickupLat,
             $pickupLng,
-            $radius
+            $dropoffLat,
+            $dropoffLng,
+            'drive'
         );
 
-        if ($availableDrivers->isEmpty()) {
-            throw new NoDriversAvailableException();
+        if (!$routeInfo || !isset($routeInfo['time'])) {
+            throw new \Exception('Could not calculate estimated trip duration using Geoapify.');
         }
+        $estimatedTripDuration = $routeInfo['time']; // Duration in seconds
 
-        return DB::transaction(function () use ($availableDrivers, $bookingDetails, $totalAfterDiscount, $discountAmount, $promotion) {
-            $nearestDriver = $availableDrivers->first();
+        return DB::transaction(function () use ($isImmediateBooking, $taxiServiceId, $pickupTime, $pickupLat, $pickupLng, $radius, $bookingDetails, $totalAfterDiscount, $discountAmount, $promotion, $estimatedTripDuration) {
+            $driverId = null;
+            $vehicleId = null;
+            $status = 'pending'; // Default status for scheduled bookings
 
-            // Create the main Booking record first (like in hotel booking)
+            if ($isImmediateBooking) {
+                $availableDrivers = $this->driverService->getAvailableDriversForBooking(
+                    $taxiServiceId,
+                    $pickupTime,
+                    $pickupLat,
+                    $pickupLng,
+                    $radius,
+                    $bookingDetails['vehicle_type_id'] ?? null // Pass vehicle type
+                );
+
+                if ($availableDrivers->isEmpty()) {
+                    throw new NoDriversAvailableException();
+                }
+
+                $nearestDriver = $availableDrivers->first();
+                $driverId = $nearestDriver->id;
+                $vehicleId = $nearestDriver->activeVehicle->id;
+                $status = 'confirmed';
+            }
+
+            // Create the main Booking record first
             $booking = Booking::create([
-                'booking_reference' => 'TB-' . strtoupper(uniqid()), // TB for Taxi Booking
+                'booking_reference' => 'TB-' . strtoupper(uniqid()),
                 'user_id' => $bookingDetails['user_id'],
                 'booking_type' => 'taxi',
                 'total_price' => $totalAfterDiscount,
@@ -256,14 +285,17 @@ class TaxiBookingService
 
             // Create the specific TaxiBooking record
             $taxiBooking = $this->taxiBookingRepository->create(array_merge($bookingDetails, [
-                'driver_id' => $nearestDriver->id,
-                'vehicle_id' => $nearestDriver->activeVehicle->id,
-                'booking_id' => $booking->id, // Link to the main booking
-                'status' => 'confirmed',
+                'driver_id' => $driverId,
+                'vehicle_id' => $vehicleId,
+                'booking_id' => $booking->id,
+                'status' => $status,
                 'cost' => $totalAfterDiscount,
+                'duration_hours' => round($estimatedTripDuration / 3600, 2), // Store in hours
             ]));
 
-            $this->driverService->markBusy($nearestDriver->id);
+            if ($isImmediateBooking && $driverId) {
+                $this->driverService->markBusy($driverId);
+            }
 
             // Update promotion usage if used
             if ($promotion) {

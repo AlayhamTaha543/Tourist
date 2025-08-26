@@ -235,10 +235,10 @@ class JourneyService
         return [
             'id' => $flight->id,
             'flight_number' => $flight->flight_number,
-            'departure' => [
-                'country' => $flight->departure?->city?->country?->name ?? 'Unknown',
-                'time' => $flight->departure_time,
-            ],
+            'departure' => $flight->departure?->city?->country?->code ?? 'Unknown',
+            'departure_time' => $flight->departure_time,
+            'arrival'=> $flight->arrival?->city?->country?->code ?? 'Unknown',
+            'arrival_time'=>$flight->arrival_time,
             'duration_minutes' => $flight->duration_minutes,
             'duration_formatted' => $flight->duration_minutes ? $this->formatDuration($flight->duration_minutes) : null,
             'price' => $flight->price,
