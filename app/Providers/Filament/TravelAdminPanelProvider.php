@@ -10,6 +10,8 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use App\Filament\Widgets\GenericBookingTrendWidget;
+use App\Models\TravelBooking;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -39,6 +41,10 @@ class TravelAdminPanelProvider extends PanelProvider
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
+                GenericBookingTrendWidget::make([
+                    'modelClass' => TravelBooking::class,
+                    'label' => 'Travel Bookings Trend',
+                ]),
             ])
             ->middleware([
                 EncryptCookies::class,

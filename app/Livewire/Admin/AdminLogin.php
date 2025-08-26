@@ -33,10 +33,29 @@ class AdminLogin extends Component
         }
         Filament::auth()->login(Filament::auth()->user());
         session()->regenerate();
-        if (Filament::auth()->user()->email_verified_at ==null) {
-            return redirect()->route('otpCode');
+
+        $admin = Filament::auth()->user();
+
+        if ($admin->role === 'super_admin') {
+            return redirect()->to(Dashboard::getUrl(panel: 'admin'));
         }
-        return redirect()->to(Dashboard::getUrl(panel: 'admin'));
+
+        switch ($admin->section) {
+            case 'restaurant':
+                return redirect()->to(Dashboard::getUrl(panel: 'restaurantAdmin'));
+            case 'hotel':
+                return redirect()->to(Dashboard::getUrl(panel: 'hotelAdmin'));
+            case 'tour':
+                return redirect()->to(Dashboard::getUrl(panel: 'tourAdmin'));
+            case 'taxi':
+                return redirect()->to(Dashboard::getUrl(panel: 'taxiAdmin'));
+            case 'rental':
+                return redirect()->to(Dashboard::getUrl(panel: 'rentAdmin'));
+            case 'travel':
+                return redirect()->to(Dashboard::getUrl(panel: 'travelAdmin'));
+            default:
+                return redirect()->to(Dashboard::getUrl(panel: 'admin'));
+        }
     }
     
     public function render()

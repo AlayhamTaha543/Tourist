@@ -24,7 +24,7 @@ class HotelAmenity extends Model
     {
         return $this->belongsToMany(
             Hotel::class,
-            'hotel_amenity_mapping',
+            'hotel_amenity_maps',
             'hotel_id',
             'id',
         );

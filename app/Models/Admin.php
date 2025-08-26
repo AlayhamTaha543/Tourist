@@ -40,6 +40,14 @@ class Admin extends Authenticatable
     {
         return $this->hasOne(Hotel::class, 'admin_id');
     }
+    public function taxi()
+    {
+        return $this->hasOne(TaxiService::class, 'manager_id');
+    }
+    public function rental()
+    {
+        return $this->hasOne(RentalOffice::class, 'manager_id');
+    }
     public function travel()
     {
         return $this->hasOne(TravelAgency::class, 'admin_id');

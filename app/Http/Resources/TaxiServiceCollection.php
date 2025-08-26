@@ -19,7 +19,7 @@ class TaxiServiceCollection extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
 
-            'logo_url' => $this->logo_url ? asset('storage/' . $this->main_image) : null,
+            'logo_url' => $this->logo_url ? asset('storage/' . $this->logo_url) : null,
             'website' => $this->website,
             // 'phone' => $this->phone,
             // 'email' => $this->email,

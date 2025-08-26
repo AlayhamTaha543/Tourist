@@ -9,6 +9,3 @@ Route::get('/', function () {
 Route::get('/login', function () {
     return view('admin.login');
 })->name(('login'));
-Route::get('/otpCode', function () {
-    return view('admin.verifyCode');
-})->name(('otpCode'));

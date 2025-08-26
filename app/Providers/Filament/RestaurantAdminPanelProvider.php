@@ -10,6 +10,8 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use App\Filament\Widgets\GenericBookingTrendWidget;
+use App\Models\RestaurantBooking;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -31,6 +33,12 @@ class RestaurantAdminPanelProvider extends PanelProvider
                 'primary' => Color::Amber,
             ])
             ->discoverResources(in: app_path('Filament/RestaurantAdmin/Resources'), for: 'App\\Filament\\RestaurantAdmin\\Resources')
+            ->resources([
+                \App\Filament\RestaurantAdmin\Resources\RestaurantChairResource::class,
+                \App\Filament\RestaurantAdmin\Resources\ChairAvailabilityResource::class,
+                \App\Filament\RestaurantAdmin\Resources\RestaurantBookingResource::class,
+                \App\Filament\RestaurantAdmin\Resources\RestaurantImageResource::class,
+            ])
             ->discoverPages(in: app_path('Filament/RestaurantAdmin/Pages'), for: 'App\\Filament\\RestaurantAdmin\\Pages')
             ->pages([
                 \App\Filament\RestaurantAdmin\Pages\Dashboard::class,
@@ -39,6 +47,10 @@ class RestaurantAdminPanelProvider extends PanelProvider
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
+                GenericBookingTrendWidget::make([
+                    'modelClass' => RestaurantBooking::class,
+                    'label' => 'Restaurant Bookings Trend',
+                ]),
             ])
             ->middleware([
                 EncryptCookies::class,

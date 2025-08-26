@@ -96,7 +96,6 @@
 
     <!-- / Content -->
     @include('admin.scripts')
-    @livewireScripts
 
 </body>
 </html>
