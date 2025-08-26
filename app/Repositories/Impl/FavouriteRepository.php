@@ -179,7 +179,7 @@ class FavouriteRepository implements FavouriteInterface
         return $this->success('Removed from favourites.');
     }
 
-    public function addCountryToFavourite($id)
+    public function addCountryToFavourite($id): \Illuminate\Http\JsonResponse
     {
         $user = Auth::user();
         $country = Country::find($id);
@@ -204,5 +204,24 @@ class FavouriteRepository implements FavouriteInterface
         ]);
 
         return $this->success('Country added to favourites.', ['favourite' => $favourite]);
+    }
+
+    public function removeCountryFromFavourite($id): \Illuminate\Http\JsonResponse
+    {
+        $user = Auth::user();
+
+        $favourite = Favourite::where([
+            'user_id' => $user->id,
+            'favoritable_id' => $id,
+            'favoritable_type' => Country::class,
+        ])->first();
+
+        if (!$favourite) {
+            return $this->error('Country not found in favourites or does not belong to the user.', 404);
+        }
+
+        $favourite->delete();
+
+        return $this->success('Country removed from favourites.');
     }
 }

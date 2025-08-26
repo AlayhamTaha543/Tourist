@@ -33,7 +33,6 @@ class DatabaseSeeder extends Seeder
             DiscountPointSeeder::class,
             UserSeeder::class,
             FeedbackSeeder::class,
-            DriverLocationSeeder::class,
         ]);
     }
 }

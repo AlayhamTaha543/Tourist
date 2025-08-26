@@ -11,7 +11,7 @@ use App\Repositories\Interfaces\Taxi\DriverProfileRepositoryInterface;
 use App\Repositories\Interfaces\Taxi\DriverStatsRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Repositories\Impl\Driver\DriverLocationRepository;
 use App\Repositories\Impl\Driver\DriverProfileRepository;
@@ -21,6 +21,7 @@ use App\Events\DriverAvailabilityChanged;
 use App\Services\Rating\RatingService;
 use App\Services\Vehicle\VehicleService;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 class DriverService
 {
@@ -57,7 +58,7 @@ class DriverService
      *
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getAllDrivers(): Collection
+    public function getAllDrivers(): EloquentCollection
     {
         return $this->driverProfileRepository->getAll();
     }
@@ -90,7 +91,7 @@ class DriverService
      *
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getAvailableDrivers(): Collection
+    public function getAvailableDrivers(): EloquentCollection
     {
         return $this->driverAvailabilityRepository->getAvailableDrivers();
     }
@@ -298,7 +299,7 @@ class DriverService
         float $pickupLng,
         int $radius,
         ?int $vehicleTypeId = null
-    ): Collection {
+    ): EloquentCollection {
         $bookingTime = Carbon::parse($bookingDateTime);
 
         $drivers = $this->driverLocationRepository->getNearbyDriversByTaxiService(
@@ -315,7 +316,7 @@ class DriverService
                 $this->vehicleService->isVehicleAvailable($driver->activeVehicle, $bookingTime);
         });
 
-        return new Collection($filteredDrivers->values()->all());
+        return new EloquentCollection($filteredDrivers->values()->all());
     }
 
     // driver time conflicts
@@ -333,7 +334,7 @@ class DriverService
         float $pickupLng,
         float $radius
 
-    ): Collection {
+    ): EloquentCollection {
         $bookingTime = Carbon::parse($bookingDateTime);
 
         $drivers = $this->driverLocationRepository->getNearbyDrivers(

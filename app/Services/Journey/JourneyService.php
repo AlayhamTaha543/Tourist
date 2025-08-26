@@ -44,7 +44,7 @@ class JourneyService
             return [
                 'country' => $countryName,
                 'average_rating' => $averageRating,
-                'country_image' => $randomImage ? $randomImage : asset('storage/images/tours/1.png'),
+                'country_image' => $randomImage,
                 'price' => $countryFlights->min('price'),
                 'is_favorite' => false,
                 'flights' => [], // Added an empty flights array to prevent "Undefined array key" error

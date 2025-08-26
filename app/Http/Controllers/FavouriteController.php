@@ -34,7 +34,13 @@ class FavouriteController extends Controller
         return $this->favouriteRepository->removeFromFavouriteById($id);
     }
 
-    public function addCountryToFavourite($id){
-        return $this->favouriteRepository->addCountryToFavourite($id);
+    public function addCountryToFavourite(Request $request, $id){
+        $isFavorite = $request->input('is_favorite');
+
+        if ($isFavorite) {
+            return $this->favouriteRepository->addCountryToFavourite($id);
+        } else {
+            return $this->favouriteRepository->removeCountryFromFavourite($id);
+        }
     }
 }
