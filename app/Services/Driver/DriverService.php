@@ -13,11 +13,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use App\Events\DriverLocationUpdated;
-use App\Events\DriverAvailabilityChanged;
 use App\Repositories\Impl\Driver\DriverLocationRepository;
 use App\Repositories\Impl\Driver\DriverProfileRepository;
 use App\Repositories\Impl\Driver\DriverStatsRepository;
+use App\Events\DriverLocationUpdated;
+use App\Events\DriverAvailabilityChanged;
 use App\Services\Rating\RatingService;
 use App\Services\Vehicle\VehicleService;
 use Illuminate\Support\Carbon;
@@ -310,10 +310,12 @@ class DriverService
 
         );
 
-        return $drivers->filter(function ($driver) use ($bookingTime) {
+        $filteredDrivers = $drivers->filter(function ($driver) use ($bookingTime) {
             return $this->isDriverAvailableAtTime($driver, $bookingTime) &&
                 $this->vehicleService->isVehicleAvailable($driver->activeVehicle, $bookingTime);
         });
+
+        return new Collection($filteredDrivers->values()->all());
     }
 
     // driver time conflicts

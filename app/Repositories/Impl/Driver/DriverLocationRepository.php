@@ -26,7 +26,7 @@ class DriverLocationRepository implements DriverLocationRepositoryInterface
         try {
 
             $sql = "UPDATE drivers
-                    SET current_location = ST_MakePoint(?, ?, 4326),
+                    SET current_location = ST_GeomFromText('POINT(? ?)', 4326),
                         location_updated_at = ?,
                         last_seen_at = ?
                     WHERE id = ?";
@@ -70,8 +70,14 @@ class DriverLocationRepository implements DriverLocationRepositoryInterface
                 'availability_status',
             ])
             ->available()
-            ->selectDistanceTo('current_location', [$lng, $lat], 'distance')
-            ->withinDistanceTo('current_location', [$lng, $lat], $radius)
+            ->selectRaw(
+                'ST_Distance_Sphere(current_location, ST_GeomFromText(?, 4326)) / 1000 as distance',
+                ["POINT({$lng} {$lat})"]
+            )
+            ->whereRaw(
+                'ST_Distance_Sphere(current_location, ST_GeomFromText(?, 4326)) / 1000 <= ?',
+                ["POINT({$lng} {$lat})", $radius]
+            )
             ->orderBy('distance');
     }
 

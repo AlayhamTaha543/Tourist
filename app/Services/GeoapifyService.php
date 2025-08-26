@@ -17,6 +17,10 @@ class GeoapifyService
         $this->geocodingKey = env('GEOAPIFY_GEOCODING_KEY');
         $this->routingKey = env('GEOAPIFY_ROUTING_KEY');
         $this->placesKey = env('GEOAPIFY_PLACES_KEY');
+
+        if (empty($this->routingKey)) {
+            throw new \Exception('GEOAPIFY_ROUTING_KEY is not set in the environment variables.');
+        }
     }
 
     /**
@@ -113,6 +117,15 @@ class GeoapifyService
                 'route' => $feature['geometry']['coordinates']
             ];
         }
+
+        // Log the full response for debugging if it's not successful or data is missing
+        \Illuminate\Support\Facades\Log::error('Geoapify Routing API Error', [
+            'status' => $response->status(),
+            'response_body' => $response->body(),
+            'waypoints' => "{$fromLat},{$fromLon}|{$toLat},{$toLon}",
+            'mode' => $mode,
+            'apiKey_present' => !empty($this->routingKey),
+        ]);
 
         return null;
     }
