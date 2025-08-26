@@ -21,6 +21,7 @@ use App\Services\GeoapifyService; // Import GeoapifyService
 use Illuminate\Support\Facades\DB;
 use App\Traits\HandlesUserPoints;
 use Illuminate\Support\Facades\Log;
+use App\Models\DriverVehicleAssignment;
 
 class TaxiBookingService
 {
@@ -262,6 +263,22 @@ class TaxiBookingService
                 $driverId = $nearestDriver->id;
                 $vehicleId = $nearestDriver->activeVehicle->id;
                 $status = 'confirmed';
+                $this->driverService->markBusy($driverId);
+            } else {
+                // Scheduled booking logic
+                $driverVehicleAssignment = DriverVehicleAssignment::query()
+                    ->active()
+                    ->whereHas('vehicle', function ($query) use ($bookingDetails) {
+                        $query->where('vehicle_type_id', $bookingDetails['vehicle_type_id'] ?? null);
+                    })
+                    ->first();
+
+                if (!$driverVehicleAssignment) {
+                    throw new NoDriversAvailableException(); // Or a more specific exception
+                }
+
+                $driverId = $driverVehicleAssignment->driver_id;
+                $vehicleId = $driverVehicleAssignment->vehicle_id;
             }
 
             // Create the main Booking record first
@@ -292,10 +309,6 @@ class TaxiBookingService
                 'cost' => $totalAfterDiscount,
                 'duration_hours' => round($estimatedTripDuration / 3600, 2), // Store in hours
             ]));
-
-            if ($isImmediateBooking && $driverId) {
-                $this->driverService->markBusy($driverId);
-            }
 
             // Update promotion usage if used
             if ($promotion) {

@@ -492,40 +492,63 @@ class TravelRepository implements TravelInterface
             $total_cost += $returnFlightType->price;
         }
 
-        $promotion = null;
-        $promotion_code = $request->promotion_code;
-
-        if ($promotion_code) {
-            $promotion = Promotion::where('promotion_code', $promotion_code)
-                ->where('is_active', true)
-                ->where('start_date', '<=', now())
-                ->where('end_date', '>=', now())
-                ->where(function ($q) {
-                    $q->where('applicable_type', 1)
-                        ->orWhere('applicable_type', 7);
-                })
-                ->first();
-
-            if (!$promotion) {
-                return $this->error('Invalid or expired promotion code', 400);
-            }
-            if ($total_cost < $promotion->minimum_purchase) {
-                return $this->error("Total must be at least {$promotion->minimum_purchase} to use this code.", 400);
-            }
-            if (!in_array($promotion->applicable_type, [null, 1, 7])) {
-                return $this->error('This code cannot be applied to this flight booking', 400);
-            }
-        }
-
         $discount_amount = 0;
-        if ($promotion) {
-            $discount_amount = $promotion->discount_type == 1
-                ? ($total_cost * $promotion->discount_value / 100)
-                : $promotion->discount_value;
-            $discount_amount = min($discount_amount, $total_cost);
-        }
+        $points_deducted_for_discount = 0;
+        $totalCost_afterDiscount = $total_cost;
 
-        $totalCost_afterDiscount = $total_cost - $discount_amount;
+        if ($request->boolean('discount')) {
+            $user = auth('sanctum')->user();
+            $userRank = UserRank::firstOrCreate(
+                ['user_id' => $user->id],
+                ['points_earned' => 0]
+            );
+            $user_points = $userRank->points_earned;
+
+            if ($user_points < 5000) {
+                return $this->error('You do not have enough points for this discount. 5000 points are required.', 403);
+            }
+
+            $discount_amount = $total_cost * 0.10; // 10% discount
+            $totalCost_afterDiscount = $total_cost - $discount_amount;
+            $points_deducted_for_discount = 5000;
+
+            $userRank->points_earned -= $points_deducted_for_discount;
+            $userRank->save();
+        } else {
+            $promotion = null;
+            $promotion_code = $request->promotion_code;
+
+            if ($promotion_code) {
+                $promotion = Promotion::where('promotion_code', $promotion_code)
+                    ->where('is_active', true)
+                    ->where('start_date', '<=', now())
+                    ->where('end_date', '>=', now())
+                    ->where(function ($q) {
+                        $q->where('applicable_type', 1)
+                            ->orWhere('applicable_type', 7);
+                    })
+                    ->first();
+
+                if (!$promotion) {
+                    return $this->error('Invalid or expired promotion code', 400);
+                }
+                if ($total_cost < $promotion->minimum_purchase) {
+                    return $this->error("Total must be at least {$promotion->minimum_purchase} to use this code.", 400);
+                }
+                if (!in_array($promotion->applicable_type, [null, 1, 7])) {
+                    return $this->error('This code cannot be applied to this flight booking', 400);
+                }
+            }
+
+            if ($promotion) {
+                $discount_amount = $promotion->discount_type == 1
+                    ? ($total_cost * $promotion->discount_value / 100)
+                    : $promotion->discount_value;
+                $discount_amount = min($discount_amount, $total_cost);
+            }
+
+            $totalCost_afterDiscount = $total_cost - $discount_amount;
+        }
 
         $booking = Booking::create([
             'booking_reference' => $booking_reference,
@@ -547,14 +570,7 @@ class TravelRepository implements TravelInterface
             'payment_method' => 'credit_card', // or get from request
             'status' => 'completed',
         ]);
-        Payment::create([
-            'booking_id' => $booking->id,
-            'payment_reference' => 'PAY-' . strtoupper(uniqid()),
-            'amount' => $totalCost_afterDiscount,
-            'payment_date' => now(),
-            'payment_method' => 'credit_card', // or get from request
-            'status' => 'completed',
-        ]);
+
         $travel_booking = TravelBooking::create([
             'user_id' => auth('sanctum')->id(),
             'booking_id' => $booking->id,
@@ -590,11 +606,14 @@ class TravelRepository implements TravelInterface
             $return_flight->decrement('available_seats', 1); // Decrement overall return flight seats
         }
 
-        if ($promotion) {
-            $promotion->increment('current_usage');
-        }
+        // if ($promotion) {
+        //     $promotion->increment('current_usage');
+        // }
 
-        $this->addPointsFromAction(auth('sanctum')->user(), $totalCost_afterDiscount, $discount_amount);
+        // Add points for the booking if no points were deducted for a discount
+        if ($points_deducted_for_discount === 0) {
+            $this->addPointsFromAction(auth('sanctum')->user(), $totalCost_afterDiscount, $discount_amount);
+        }
 
         return $this->success('Flight booked successfully', [
             'booking_reference' => $booking->booking_reference,
@@ -603,6 +622,7 @@ class TravelRepository implements TravelInterface
             'departure_time' => $flight->departure_time,
             'total_cost' => $totalCost_afterDiscount,
             'discount_amount' => $discount_amount,
+            'points_deducted' => $points_deducted_for_discount,
             'flight_type_name' => $request->flight_type_name,
         ]);
     }

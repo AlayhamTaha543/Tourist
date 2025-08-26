@@ -42,9 +42,9 @@ class ServiceRepository implements ServiceInterface
         }
 
         $rank = UserRank::where('user_id', $user->id)->first();
-        $points = $rank ? $rank->points_earned : 10;
+        $points = $rank ? $rank->points_earned : 0; // Default to 0 if no rank found
 
-        return $this->success('User points retrieved successfully', ['points' => $points]);
+        return $points;
     }
 
 
