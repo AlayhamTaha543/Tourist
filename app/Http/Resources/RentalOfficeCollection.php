@@ -25,7 +25,7 @@ class RentalOfficeCollection extends JsonResource
             'open_time' => $this->open_time ? $this->open_time->format('H:i') : null,
             'close_time' => $this->close_time ? $this->close_time->format('H:i') : null,
             'is_closed' => $this->is_closed,
-            'image' => $this->image ? asset('storage/' . $this->image) : asset('storage/' . $defaultImage),
+            'logo_url' => $this->image ? asset('storage/' . $this->image) : asset('storage/' . $defaultImage),
             'rating' => (float) $this->rating,
         ];
     }

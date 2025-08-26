@@ -51,12 +51,8 @@ class RentalBookingService
             $vehicle = $this->vehicleService->getVehicleById($data['vehicle_id']);
 
             // Ensure we have the vehicle's category loaded
-            if (!$vehicle->relationLoaded('category')) {
-                $vehicle->load('category');
-            }
-
-            $data['daily_rate'] = $vehicle->category->price_per_day;
-            $totalPrice = $days * $vehicle->category->price_per_day;
+            $data['daily_rate'] = $vehicle->price_per_day;
+            $totalPrice = $days * $vehicle->price_per_day;
             $data['total_price'] = $totalPrice;
             $data['status'] = RentalBookingStatus::RESERVED;
 
@@ -78,6 +74,7 @@ class RentalBookingService
             ]);
 
             $data['booking_id'] = $booking->id;
+            $data['customer_id']= Auth::id();
             $rentalBooking = $this->bookingRepository->create($data);
 
             // Update vehicle status to reserved

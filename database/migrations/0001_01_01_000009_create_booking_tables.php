@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('booking_reference')->unique()->notNull();
             $table->foreignId('user_id')->constrained('users', 'id');
-            $table->enum('booking_type', ['tour', 'hotel', 'taxi', 'restaurant', 'package','travel'])->notNull();
+            $table->enum('booking_type', ['tour', 'hotel', 'taxi', 'restaurant', 'package','travel', 'rental'])->notNull();
             $table->dateTime('booking_date')->default(now());
             $table->enum('status', ['pending', 'confirmed', 'cancelled', 'completed'])->default('pending');
             $table->decimal('total_price', 10, 2)->notNull();

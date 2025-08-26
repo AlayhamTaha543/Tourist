@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class RentalVehicleStatusHistory extends Model
 {
     use HasFactory;
+    protected $table = 'rental_vehicle_status_history'; // Explicitly set table name
 
     protected $fillable = [
         'vehicle_id',

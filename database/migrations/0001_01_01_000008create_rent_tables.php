@@ -68,6 +68,7 @@ return new class extends Migration {
             $table->foreign('changed_by_id')->references('id')->on('admins');
 
             $table->timestamp('changed_at')->useCurrent();
+            $table->timestamps();
         });
     }
 

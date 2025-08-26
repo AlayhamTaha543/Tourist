@@ -559,6 +559,7 @@ class TravelRepository implements TravelInterface
         ]);
 
         $flightType->decrement('available_seats', 1);
+        $flight->decrement('available_seats', 1); // Decrement overall flight seats
 
         if ($return_flight) {
             TravelBooking::create([
@@ -574,13 +575,14 @@ class TravelRepository implements TravelInterface
                 'flight_type_name' => $request->flight_type_name,
             ]);
             $returnFlightType->decrement('available_seats', 1);
+            $return_flight->decrement('available_seats', 1); // Decrement overall return flight seats
         }
 
         if ($promotion) {
             $promotion->increment('current_usage');
         }
 
-        $this->addPointsFromAction(auth('sanctum')->user(), 'book_flight', 1); // Always 1 person per booking
+        $this->addPointsFromAction(auth('sanctum')->user(), $totalCost_afterDiscount, $discount_amount);
 
         return $this->success('Flight booked successfully', [
             'booking_reference' => $booking->booking_reference,

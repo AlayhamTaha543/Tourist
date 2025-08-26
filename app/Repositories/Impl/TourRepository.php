@@ -291,7 +291,7 @@ class TourRepository implements TourInterface
             $promotion->increment('current_usage');
         }
 
-        $this->addPointsFromAction(auth('sanctum')->user(), 'book_tour', $newBookingCount);
+        $this->addPointsFromAction(auth('sanctum')->user(), $totalCostAfterDiscount, $discountAmount);
 
         $schedule->decrement('available_spots', $newBookingCount);
 

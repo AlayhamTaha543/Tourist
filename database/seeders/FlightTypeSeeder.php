@@ -23,6 +23,7 @@ class FlightTypeSeeder extends Seeder
         ];
 
         foreach ($travelFlights as $flight) {
+            $totalAvailableSeatsForFlight = 0;
             foreach ($flightTypesData as $typeData) {
                 FlightType::create([
                     'travel_flight_id' => $flight->id,
@@ -30,7 +31,11 @@ class FlightTypeSeeder extends Seeder
                     'price' => $typeData['price'],
                     'available_seats' => $typeData['available_seats'],
                 ]);
+                $totalAvailableSeatsForFlight += $typeData['available_seats'];
             }
+
+            // Update the available_seats for the TravelFlight
+            $flight->update(['available_seats' => $totalAvailableSeatsForFlight]);
         }
     }
 }
