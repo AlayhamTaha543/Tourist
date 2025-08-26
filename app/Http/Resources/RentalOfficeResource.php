@@ -20,7 +20,7 @@ class RentalOfficeResource extends JsonResource
             'name' => $this->name,
             'location' => $this->location->fullName(),
             
-            'image' => $this->image ? asset('storage/' . $this->image) : asset('storage/' . $defaultImage),
+            'logo_url' => $this->image ? asset('storage/' . $this->image) : asset('storage/' . $defaultImage),
             'rating' => (float) $this->rating,
 
             // Include vehicles if relationship is loaded
