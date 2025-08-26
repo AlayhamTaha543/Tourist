@@ -18,10 +18,13 @@ use App\Services\Vehicle\VehicleService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use App\Traits\HandlesUserPoints;
 use Illuminate\Support\Facades\Log;
 
 class TaxiBookingService
 {
+    use HandlesUserPoints;
+
     public function __construct(
         protected DriverService $driverService,
         protected VehicleService $vehicleService,
@@ -258,8 +261,8 @@ class TaxiBookingService
                 $promotion->increment('current_usage');
             }
 
-            // Add points for booking (similar to hotel booking)
-            $this->addPointsFromAction(auth('sanctum')->user(), 'book_taxi', 1);
+            // Add points for booking
+            $this->addPointsFromAction(auth('sanctum')->user(), $totalAfterDiscount, $discountAmount);
 
             return $taxiBooking;
         });
@@ -385,10 +388,4 @@ class TaxiBookingService
         return $earthRadius * $c;
     }
 
-    // 7. Add the addPointsFromAction method if you don't have it
-    private function addPointsFromAction($user, $action, $points)
-    {
-        // Implement your points system logic here
-        // This might involve creating a UserPoint record or updating user's total points
-    }
 }

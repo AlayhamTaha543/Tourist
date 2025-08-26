@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 interface ServiceInterface
 {
     public function UserRank();
-    public function discountPoints();
     public function addRating(RatingRequest $request);
     public function submitFeedback(FeedBackRequest $request);
     public function getAvailablePromotions();

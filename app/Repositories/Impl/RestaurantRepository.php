@@ -335,7 +335,7 @@ class RestaurantRepository implements RestaurantInterface
             $promotion->increment('current_usage');
         }
 
-        $this->addPointsFromAction(auth('sanctum')->user(), 'book_restaurant', 1);
+        $this->addPointsFromAction(auth('sanctum')->user(), $totalPriceAfterDiscount, $discountAmount);
 
         return $this->success('Chairs reserved successfully', [
             'reservation_id' => $tableReservation->id,

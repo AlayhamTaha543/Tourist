@@ -312,7 +312,7 @@ class HotelRepository implements HotelInterface
             $promotion->increment('current_usage');
         }
 
-        $this->addPointsFromAction(auth('sanctum')->user(), 'book_hotel', 1);
+        $this->addPointsFromAction(auth('sanctum')->user(), $totalAfterDiscount, $discountAmount);
 
         return $this->success('Hotel booked successfully', [
             'booking_reference' => $booking->booking_reference,

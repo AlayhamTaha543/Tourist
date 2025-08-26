@@ -47,23 +47,6 @@ class ServiceRepository implements ServiceInterface
         return $this->success('User points retrieved successfully', ['points' => $points]);
     }
 
-    public function discountPoints()
-    {
-        $discountActions = PointRule::select('action', 'points')->get();
-
-        if ($discountActions->isEmpty()) {
-            return $this->error('No available discount actions found', 404);
-        }
-
-        return $this->success('Available discount actions', [
-            'discounts' => $discountActions->map(function ($item) {
-                return [
-                    'action' => $item->action,
-                    'points' => $item->points,
-                ];
-            }),
-        ], 200);
-    }
 
     public function addRating(RatingRequest $request)
     {

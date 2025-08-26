@@ -11,11 +11,14 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use App\Traits\HandlesUserPoints;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class RentalBookingService
 {
+    use HandlesUserPoints;
+
     public function __construct(
         protected RentalBookingRepositoryInterface $bookingRepository,
         protected RentalVehicleService $vehicleService
@@ -82,6 +85,9 @@ class RentalBookingService
                 $data['vehicle_id'],
                 \App\Enum\RentalVehicleStatus::RESERVED
             );
+
+            // Add points for the booking
+            $this->addPointsFromAction(Auth::user(), $totalPrice, 0); // Assuming no direct discount for rental bookings here
 
             return $rentalBooking;
         });

@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class PointRule extends Model
 {
     protected $fillable = [
-        'points',
-        'action'
+        // No longer used for dynamic point calculation
     ];
 }
