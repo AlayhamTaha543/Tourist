@@ -92,9 +92,9 @@ class RentalBookingService
             $pointsEarned = $this->addPointsFromAction(Auth::user(), $totalPrice, 0); // Assuming no direct discount for rental bookings here
 
             return [
-                'booking_id' => $booking->id,
-                'total_price' => $totalPrice,
-                'points_earned' => $pointsEarned,
+                'booking_id' => (string) $booking->id,
+                'total_price' => (string) $totalPrice,
+                'points_earned' => (string) $pointsEarned,
             ];
         });
     }
