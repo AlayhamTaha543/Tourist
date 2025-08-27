@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\DB;
 use App\Traits\HandlesUserPoints;
 use Illuminate\Support\Facades\Log;
 use App\Models\DriverVehicleAssignment;
+use App\Repositories\Impl\Driver\DriverAvailabilityRepository;
 
 class TaxiBookingService
 {
@@ -31,6 +32,7 @@ class TaxiBookingService
         protected DriverService $driverService,
         protected VehicleService $vehicleService,
         protected TaxiBookingRepository $taxiBookingRepository,
+        protected DriverAvailabilityRepository $driverAvailabilityRepository,
         protected GeoapifyService $geoapifyService // Inject GeoapifyService
     ) {
     }
@@ -176,20 +178,34 @@ class TaxiBookingService
         string $pickupTime,
         float $pickupLat,
         float $pickupLng,
-        float $dropoffLat, // New parameter
-        float $dropoffLng, // New parameter
+        float $dropoffLat,
+        float $dropoffLng,
         int $radius,
         array $bookingDetails
     ): TaxiBooking {
         $pickupDateTime = Carbon::parse($pickupTime);
         $isImmediateBooking = $pickupDateTime->lessThanOrEqualTo(Carbon::now()->addMinutes(5));
 
-        $totalCost = $this->calculateTaxiCost(
-            $taxiServiceId,
+        // Get route info FIRST to calculate accurate duration
+        $routeInfo = $this->geoapifyService->getRoute(
             $pickupLat,
             $pickupLng,
             $dropoffLat,
             $dropoffLng,
+            'drive'
+        );
+
+        if (!$routeInfo || !isset($routeInfo['time']) || !isset($routeInfo['distance'])) {
+            throw new \Exception('Could not calculate route information. Please try again.');
+        }
+
+        $estimatedTripDuration = $routeInfo['time']; // Duration in seconds
+        $estimatedTripDurationMinutes = round($estimatedTripDuration / 60, 2);
+
+        // Calculate cost using the route distance
+        $totalCost = $this->calculateTaxiCostWithDistance(
+            $taxiServiceId,
+            $routeInfo['distance'], // Use distance from route
             $bookingDetails
         );
 
@@ -226,33 +242,21 @@ class TaxiBookingService
 
         $totalAfterDiscount = $totalCost - $discountAmount;
 
-        // Get estimated trip duration from Geoapify
-        $routeInfo = $this->geoapifyService->getRoute(
-            $pickupLat,
-            $pickupLng,
-            $dropoffLat,
-            $dropoffLng,
-            'drive'
-        );
-
-        if (!$routeInfo || !isset($routeInfo['time'])) {
-            throw new \Exception('Could not calculate estimated trip duration using Geoapify.');
-        }
-        $estimatedTripDuration = $routeInfo['time']; // Duration in seconds
-
-        return DB::transaction(function () use ($isImmediateBooking, $taxiServiceId, $pickupTime, $pickupLat, $pickupLng, $radius, $bookingDetails, $totalAfterDiscount, $discountAmount, $promotion, $estimatedTripDuration) {
+        return DB::transaction(function () use ($isImmediateBooking, $taxiServiceId, $pickupTime, $pickupDateTime, $pickupLat, $pickupLng, $radius, $bookingDetails, $totalAfterDiscount, $discountAmount, $promotion, $estimatedTripDurationMinutes) {
             $driverId = null;
             $vehicleId = null;
             $status = 'pending'; // Default status for scheduled bookings
 
             if ($isImmediateBooking) {
+                // CRITICAL FIX: Pass duration to availability check
                 $availableDrivers = $this->driverService->getAvailableDriversForBooking(
                     $taxiServiceId,
                     $pickupTime,
                     $pickupLat,
                     $pickupLng,
                     $radius,
-                    $bookingDetails['vehicle_type_id'] ?? null // Pass vehicle type
+                    $bookingDetails['vehicle_type_id'] ?? null,
+                    (int) $estimatedTripDurationMinutes // This was missing!
                 );
 
                 if ($availableDrivers->isEmpty()) {
@@ -262,23 +266,24 @@ class TaxiBookingService
                 $nearestDriver = $availableDrivers->first();
                 $driverId = $nearestDriver->id;
                 $vehicleId = $nearestDriver->activeVehicle->id;
-                $status = 'confirmed';
-                $this->driverService->markBusy($driverId);
-            } else {
-                // Scheduled booking logic
-                $driverVehicleAssignment = DriverVehicleAssignment::query()
-                    ->active()
-                    ->whereHas('vehicle', function ($query) use ($bookingDetails) {
-                        $query->where('vehicle_type_id', $bookingDetails['vehicle_type_id'] ?? null);
-                    })
-                    ->first();
 
-                if (!$driverVehicleAssignment) {
-                    throw new NoDriversAvailableException(); // Or a more specific exception
+                // CRITICAL: Mark driver as busy BEFORE creating booking to prevent race conditions
+                $this->driverService->markBusy($driverId);
+                $status = 'confirmed';
+            } else {
+                // For scheduled bookings, also check availability properly
+                $availableDriverVehicle = $this->findAvailableDriverVehicleForScheduled(
+                    $pickupDateTime,
+                    $estimatedTripDurationMinutes,
+                    $bookingDetails['vehicle_type_id'] ?? null
+                );
+
+                if (!$availableDriverVehicle) {
+                    throw new NoDriversAvailableException();
                 }
 
-                $driverId = $driverVehicleAssignment->driver_id;
-                $vehicleId = $driverVehicleAssignment->vehicle_id;
+                $driverId = $availableDriverVehicle['driver_id'];
+                $vehicleId = $availableDriverVehicle['vehicle_id'];
             }
 
             // Create the main Booking record first
@@ -300,14 +305,15 @@ class TaxiBookingService
                 'status' => 'completed',
             ]);
 
-            // Create the specific TaxiBooking record
+            // Create the specific TaxiBooking record with all required fields
             $taxiBooking = $this->taxiBookingRepository->create(array_merge($bookingDetails, [
                 'driver_id' => $driverId,
                 'vehicle_id' => $vehicleId,
                 'booking_id' => $booking->id,
                 'status' => $status,
                 'cost' => $totalAfterDiscount,
-                'duration_hours' => round($estimatedTripDuration / 3600, 2), // Store in hours
+                'duration_minutes' => $estimatedTripDurationMinutes,
+                'pickup_date_time' => $pickupDateTime, // Essential for overlap checking
             ]));
 
             // Update promotion usage if used
@@ -320,6 +326,73 @@ class TaxiBookingService
 
             return $taxiBooking;
         });
+    }
+
+    /**
+     * Calculate taxi cost using distance from route
+     */
+    private function calculateTaxiCostWithDistance(
+        int $taxiServiceId,
+        float $distanceMeters,
+        array $bookingDetails
+    ): float {
+        $taxiService = TaxiService::find($taxiServiceId);
+        $vehicleType = VehicleType::find($bookingDetails['vehicle_type_id']);
+
+        if (!$taxiService || !$vehicleType) {
+            throw new \Exception('Taxi service or vehicle type not found for cost calculation.');
+        }
+
+        $distanceKm = $distanceMeters / 1000; // Convert meters to kilometers
+        $baseFare = $taxiService->base_fare ?? 10.00;
+        $perKmRate = $vehicleType->per_km_rate ?? 2.00;
+
+        return $baseFare + ($distanceKm * $perKmRate);
+    }
+
+    /**
+     * Find available driver-vehicle for scheduled bookings
+     */
+    private function findAvailableDriverVehicleForScheduled(
+        Carbon $pickupDateTime,
+        float $durationMinutes,
+        ?int $vehicleTypeId = null
+    ): ?array {
+        $query = DriverVehicleAssignment::query()
+            ->active()
+            ->with(['driver', 'vehicle']);
+
+        if ($vehicleTypeId) {
+            $query->whereHas('vehicle', function ($q) use ($vehicleTypeId) {
+                $q->where('vehicle_type_id', $vehicleTypeId);
+            });
+        }
+
+        $assignments = $query->get();
+
+        foreach ($assignments as $assignment) {
+            // Use the repository method to check availability
+            $isDriverAvailable = $this->driverAvailabilityRepository->isDriverAvailableForBooking(
+                $assignment->driver_id,
+                $pickupDateTime,
+                (int) $durationMinutes
+            );
+
+            $isVehicleAvailable = $this->vehicleService->isVehicleAvailableForBooking(
+                $assignment->vehicle_id,
+                $pickupDateTime,
+                (int) $durationMinutes
+            );
+
+            if ($isDriverAvailable && $isVehicleAvailable) {
+                return [
+                    'driver_id' => $assignment->driver_id,
+                    'vehicle_id' => $assignment->vehicle_id
+                ];
+            }
+        }
+
+        return null;
     }
 
     public function completeBooking(int $bookingId): TaxiBooking

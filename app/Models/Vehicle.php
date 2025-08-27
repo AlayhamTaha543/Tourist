@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Vehicle extends Model
 {
@@ -92,5 +93,9 @@ public function activeDriver()
     public function taxiBookings()
     {
         return $this->hasMany(TaxiBooking::class, 'vehicle_id', 'id') ;
+    }
+    public function driverVehicleAssignments(): HasMany
+    {
+        return $this->hasMany(DriverVehicleAssignment::class, 'vehicle_id', 'id');
     }
 }

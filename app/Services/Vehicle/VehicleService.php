@@ -5,11 +5,11 @@ namespace App\Services\Vehicle;
 use App\Models\Vehicle;
 use App\Repositories\Impl\TaxiServiceRepository;
 use App\Repositories\Impl\VehicleRepository;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Support\Carbon;
 
 class VehicleService
 {
@@ -208,4 +208,40 @@ class VehicleService
             ->exists();
     }
 
+    public function isVehicleAvailableForBooking(int $vehicleId, Carbon $pickupDateTime, int $durationMinutes): bool
+    {
+        $bookingStart = $pickupDateTime;
+        $bookingEnd = $pickupDateTime->copy()->addMinutes($durationMinutes);
+
+        return Vehicle::where('id', $vehicleId)
+            ->whereDoesntHave('taxiBookings', function ($query) use ($bookingStart, $bookingEnd) {
+                $query->where(function ($q) use ($bookingStart, $bookingEnd) {
+                    // Check for overlapping taxi bookings
+                    $q->where('status', '!=', 'cancelled')
+                        ->where('status', '!=', 'completed')
+                        ->where(function ($q2) use ($bookingStart, $bookingEnd) {
+                            $q2->whereBetween('pickup_date_time', [$bookingStart, $bookingEnd]) // Existing booking starts within new booking
+                                ->orWhereBetween(DB::raw('DATE_ADD(pickup_date_time, INTERVAL duration_minutes MINUTE)'), [$bookingStart, $bookingEnd]) // Existing booking ends within new booking
+                                ->orWhere(function ($q3) use ($bookingStart, $bookingEnd) { // New booking falls within an existing booking
+                                    $q3->where('pickup_date_time', '<=', $bookingStart)
+                                        ->where(DB::raw('DATE_ADD(pickup_date_time, INTERVAL duration_minutes MINUTE)'), '>=', $bookingEnd);
+                                });
+                        });
+                });
+            })
+            ->whereDoesntHave('driverVehicleAssignments', function ($query) use ($bookingStart, $bookingEnd) {
+                $query->where(function ($q) use ($bookingStart, $bookingEnd) {
+                    // Check for overlapping driver-vehicle assignments
+                    $q->whereNull('unassigned_at') // Active assignments
+                        ->where(function ($q2) use ($bookingStart, $bookingEnd) {
+                            $q2->whereBetween('assigned_at', [$bookingStart, $bookingEnd]) // Assignment starts within new booking
+                                ->orWhere(function ($q3) use ($bookingStart, $bookingEnd) { // New booking falls within an existing assignment
+                                    $q3->where('assigned_at', '<=', $bookingStart)
+                                        ->whereNull('unassigned_at'); // Still assigned
+                                });
+                        });
+                });
+            })
+            ->exists();
+    }
 }

@@ -48,7 +48,7 @@ class TaxiBooking extends Model
         'pickup_date_time',
         'type_of_booking',
         'estimated_distance',
-        'duration_hours',
+        'duration_minutes',
         'return_time',
         'status',
         'is_scheduled',

@@ -230,8 +230,13 @@ class DriverService
      */
     public function markAvailable(int $driverId): bool
     {
-
-        return $this->updateDriverAvailability($driverId, 'available');
+        try {
+            Log::info("Marking driver {$driverId} as available");
+            return $this->updateDriverAvailability($driverId, 'available');
+        } catch (\Exception $e) {
+            Log::error("Failed to mark driver {$driverId} as available: " . $e->getMessage());
+            throw $e;
+        }
     }
 
     /**
@@ -243,7 +248,13 @@ class DriverService
      */
     public function markBusy(int $driverId): bool
     {
-        return $this->updateDriverAvailability($driverId, 'busy');
+        try {
+            Log::info("Marking driver {$driverId} as busy");
+            return $this->updateDriverAvailability($driverId, 'busy');
+        } catch (\Exception $e) {
+            Log::error("Failed to mark driver {$driverId} as busy: " . $e->getMessage());
+            throw $e;
+        }
     }
 
     /**
@@ -271,16 +282,38 @@ class DriverService
         try {
             DB::beginTransaction();
 
+            // Check if driver exists
+            $driver = Driver::find($driverId);
+            if (!$driver) {
+                throw new \Exception("Driver with ID {$driverId} not found");
+            }
+
             $result = $this->driverAvailabilityRepository->updateAvailability($driverId, $status);
+
+            if (!$result) {
+                throw new \Exception("Failed to update driver availability in repository");
+            }
 
             // Broadcast the availability change event
             event(new DriverAvailabilityChanged($driverId, $status));
 
             DB::commit();
-            return $result;
+
+            Log::info("Driver availability updated successfully", [
+                'driver_id' => $driverId,
+                'new_status' => $status
+            ]);
+
+            return true;
+
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to update driver availability: ' . $e->getMessage());
+            Log::error("Failed to update driver availability", [
+                'driver_id' => $driverId,
+                'status' => $status,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             throw $e;
         }
     }
@@ -298,28 +331,115 @@ class DriverService
         float $pickupLat,
         float $pickupLng,
         int $radius,
-        ?int $vehicleTypeId = null
+        ?int $vehicleTypeId = null,
+        ?int $durationMinutes = null // This parameter was being ignored!
     ): EloquentCollection {
         $bookingTime = Carbon::parse($bookingDateTime);
 
+        // Get nearby drivers
         $drivers = $this->driverLocationRepository->getNearbyDriversByTaxiService(
             $taxiServiceId,
             $pickupLat,
-            $pickupLng, // Longitude first for POINT(lng, lat)
+            $pickupLng,
             $radius,
             $vehicleTypeId
-
         );
 
-        $filteredDrivers = $drivers->filter(function ($driver) use ($bookingTime) {
-            return $this->isDriverAvailableAtTime($driver, $bookingTime) &&
-                $this->vehicleService->isVehicleAvailable($driver->activeVehicle, $bookingTime);
+        Log::debug('Nearby drivers found', [
+            'count' => $drivers->count(),
+            'taxi_service_id' => $taxiServiceId,
+            'pickup_lat' => $pickupLat,
+            'pickup_lng' => $pickupLng,
+            'radius' => $radius,
+            'vehicle_type_id' => $vehicleTypeId,
+            'driver_ids' => $drivers->pluck('id')->toArray()
+        ]);
+        Log::info('Checking driver availability', [
+            'total_nearby_drivers' => $drivers->count(),
+            'booking_time' => $bookingTime->toDateTimeString(),
+            'duration_minutes' => $durationMinutes
+        ]);
+
+        // CRITICAL FIX: Use duration-based availability checking
+        $filteredDrivers = $drivers->filter(function ($driver) use ($bookingTime, $durationMinutes) {
+            // Ensure driver has an active vehicle
+            if (!$driver->activeVehicle) {
+                Log::debug("Driver {$driver->id} has no active vehicle");
+                return false;
+            }
+
+            // Use the comprehensive availability check with duration
+            if ($durationMinutes !== null) {
+                // Use duration-based checking (the proper way)
+                $driverAvailable = $this->driverAvailabilityRepository->isDriverAvailableForBooking(
+                    $driver->id,
+                    $bookingTime,
+                    $durationMinutes
+                );
+
+                $vehicleAvailable = $this->vehicleService->isVehicleAvailableForBooking(
+                    $driver->activeVehicle->id,
+                    $bookingTime,
+                    $durationMinutes
+                );
+                Log::debug("Vehicle availability check", [
+                    'driver_id' => $driver->id,
+                    'vehicle_id' => $driver->activeVehicle->id,
+                    'has_active_vehicle' => true,
+                    'vehicle_available' => $vehicleAvailable,
+                    'booking_start' => $bookingTime->toDateTimeString(),
+                    'booking_end' => $bookingTime->copy()->addMinutes($durationMinutes)->toDateTimeString(),
+                ]);
+
+                Log::debug("Duration-based availability check", [
+                    'driver_id' => $driver->id,
+                    'vehicle_id' => $driver->activeVehicle->id,
+                    'duration_minutes' => $durationMinutes,
+                    'driver_available' => $driverAvailable,
+                    'vehicle_available' => $vehicleAvailable
+                ]);
+
+                return $driverAvailable && $vehicleAvailable;
+            } else {
+                // Fallback to simple time-based checking (less accurate)
+                Log::warning("No duration provided, using simple availability check", [
+                    'driver_id' => $driver->id
+                ]);
+
+                return $this->driverAvailabilityRepository->isDriverAvailableAtTime($driver, $bookingTime) &&
+                    $this->vehicleService->isVehicleAvailable($driver->activeVehicle, $bookingTime);
+
+            }
         });
+
+        Log::info('Driver availability filtering complete', [
+            'available_drivers' => $filteredDrivers->count(),
+            'total_checked' => $drivers->count()
+        ]);
 
         return new EloquentCollection($filteredDrivers->values()->all());
     }
 
+
     // driver time conflicts
+    public function isDriverAvailableForBooking(int $driverId, Carbon $pickupDateTime, int $durationMinutes): bool
+    {
+        return $this->driverAvailabilityRepository->isDriverAvailableForBooking(
+            $driverId,
+            $pickupDateTime,
+            $durationMinutes
+        );
+    }
+
+    /*************  ✨ Windsurf Command ⭐  *************/
+    /**
+     * Checks if a driver is available at a given time.
+     *
+     * @param Driver $driver
+     * @param Carbon $bookingTime
+     * @return bool
+     */
+    /*******  13242e26-2866-4b23-8624-11faca4135cb  *******/
     protected function isDriverAvailableAtTime(Driver $driver, Carbon $bookingTime): bool
     {
         return $this->driverAvailabilityRepository->isDriverAvailableAtTime(
