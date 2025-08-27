@@ -24,6 +24,11 @@ use Carbon\Carbon;
 use DB;
 use Illuminate\Http\Request;
 use App\Repositories\Interfaces\ServiceInterface;
+use App\Http\Resources\FlightResource;
+use App\Http\Resources\FlightTourResource;
+use App\Http\Resources\PromotionResource;
+use App\Models\Tour;
+
 
 class TravelRepository implements TravelInterface
 {
@@ -34,6 +39,84 @@ class TravelRepository implements TravelInterface
     public function __construct(ServiceInterface $serviceRepository)
     {
         $this->serviceRepository = $serviceRepository;
+    }
+
+    /**
+     * Helper method to determine if a flight is favorited by the user.
+     */
+    private function getIsFavourited(?User $user, TravelFlight $flight): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        return Favourite::where([
+            'user_id' => $user->id,
+            'favoritable_id' => $flight->id,
+            'favoritable_type' => TravelFlight::class,
+        ])->exists();
+    }
+
+    /**
+     * Helper method to get the active promotion.
+     */
+    private function getPromotion(): ?Promotion
+    {
+        $now = now();
+        return Promotion::where('is_active', true)
+            ->where('start_date', '<=', $now)
+            ->where('end_date', '>=', $now)
+            ->where('applicable_type', 1)
+            ->orWhere('applicable_type', 6)
+            ->first();
+    }
+
+    /**
+     * Helper method to calculate the average rating for a flight.
+     */
+    private function getAverageFlightRating(int $flightId): float
+    {
+        return Rating::where('rateable_id', $flightId)
+            ->where('rateable_type', 'flight')
+            ->where('is_visible', true)
+            ->avg('rating') ?? 0;
+    }
+
+    /**
+     * Helper method to format location strings.
+     */
+    private function formatLocation($location): string
+    {
+        return $location->name . ', ' .
+            ($location->city->name ?? '') . ', ' .
+            ($location->city->country->name ?? '');
+    }
+
+    /**
+     * Helper method to get and format tours associated with the flight's arrival.
+     */
+    private function getAssociatedTours(TravelFlight $flight): \Illuminate\Support\Collection
+    {
+        // Get tours directly associated with the arrival location
+        $toursByLocation = Tour::with(['admin', 'schedules'])
+            ->where('location_id', $flight->arrival_id)
+            ->get();
+
+        // Get tours associated with locations in the arrival country
+        $toursByCountry = collect();
+        if ($flight->arrival->city->country) {
+            $arrivalCountryId = $flight->arrival->city->country->id;
+            $toursByCountry = Tour::with(['admin', 'schedules'])
+                ->whereHas('location', function ($query) use ($arrivalCountryId) {
+                    $query->whereHas('city.country', function ($subQuery) use ($arrivalCountryId) {
+                        $subQuery->where('id', $arrivalCountryId);
+                    });
+                })
+                ->get();
+        }
+
+        // Merge and get unique tours
+        return $toursByLocation->merge($toursByCountry)->unique('id');
     }
 
     public function getAllFlights()
@@ -120,131 +203,28 @@ class TravelRepository implements TravelInterface
 
     public function getFlight($id)
     {
-        $flight = TravelFlight::with(['agency', 'departure.city.country', 'arrival.city.country'])->find($id);
+        $flight = TravelFlight::with(['agency', 'departure.city.country', 'arrival.city.country', 'flightTypes'])->find($id);
 
         if (!$flight) {
             return $this->error('Flight not found', 404);
         }
 
         $user = auth('sanctum')->user();
-        $isFavourited = false;
 
-        if ($user) {
-            $isFavourited = Favourite::where([
-                'user_id' => $user->id,
-                'favoritable_id' => $flight->id,
-                'favoritable_type' => TravelFlight::class,
-            ])->exists();
-        }
-
-        $now = now();
-        $promotion = Promotion::where('is_active', true)
-            ->where('start_date', '<=', $now)
-            ->where('end_date', '>=', $now)
-            ->where('applicable_type', 1)
-            ->orwhere('applicable_type', 6)
-            ->first();
-
-        // Calculate average rating for this flight
-        $averageRating = Rating::where('rateable_id', $flight->id)
-            ->where('rateable_type', 'flight') // Assuming you have a rating_type for flights
-            ->where('is_visible', true)
-            ->avg('rating') ?? 0;
-
-        // Format departure and arrival locations
-        $departureLocation = $flight->departure->name . ', ' .
-            ($flight->departure->city->name ?? '') . ', ' .
-            ($flight->departure->city->country->name ?? '');
-
-        $arrivalLocation = $flight->arrival->name . ', ' .
-            ($flight->arrival->city->name ?? '') . ', ' .
-            ($flight->arrival->city->country->name ?? '');
-
-        // Find tour guides based on arrival location or country
-        $tourGuides = [];
-        $defaultImage = "images/admin/a.png";
-
-        $tourGuides = [];
-        $defaultImage = "images/admin/a.png";
-
-        // Get tours directly associated with the arrival location
-        $toursByLocation = \App\Models\Tour::with(['admin', 'schedules'])
-            ->where('location_id', $flight->arrival_id)
-            ->get();
-
-        // Get tours associated with locations in the arrival country
-        $toursByCountry = collect();
-        if ($flight->arrival->city->country) {
-            $arrivalCountryId = $flight->arrival->city->country->id;
-            $toursByCountry = \App\Models\Tour::with(['admin', 'schedules'])
-                ->whereHas('location', function ($query) use ($arrivalCountryId) {
-                    $query->whereHas('city.country', function ($subQuery) use ($arrivalCountryId) {
-                        $subQuery->where('id', $arrivalCountryId);
-                    });
-                })
-                ->get();
-        }
-
-        // Merge and get unique tours
-        $allTours = $toursByLocation->merge($toursByCountry)->unique('id');
-
-        $tours = $allTours->map(function ($tour) use ($defaultImage) {
-            return [
-                'id' => $tour->id,
-                'name' => $tour->name,
-                'base_price' => $tour->base_price,
-                'admin' => $tour->admin ? [
-                    'id' => $tour->admin->id,
-                    'name' => $tour->admin->name,
-                    'image' => $tour->admin->image ? asset('storage/' . $tour->admin->image) : asset('storage/' . $defaultImage),
-                ] : null,
-                'schedules' => $tour->schedules->map(function ($schedule) {
-                    return [
-                        'id' => $schedule->id,
-                        'tour_id' => $schedule->tour_id,
-                        'start_date' => Carbon::parse($schedule->start_date)->format('Y-m-d'),
-                        'end_date' => Carbon::parse($schedule->end_date)->format('Y-m-d'),
-                        'start_time' => Carbon::parse($schedule->start_time)->format('H:i:s'),
-                        'available_spots' => $schedule->available_spots,
-                        'price' => $schedule->price,
-                        'is_active' => $schedule->is_active,
-                    ];
-                }),
-            ];
-        });
-
+        $isFavourited = $this->getIsFavourited($user, $flight);
+        $promotion = $this->getPromotion();
+        $averageRating = $this->getAverageFlightRating($flight->id);
+        $allTours = $this->getAssociatedTours($flight);
         $userPoints = $this->serviceRepository->getUserPoints();
 
         return $this->success('Flight retrieved successfully', [
-            'flight' => [
-                'flight_number' => $flight->flight_number,
-                'departure' => $departureLocation,
-                'arrival' => $arrivalLocation,
-                'departure_time' => $flight->departure_time,
-                'arrival_time' => $flight->arrival_time,
-                'price' => $flight->price,
-                'available_seats' => $flight->available_seats,
-                'rating' => round($averageRating, 1),
-                'flight_types' => $flight->flightTypes->map(function ($type) {
-                    return [
-                        'flight_type' => $type->flight_type,
-                        'price' => $type->price,
-                        'available_seats' => $type->available_seats,
-                    ];
-                }),
-            ],
-            'tours' => $tours,
+            'flight' => new FlightResource($flight->setAttribute('rating', $averageRating)),
+            'tours' => FlightTourResource::collection($allTours),
             'is_favourited' => $isFavourited,
-            'promotion' => $promotion ? [
-                'promotion_code' => $promotion->promotion_code,
-                'description' => $promotion->description,
-                'discount_type' => $promotion->discount_type,
-                'discount_value' => $promotion->discount_value,
-                'minimum_purchase' => $promotion->minimum_purchase,
-            ] : null,
-            'user_points' => $userPoints->getData()->data->points ?? 0,
-            'user_name' => $user ? $user->first_name . ' ' . $user->last_name : 'user', // Added user name
-            'location_name' => $user->location ? $user->location : 'location', // Added departure location name
+            'promotion' => $promotion ? new PromotionResource($promotion) : null,
+            'user_points' => $userPoints->points ?? 0,
+            'user_name' => $user ? $user->first_name . ' ' . $user->last_name : 'user',
+            'location_name' => $user && $user->location ? $user->location : 'location',
         ]);
     }
 

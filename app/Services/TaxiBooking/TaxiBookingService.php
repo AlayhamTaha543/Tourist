@@ -363,6 +363,11 @@ class TaxiBookingService
         float $durationMinutes,
         ?int $vehicleTypeId = null
     ): ?array {
+        Log::debug('Looking for scheduled driver-vehicle assignments', [
+            'pickup_datetime' => $pickupDateTime->toDateTimeString(),
+            'duration_minutes' => $durationMinutes,
+            'vehicle_type_id' => $vehicleTypeId
+        ]);
         $query = DriverVehicleAssignment::query()
             ->active()
             ->with(['driver', 'vehicle']);
@@ -374,6 +379,11 @@ class TaxiBookingService
         }
 
         $assignments = $query->get();
+        Log::debug('Found driver-vehicle assignments', [
+            'total_assignments' => $assignments->count(),
+            'assignment_ids' => $assignments->pluck('id')->toArray()
+        ]);
+
 
         foreach ($assignments as $assignment) {
             // Use the repository method to check availability
@@ -388,13 +398,20 @@ class TaxiBookingService
                 $pickupDateTime,
                 (int) $durationMinutes
             );
-
+            Log::debug('Checking assignment availability', [
+                'assignment_id' => $assignment->id,
+                'driver_id' => $assignment->driver_id,
+                'vehicle_id' => $assignment->vehicle_id,
+                'driver_available' => $isDriverAvailable,
+                'vehicle_available' => $isVehicleAvailable
+            ]);
             if ($isDriverAvailable && $isVehicleAvailable) {
                 return [
                     'driver_id' => $assignment->driver_id,
                     'vehicle_id' => $assignment->vehicle_id
                 ];
             }
+            Log::debug('No available driver-vehicle combination found for scheduled booking');
         }
 
         return null;
