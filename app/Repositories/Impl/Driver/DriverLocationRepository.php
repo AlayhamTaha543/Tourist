@@ -109,11 +109,14 @@ class DriverLocationRepository implements DriverLocationRepositoryInterface
         int $taxiServiceId,
         float $lat,
         float $lng,
-        int $radius,
+        int $radius = 5000, // Default to 5000 meters (5km) if not provided or too small
         ?int $vehicleTypeId = null
     ): Collection {
         try {
-            $query = $this->baseNearbyQuery($lat, $lng, $radius)
+            // Ensure a reasonable minimum radius if a small one is passed
+            $effectiveRadius = max($radius, 500); // Ensure at least 500 meters radius
+
+            $query = $this->baseNearbyQuery($lat, $lng, $effectiveRadius)
                 ->where('taxi_service_id', $taxiServiceId)
                 ->recentlyActive();
 
@@ -126,6 +129,12 @@ class DriverLocationRepository implements DriverLocationRepositoryInterface
 
             $drivers = $query->get();
 
+            Log::debug('Nearby drivers found by service and type', [
+                'effective_radius' => $effectiveRadius,
+                'total_drivers_in_radius' => $drivers->count(),
+                'driver_distances' => $drivers->mapWithKeys(fn($d) => [$d->id => $d->distance])->toArray()
+            ]);
+
             return $drivers->filter(function ($driver) {
                 return $this->availabilityRepository
                     ->isDriverAvailableAtTime($driver->id, Carbon::now());
@@ -137,6 +146,7 @@ class DriverLocationRepository implements DriverLocationRepositoryInterface
                 'lat' => $lat,
                 'lng' => $lng,
                 'radius' => $radius,
+                'effective_radius_used' => $effectiveRadius,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);

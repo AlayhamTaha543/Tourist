@@ -44,27 +44,47 @@ class FavouriteRepository implements FavouriteInterface
     public function showAllFavourite()
     {
         $user = auth()->user();
-        $favourites = Favourite::where('user_id', $user->id)
-            ->with('favoritable')
+        $favouriteCountries = Favourite::where('user_id', $user->id)
+            ->where('favoritable_type', Country::class)
+            ->with(['favoritable.tours.images', 'favoritable.tours.feedbacks', 'favoritable.departureFlights', 'favoritable.arrivalFlights'])
             ->get();
 
-        $result = $favourites->map(function ($favourite) use ($user) {
-            return [
-                'id' => $favourite->id,
-                'user' => $user->first_name . ' ' . $user->last_name, // Adjust field names as needed
-                'name' => $favourite->favoritable->name ?? $favourite->favoritable->title ?? 'Unknown', // Get name or title based on the favoritable type
-                'type' => class_basename($favourite->favoritable_type),
+        $totalFlights = 0;
 
+        $countriesData = $favouriteCountries->map(function ($favourite) use (&$totalFlights) {
+            $country = $favourite->favoritable;
+
+            // Calculate average rating from associated tours
+            $averageRating = $country->tours->avg('average_rating') ?? 0.0;
+
+            // Get a representative image for the country (e.g., from the first tour)
+            $countryImage = $country->tours->first()->main_image ?? 'http://127.0.0.1:8000/storage/images/countries/default.png';
+
+            // Calculate average price from associated flights
+            $allFlights = $country->departureFlights->merge($country->arrivalFlights);
+            $countryPrice = $allFlights->avg('price') ?? 0.0;
+            $countryPrice = number_format($countryPrice, 2, '.', ''); // Format to 2 decimal places
+
+            $totalFlights += $allFlights->count();
+
+            return [
+                'country' => $country->name,
+                'average_rating' => round($averageRating, 1),
+                'country_image' => $countryImage,
+                'price' => (string) $countryPrice,
+                'is_favorite' => true,
             ];
         });
 
-        return $this->success('Favorites retrieved successfully', [
-            'favourites' => $result,
+        return $this->success('Flights grouped by countries retrieved successfully', [
+            'countries' => $countriesData,
+            'total_countries' => $countriesData->count(),
+            'total_flights' => $totalFlights,
         ]);
     }
     public function addRestaurantToFavourite($id)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $restaurant = Restaurant::find($id);
         if (!$restaurant) {
             return $this->error('Restaurant not found', 404);
@@ -90,7 +110,7 @@ class FavouriteRepository implements FavouriteInterface
 
     public function addHotelToFavourite($id)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $hotel = Hotel::find($id);
         if (!$hotel) {
             return $this->error('hotel not found', 404);
@@ -115,7 +135,7 @@ class FavouriteRepository implements FavouriteInterface
     }
     public function addTourToFavourite($id)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $tour = Tour::find($id);
         if (!$tour) {
             return $this->error('tour not found', 404);
@@ -140,7 +160,7 @@ class FavouriteRepository implements FavouriteInterface
     }
     public function addPackageToFavourite($id)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $package = TravelPackage::find($id);
         if (!$package) {
             return $this->error('package not found', 404);
@@ -166,7 +186,7 @@ class FavouriteRepository implements FavouriteInterface
 
     public function removeFromFavouriteById($id)
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         $favourite = Favourite::where('id', $id)
             ->where('user_id', $user->id)

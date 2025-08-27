@@ -33,4 +33,29 @@ class Country extends Model
     {
         return $this->hasMany(User::class, 'country_id', 'id');
     }
+
+    public function locations(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(Location::class, City::class);
+    }
+
+    public function tours(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(Tour::class, Location::class, 'city_id', 'location_id', 'id', 'id');
+    }
+
+    public function departureFlights(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(TravelFlight::class, Location::class, 'city_id', 'departure_id', 'id', 'id');
+    }
+
+    public function arrivalFlights(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(TravelFlight::class, Location::class, 'city_id', 'arrival_id', 'id', 'id');
+    }
+
+    public function flights()
+    {
+        return $this->departureFlights->merge($this->arrivalFlights);
+    }
 }
