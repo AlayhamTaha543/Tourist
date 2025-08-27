@@ -29,9 +29,13 @@ class DriverLocationSeeder extends Seeder
             $lng = $minLng + mt_rand() / mt_getrandmax() * ($maxLng - $minLng);
 
             if ($driver->id === 1) {
-                // Set specific coordinates for driver ID 1
-                $lat = 33.5132;
-                $lng = 36.2912;
+                // Set specific coordinates for driver ID 1 with a small random offset
+                $baseLat = 33.5132;
+                $baseLng = 36.2912;
+                $offset = 0.01; // +/- 0.01 degrees for "near" location
+
+                $lat = $baseLat + (mt_rand() / mt_getrandmax() * (2 * $offset)) - $offset;
+                $lng = $baseLng + (mt_rand() / mt_getrandmax() * (2 * $offset)) - $offset;
             }
 
             // Update the driver's current_location using ST_GeomFromText for MySQL

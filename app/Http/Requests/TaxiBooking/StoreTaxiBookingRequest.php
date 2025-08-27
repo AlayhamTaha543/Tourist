@@ -26,7 +26,7 @@ class StoreTaxiBookingRequest extends FormRequest
         return [
             'taxi_service_id' => 'required|exists:taxi_services,id',
             'vehicle_type_id' => 'required|exists:vehicle_types,id',
-            'vehicle_id' => 'required|exists:vehicles,id',
+            'vehicle_id' => 'nullable|exists:vehicles,id',
             'pickup_date_time' => 'required|date',
             'pickup_location' => 'required|array',
             'pickup_location.latitude' => 'required|numeric',

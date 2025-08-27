@@ -181,7 +181,8 @@ class TaxiBookingService
         float $dropoffLat,
         float $dropoffLng,
         int $radius,
-        array $bookingDetails
+        array $bookingDetails,
+        ?int $selectedVehicleId = null
     ): TaxiBooking {
         $pickupDateTime = Carbon::parse($pickupTime);
         $isImmediateBooking = $pickupDateTime->lessThanOrEqualTo(Carbon::now()->addMinutes(5));
@@ -247,12 +248,60 @@ class TaxiBookingService
 
         $totalAfterDiscount = $totalCost - $discountAmount;
 
-        return DB::transaction(function () use ($isImmediateBooking, $taxiServiceId, $pickupTime, $pickupDateTime, $pickupLat, $pickupLng, $radius, $bookingDetails, $totalAfterDiscount, $discountAmount, $promotion, $estimatedTripDurationMinutes) {
+        return DB::transaction(function () use ($isImmediateBooking, $taxiServiceId, $pickupTime, $pickupDateTime, $pickupLat, $pickupLng, $radius, $bookingDetails, $totalAfterDiscount, $discountAmount, $promotion, $estimatedTripDurationMinutes, $selectedVehicleId, $routeInfo) {
             $driverId = null;
             $vehicleId = null;
             $status = 'pending'; // Default status for scheduled bookings
 
-            if ($isImmediateBooking) {
+            if ($selectedVehicleId) {
+                $selectedVehicle = $this->vehicleService->getVehicleById($selectedVehicleId);
+
+                if (!$selectedVehicle) {
+                    throw new TaxiBookingException('Selected vehicle not found.');
+                }
+
+                if (isset($bookingDetails['vehicle_type_id']) && $selectedVehicle->vehicle_type_id !== $bookingDetails['vehicle_type_id']) {
+                    throw new TaxiBookingException('Selected vehicle type does not match requested vehicle type.');
+                }
+
+                $isVehicleAvailable = $this->vehicleService->isVehicleAvailableForBooking(
+                    $selectedVehicleId,
+                    $pickupDateTime,
+                    (int) $estimatedTripDurationMinutes
+                );
+
+                if (!$isVehicleAvailable) {
+                    throw new TaxiBookingException('Selected vehicle is not available for the requested time.');
+                }
+
+                $driverAssignment = DriverVehicleAssignment::where('vehicle_id', $selectedVehicleId)
+                    ->active()
+                    ->first();
+
+                if (!$driverAssignment) {
+                    throw new TaxiBookingException('No active driver found for the selected vehicle.');
+                }
+
+                $isDriverAvailable = $this->driverAvailabilityRepository->isDriverAvailableForBooking(
+                    $driverAssignment->driver_id,
+                    $pickupDateTime,
+                    (int) $estimatedTripDurationMinutes
+                );
+
+                if (!$isDriverAvailable) {
+                    throw new TaxiBookingException('Driver for the selected vehicle is not available for the requested time.');
+                }
+
+                $driverId = $driverAssignment->driver_id;
+                $vehicleId = $selectedVehicleId;
+                $status = 'confirmed'; // If a specific vehicle is chosen and validated, it's confirmed.
+
+                // Mark driver as busy for immediate bookings
+                if ($isImmediateBooking) {
+                    $this->driverService->markBusy($driverId);
+                }
+
+            } elseif ($isImmediateBooking) {
                 // CRITICAL FIX: Pass duration to availability check
                 $availableDrivers = $this->driverService->getAvailableDriversForBooking(
                     $taxiServiceId,
@@ -318,6 +367,7 @@ class TaxiBookingService
                 'status' => $status,
                 'cost' => $totalAfterDiscount,
                 'duration_minutes' => $estimatedTripDurationMinutes,
+                'estimated_distance' => round($routeInfo['distance'] / 1000, 2), // Convert meters to kilometers and round to 2 decimal places
                 'pickup_date_time' => $pickupDateTime, // Essential for overlap checking
             ]));
 
