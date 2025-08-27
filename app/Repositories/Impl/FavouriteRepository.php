@@ -183,7 +183,7 @@ class FavouriteRepository implements FavouriteInterface
 
     public function addCountryToFavourite($id, $isFavorite): \Illuminate\Http\JsonResponse
     {
-        if ($isFavorite) {
+        if ($isFavorite === true) {
             return $this->addCountryToFavouriteRequest($id);
         }
 
