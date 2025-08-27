@@ -16,17 +16,18 @@ class FavouriteRepository implements FavouriteInterface
 {
     use ApiResponse;
 
-    public function showFavourite($id){
+    public function showFavourite($id)
+    {
         $user = auth()->user();
         $favourite = Favourite::where([
             'id' => $id,
             'user_id' => $user->id
         ])->with('favoritable')->first();
-        
-        if(!$favourite){
+
+        if (!$favourite) {
             return $this->error('favourite not found', 404);
         }
-        
+
         // Prepare the response data
         $responseData = [
             'user' => $user->first_name . ' ' . $user->last_name, // Adjust field names as needed
@@ -34,18 +35,19 @@ class FavouriteRepository implements FavouriteInterface
             'type' => class_basename($favourite->favoritable_type),
 
         ];
-        
+
         return $this->success('Store retrieved successfully', [
             'favourite' => $responseData,
         ]);
     }
-    
-    public function showAllFavourite(){
+
+    public function showAllFavourite()
+    {
         $user = auth()->user();
         $favourites = Favourite::where('user_id', $user->id)
             ->with('favoritable')
             ->get();
-            
+
         $result = $favourites->map(function ($favourite) use ($user) {
             return [
                 'id' => $favourite->id,
@@ -55,7 +57,7 @@ class FavouriteRepository implements FavouriteInterface
 
             ];
         });
-        
+
         return $this->success('Favorites retrieved successfully', [
             'favourites' => $result,
         ]);
@@ -64,7 +66,7 @@ class FavouriteRepository implements FavouriteInterface
     {
         $user = auth()->user();
         $restaurant = Restaurant::find($id);
-        if(!$restaurant){
+        if (!$restaurant) {
             return $this->error('Restaurant not found', 404);
         }
         $alreadyExists = Favourite::where([
@@ -90,7 +92,7 @@ class FavouriteRepository implements FavouriteInterface
     {
         $user = auth()->user();
         $hotel = Hotel::find($id);
-        if(!$hotel){
+        if (!$hotel) {
             return $this->error('hotel not found', 404);
         }
         $alreadyExists = Favourite::where([
@@ -115,7 +117,7 @@ class FavouriteRepository implements FavouriteInterface
     {
         $user = auth()->user();
         $tour = Tour::find($id);
-        if(!$tour){
+        if (!$tour) {
             return $this->error('tour not found', 404);
         }
         $alreadyExists = Favourite::where([
@@ -140,7 +142,7 @@ class FavouriteRepository implements FavouriteInterface
     {
         $user = auth()->user();
         $package = TravelPackage::find($id);
-        if(!$package){
+        if (!$package) {
             return $this->error('package not found', 404);
         }
         $alreadyExists = Favourite::where([
@@ -179,7 +181,16 @@ class FavouriteRepository implements FavouriteInterface
         return $this->success('Removed from favourites.');
     }
 
-    public function addCountryToFavourite($id): \Illuminate\Http\JsonResponse
+    public function addCountryToFavourite($id, $isFavorite): \Illuminate\Http\JsonResponse
+    {
+        if ($isFavorite) {
+            return $this->addCountryToFavouriteRequest($id);
+        }
+
+        return $this->removeCountryFromFavourite($id);
+    }
+
+    private function addCountryToFavouriteRequest($id): \Illuminate\Http\JsonResponse
     {
         $user = Auth::user();
         $country = Country::find($id);

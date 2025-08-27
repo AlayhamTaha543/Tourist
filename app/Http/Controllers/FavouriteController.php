@@ -12,35 +12,43 @@ class FavouriteController extends Controller
     {
         $this->favouriteRepository = $favouriteRepository;
     }
-    public function showAllFavourite(){
+    public function showAllFavourite()
+    {
         return $this->favouriteRepository->showAllFavourite();
     }
-    public function showFavourite($id){
+    public function showFavourite($id)
+    {
         return $this->favouriteRepository->showFavourite($id);
     }
-    public function addRestaurantToFavourite($id){
+    public function addRestaurantToFavourite($id)
+    {
         return $this->favouriteRepository->addRestaurantToFavourite($id);
     }
-    public function addHotelToFavourite($id){
+    public function addHotelToFavourite($id)
+    {
         return $this->favouriteRepository->addHotelToFavourite($id);
     }
-    public function addTourToFavourite($id){
+    public function addTourToFavourite($id)
+    {
         return $this->favouriteRepository->addTourToFavourite($id);
     }
-    public function addPackageToFavourite($id){
+    public function addPackageToFavourite($id)
+    {
         return $this->favouriteRepository->addPackageToFavourite($id);
     }
-    public function removeFromFavouriteById($id){
+    public function removeFromFavouriteById($id)
+    {
         return $this->favouriteRepository->removeFromFavouriteById($id);
     }
 
-    public function addCountryToFavourite(Request $request, $id){
-        $isFavorite = $request->input('is_favorite');
+    public function addCountryToFavourite(Request $request, $id)
+    {
+        $isFavorite = $request->is_favorite;
 
-        if ($isFavorite) {
-            return $this->favouriteRepository->addCountryToFavourite($id);
-        } else {
-            return $this->favouriteRepository->removeCountryFromFavourite($id);
-        }
+
+        return $this->favouriteRepository->addCountryToFavourite($id, $isFavorite);
+
+        // return $this->favouriteRepository->removeCountryFromFavourite($id);
+
     }
 }
