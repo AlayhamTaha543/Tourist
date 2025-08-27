@@ -222,7 +222,7 @@ class TravelRepository implements TravelInterface
             'tours' => FlightTourResource::collection($allTours),
             'is_favourited' => $isFavourited,
             'promotion' => $promotion ? new PromotionResource($promotion) : null,
-            'user_points' => $userPoints->points ?? 0,
+            'user_points' => $userPoints ?? 0,
             'user_name' => $user ? $user->first_name . ' ' . $user->last_name : 'user',
             'location_name' => $user && $user->location ? $user->location : 'location',
         ]);
