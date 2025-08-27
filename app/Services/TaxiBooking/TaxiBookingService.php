@@ -185,7 +185,12 @@ class TaxiBookingService
     ): TaxiBooking {
         $pickupDateTime = Carbon::parse($pickupTime);
         $isImmediateBooking = $pickupDateTime->lessThanOrEqualTo(Carbon::now()->addMinutes(5));
-
+        Log::debug('Booking type determination', [
+            'pickup_datetime' => $pickupDateTime->toDateTimeString(),
+            'current_time' => Carbon::now()->toDateTimeString(),
+            'is_immediate_booking' => $isImmediateBooking,
+            'minutes_difference' => $pickupDateTime->diffInMinutes(Carbon::now())
+        ]);
         // Get route info FIRST to calculate accurate duration
         $routeInfo = $this->geoapifyService->getRoute(
             $pickupLat,
