@@ -28,6 +28,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('getFeedbacksByType', 'getFeedbacksByType');
         Route::post('submitFeedback', 'submitFeedback');
         Route::get('getAvailablePromotions', 'getAvailablePromotions');
-        Route::post('requestTourAdmin', 'requestTourAdmin');
+        // Route::post('requestTourAdmin', 'requestTourAdmin');
     });
 });

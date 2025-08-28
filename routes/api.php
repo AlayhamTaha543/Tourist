@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Journey\JourneyController;
+use App\Http\Controllers\Api\TourAdminRequestController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('journey')->group(function () {
@@ -17,6 +18,8 @@ Route::middleware('auth:sanctum')->prefix('journey')->group(function () {
 
 });
 
+
+Route::post('auth/requestTourAdmin', [TourAdminRequestController::class, 'store']);
 
 require __DIR__ . '/api/auth.php';
 require __DIR__ . '/api/booking.php';
