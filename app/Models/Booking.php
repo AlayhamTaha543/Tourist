@@ -46,6 +46,11 @@ class Booking extends Model
     {
         return $this->hasOne(TourBooking::class, 'booking_id', 'id');
     }
+    public function rentalBooking(): HasOne
+    {
+        return $this->hasOne(RentalBooking::class, 'booking_id', 'id');
+    }
+
 
     public function hotelBooking(): HasOne
     {

@@ -43,6 +43,10 @@ class RentalBooking extends Model
     {
         return $this->belongsTo(RentalVehicle::class);
     }
+    public function rentalVehicle(): BelongsTo
+    {
+        return $this->belongsTo(RentalVehicle::class);
+    }
 
     public function office(): BelongsTo
     {

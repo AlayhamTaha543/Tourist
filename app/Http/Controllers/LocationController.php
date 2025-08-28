@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Interface\LocationInterface;
+use App\Repositories\Interfaces\LocationInterface;
 use Illuminate\Http\Request;
 
 class LocationController extends Controller

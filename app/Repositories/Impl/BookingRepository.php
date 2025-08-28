@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\HotelBooking;
 use App\Models\Payment;
 use App\Models\Policy;
+use App\Models\RentalBooking;
 use App\Models\RestaurantBooking;
 use App\Models\TourBooking;
 use App\Models\TravelBooking;
@@ -83,6 +84,7 @@ class BookingRepository implements BookingInterface
             'restaurant' => [],
             'flight' => [],
             'taxi' => [],
+            'rental' => [],
         ];
         foreach ($bookings as $booking) {
             switch ($booking->booking_type) {
@@ -91,7 +93,7 @@ class BookingRepository implements BookingInterface
                         'booking_reference' => $booking->booking_reference,
                         'date' => $booking->booking_date,
                         'total_price' => $booking->total_price,
-                        'taxi' => optional($booking->taxiBooking->taxiService)->only(['id', 'name', 'location']),
+                        'taxi' => optional(optional($booking->taxiBooking)->taxiService)->only(['id', 'name', 'location']),
                         'pickup_location' => $booking->taxiBooking->pickupLocation ?? null,
                         'dropoff_location' => $booking->taxiBooking->dropoffLocation ?? null,
                         'pickup_time' => $booking->taxiBooking->pickup_date_time ?? null,
@@ -119,7 +121,7 @@ class BookingRepository implements BookingInterface
                         'check_out_date' => optional($booking->hotelBooking)->check_out_date ?? null,
                     ];
                     break;
-                case 'package':
+                case 'travel':
                     $response['flight'][] = [
                         'booking_reference' => $booking->booking_reference,
                         'date' => $booking->booking_date,
@@ -143,6 +145,17 @@ class BookingRepository implements BookingInterface
                         'reservation_time' => $booking->restaurantBooking->reservation_time ?? null,
                         'guests' => $booking->restaurantBooking->number_of_guests ?? 0,
                         'order' => $orderItems,
+                    ];
+                    break;
+                case 'rental':
+                    $response['rental'][] = [
+                        'booking_reference' => $booking->booking_reference,
+                        'date' => $booking->booking_date,
+                        'total_price' => $booking->total_price,
+                        'rental_office' => optional(optional($booking->rentalBooking->rentalVehicle)->rentalOffice)->only(['id', 'name', 'location']),
+                        'vehicle_name' => optional($booking->rentalBooking->rentalVehicle)->name ?? null,
+                        'pickup_date' => optional($booking->rentalBooking)->pickup_date ?? null,
+                        'dropoff_date' => optional($booking->rentalBooking)->dropoff_date ?? null,
                     ];
                     break;
             }
@@ -161,6 +174,8 @@ class BookingRepository implements BookingInterface
             'hotelBooking.roomType.hotel',
             'restaurantBooking.restaurant',
             'travelBooking.flight',
+            'rentalBooking.rentalVehicle',
+            'taxiBooking.taxiService',
         ])
             ->where('user_id', $user->id)
             ->get();
@@ -171,16 +186,18 @@ class BookingRepository implements BookingInterface
             'restaurant' => [],
             'flight' => [],
             'taxi' => [],
+            'rental' => [],
         ];
 
         foreach ($bookings as $booking) {
             switch ($booking->booking_type) {
-                case 'Taxi':
+                case 'taxi':
+                    dd($booking);
                     $response['taxi'][] = [
                         'booking_reference' => $booking->booking_reference,
                         'date' => $booking->booking_date,
                         'total_price' => $booking->total_price,
-                        'taxi' => optional($booking->taxiBooking->taxiService)->only(['id', 'name', 'location']),
+                        'taxi' => optional($booking->taxiBooking->taxiService)->only(['name', 'location']),
                         'pickup_location' => $booking->taxiBooking->pickupLocation ?? null,
                         'dropoff_location' => $booking->taxiBooking->dropoffLocation ?? null,
                         'pickup_time' => $booking->taxiBooking->pickup_date_time ?? null,
@@ -208,7 +225,7 @@ class BookingRepository implements BookingInterface
                         'check_out_date' => optional($booking->hotelBooking)->check_out_date ?? null,
                     ];
                     break;
-                case 'package':
+                case 'travel':
                     $response['flight'][] = [
                         'booking_reference' => $booking->booking_reference,
                         'date' => $booking->booking_date,
@@ -232,6 +249,17 @@ class BookingRepository implements BookingInterface
                         'reservation_time' => $booking->restaurantBooking->reservation_time ?? null,
                         'guests' => $booking->restaurantBooking->number_of_guests ?? 0,
                         'order' => $orderItems,
+                    ];
+                    break;
+                case 'rental':
+                    $response['rental'][] = [
+                        'booking_reference' => $booking->booking_reference,
+                        'date' => $booking->booking_date,
+                        'total_price' => $booking->total_price,
+                        'rental_office' => optional(optional($booking->rentalBooking->rentalVehicle)->rentalOffice)->only(['id', 'name', 'location']),
+                        'vehicle_name' => optional($booking->rentalBooking->rentalVehicle)->name ?? null,
+                        'pickup_date' => optional($booking->rentalBooking)->pickup_date ?? null,
+                        'dropoff_date' => optional($booking->rentalBooking)->dropoff_date ?? null,
                     ];
                     break;
             }

@@ -30,8 +30,11 @@ use App\Repositories\Interfaces\TourInterface;
 use App\Repositories\Interfaces\TravelInterface;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\URL;
 use Webbingbrasil\FilamentMaps\Widgets\MapWidget;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use App\Models\{Hotel, TravelAgency, TaxiService, RentalOffice, Restaurant, Tour, Application};
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -107,6 +110,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        URL::forceScheme('https');
+
+        Relation::morphMap([
+            'Hotel' => Hotel::class,
+            'TravelAgency' => TravelAgency::class,
+            'TaxiService' => TaxiService::class,
+            'RentalOffice' => RentalOffice::class,
+            'Restaurant' => Restaurant::class,
+            'Tour' => Tour::class,
+            'Application' => Application::class,
+        ]);
+
         // Register all migration directories
         $migrationDirs = [database_path('migrations')];
 
