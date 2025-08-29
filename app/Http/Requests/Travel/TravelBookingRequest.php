@@ -23,7 +23,7 @@ class TravelBookingRequest extends FormRequest
     {
         return [
             'flight_type_name' => 'required|string|exists:flight_types,flight_type',
-            'passport_image' => 'required|image|max:2048',
+            'passport_image' => ['required', 'image', 'max:2048', new \App\Rules\ValidatePassportImage()],
             'ticket_type' => 'required|in:one_way,round_trip',
             'number_of_adults' => 'nullable|integer|min:1',
             'schedule_id' => 'nullable|integer|exists:tour_schedules,id',
@@ -32,6 +32,7 @@ class TravelBookingRequest extends FormRequest
         ];
     }
 
+
     public function withValidator($validator)
     {
         $validator->sometimes(['number_of_adults', 'schedule_id'], 'required', function ($input) {
@@ -39,3 +40,5 @@ class TravelBookingRequest extends FormRequest
         });
     }
 }
+
+

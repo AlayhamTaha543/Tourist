@@ -6,7 +6,6 @@ use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-
 class ValidatePassportImage implements ValidationRule
 {
     /**
@@ -16,59 +15,84 @@ class ValidatePassportImage implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
+        Log::info('ValidatePassportImage rule started for attribute: ' . $attribute);
+
         if (!$value->isValid()) {
             $fail('The :attribute is not a valid uploaded file.');
+            Log::warning('Uploaded file is not valid for attribute: ' . $attribute);
             return;
         }
 
-        // Convert image to base64 for API submission
-        $base64Image = base64_encode($value->get());
+        $apiEndpoint = env('LLM_PASSPORT_API_ENDPOINT', 'https://openrouter.ai/api/v1/chat/completions');
+        $apiKey = env('OPENROUTER_API_KEY');
+        $model = env('LLM_PASSPORT_MODEL', 'mistralai/mistral-small-3.2-24b-instruct:free');
 
-        // TODO: Replace with your actual LLM API endpoint
-        $apiEndpoint = env('LLM_PASSPORT_API_ENDPOINT', 'http://your-llm-api.com/analyze-passport');
-        // TODO: Replace with your actual API key environment variable name
-        $apiKey = env('LLM_PASSPORT_API_KEY');
+        Log::info("LLM API Configuration: Endpoint={$apiEndpoint}, Model={$model}");
 
         if (!$apiKey) {
-            Log::error('LLM_PASSPORT_API_KEY is not set in .env file.');
+            Log::error('OPENROUTER_API_KEY is not set in .env file. Passport validation service is not configured.');
             $fail('Passport validation service is not configured.');
             return;
         }
 
         try {
+            // Convert image to base64 for API submission
+            $base64Image = base64_encode($value->get());
+            $mimeType = $value->getMimeType();
+            Log::info('Image converted to base64 with MIME type: ' . $mimeType);
+
+            $requestPayload = [
+                'model' => $model,
+                'messages' => [
+                    [
+                        'role' => 'user',
+                        'content' => [
+                            [
+                                'type' => 'text',
+                                'text' => 'Does this image clearly show a passport? Respond with "yes" or "no" and a brief explanation.'
+                            ],
+                            [
+                                'type' => 'image_url',
+                                'image_url' => [
+                                    'url' => "data:{$mimeType};base64,{$base64Image}"
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ];
+
+            Log::info('Sending request to OpenRouter API with base64 image payload.');
+
             $response = Http::withHeaders([
-                // TODO: Add any other required headers, e.g., 'Content-Type': 'application/json'
-                'Authorization' => 'Bearer ' . $apiKey, // Example for Bearer token authentication
-            ])->post($apiEndpoint, [
-                // TODO: Adjust payload based on your LLM API's expected request format
-                'image' => $base64Image,
-                'filename' => $value->getClientOriginalName(),
-            ]);
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer ' . $apiKey,
+            ])->post($apiEndpoint, $requestPayload);
+
+            Log::info('Received response from OpenRouter API. Status: ' . $response->status() . ', Body: ' . $response->body());
 
             if ($response->failed()) {
-                Log::error('LLM Passport API request failed: ' . $response->body());
+                Log::error('OpenRouter API request failed: ' . $response->body());
                 $fail('Failed to verify passport image with external service. Please try again.');
                 return;
             }
 
             $responseData = $response->json();
+            $llmResponseContent = $responseData['choices'][0]['message']['content'] ?? '';
+            Log::info('LLM Response Content: ' . $llmResponseContent);
 
-            // TODO: Adjust this logic based on your LLM API's expected response format
-            // Example: Assuming the API returns a 'is_passport' boolean and a 'confidence' score
-            if (!isset($responseData['is_passport']) || !$responseData['is_passport']) {
-                $fail('The uploaded file does not appear to be a valid passport image.');
-                return;
+            if (stripos($llmResponseContent, 'yes') === false) {
+                Log::warning('LLM analysis determined the image is NOT a passport.');
+                $fail('The uploaded file does not appear to be a valid passport image according to the AI analysis.');
+            } else {
+                Log::info('LLM analysis determined the image IS a passport. Validation passed.');
             }
 
-            // Optional: Check confidence score if your API provides one
-            // if (isset($responseData['confidence']) && $responseData['confidence'] < 0.8) {
-            //     $fail('The uploaded file is a passport image, but with low confidence. Please try again with a clearer image.');
-            //     return;
-            // }
-
         } catch (\Exception $e) {
-            Log::error('Error calling LLM Passport API: ' . $e->getMessage());
+            Log::error('Error calling OpenRouter API: ' . $e->getMessage());
             $fail('An error occurred during passport image verification. Please try again.');
+        } finally {
+            Log::info('ValidatePassportImage rule finished.');
         }
     }
 }
