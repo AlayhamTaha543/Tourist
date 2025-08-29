@@ -23,7 +23,31 @@ class RentalOfficeResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Forms\Components\TextInput::make('name')
+                    ->required()
+                    ->maxLength(100),
+                Forms\Components\TextInput::make('address')
+                    ->maxLength(255)
+                    ->nullable(),
+                Forms\Components\TextInput::make('rating')
+                    ->numeric()
+                    ->nullable(),
+                Forms\Components\Select::make('location_id')
+                    ->relationship('location', 'name')
+                    ->required()
+                    ->label('Location'),
+                Forms\Components\Select::make('manager_id')
+                    ->relationship('manager', 'name')
+                    ->required()
+                    ->label('Manager'),
+                Forms\Components\FileUpload::make('image')
+                    ->image()
+                    ->directory('rental-offices')
+                    ->nullable(),
+                Forms\Components\TimePicker::make('open_time')
+                    ->nullable(),
+                Forms\Components\TimePicker::make('close_time')
+                    ->nullable(),
             ]);
     }
 
@@ -31,7 +55,22 @@ class RentalOfficeResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('name')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('address')
+                    ->searchable()
+                    ->limit(50),
+                Tables\Columns\TextColumn::make('location.name')
+                    ->label('Location Name')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('manager.name')
+                    ->label('Manager Name')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\ImageColumn::make('image')
+                    ->label('Image'),
             ])
             ->filters([
                 //

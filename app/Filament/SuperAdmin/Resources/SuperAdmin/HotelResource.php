@@ -24,7 +24,21 @@ class HotelResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Select::make('admin_id')
-                    ->relationship('admin', 'email', fn (Builder $query) => $query->where('role', 'hotel_admin'))
+                    ->relationship('admin', 'email', fn (Builder $query) => $query->where('role', 'admin')->where('section', 'hotel'))
+                    ->placeholder('Select a Hotel Admin or create a new one')
+                    ->createOptionForm([
+                        Forms\Components\TextInput::make('name')->required(),
+                        Forms\Components\TextInput::make('email')->email()->required(),
+                        Forms\Components\TextInput::make('password')
+                            ->password()
+                            ->required()
+                            ->default('password') // Default password for new admins
+                            ->dehydrateStateUsing(fn (string $state): string => bcrypt($state))
+                            ->helperText('Default password is "password". Please inform the admin to change it.'),
+                    ])
+                    ->createOptionUsing(function (array $data) {
+                        return \App\Models\Admin::create(array_merge($data, ['role' => 'admin', 'section' => 'hotel']));
+                    })
                     ->required()
                     ->label('Hotel Admin Email'),
                 Forms\Components\TextInput::make('name')->required()->live(onBlur: true),

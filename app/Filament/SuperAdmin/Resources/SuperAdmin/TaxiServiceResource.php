@@ -23,7 +23,41 @@ class TaxiServiceResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Forms\Components\TextInput::make('name')
+                    ->required()
+                    ->maxLength(255),
+                Forms\Components\Textarea::make('description')
+                    ->maxLength(65535)
+                    ->nullable(),
+                Forms\Components\Select::make('location_id')
+                    ->relationship('location', 'name')
+                    ->required()
+                    ->label('Location'),
+                Forms\Components\FileUpload::make('logo_url')
+                    ->image()
+                    ->directory('taxi-services')
+                    ->nullable(),
+                Forms\Components\TextInput::make('website')
+                    ->maxLength(255)
+                    ->nullable(),
+                Forms\Components\TextInput::make('phone')
+                    ->tel()
+                    ->maxLength(255)
+                    ->nullable(),
+                Forms\Components\TextInput::make('email')
+                    ->email()
+                    ->maxLength(255)
+                    ->nullable(),
+                Forms\Components\Toggle::make('is_active')
+                    ->nullable(),
+                Forms\Components\Select::make('manager_id')
+                    ->relationship('manager', 'name')
+                    ->nullable()
+                    ->label('Manager'),
+                Forms\Components\TimePicker::make('open_time')
+                    ->nullable(),
+                Forms\Components\TimePicker::make('close_time')
+                    ->nullable(),
             ]);
     }
 
@@ -31,7 +65,22 @@ class TaxiServiceResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('name')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('description')
+                    ->searchable()
+                    ->limit(50),
+                Tables\Columns\TextColumn::make('location.name')
+                    ->label('Location Name')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\ImageColumn::make('logo_url')
+                    ->label('Logo'),
+                Tables\Columns\TextColumn::make('manager.name')
+                    ->label('Manager Name')
+                    ->searchable()
+                    ->sortable(),
             ])
             ->filters([
                 //

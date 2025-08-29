@@ -18,7 +18,7 @@ class FavouriteRepository implements FavouriteInterface
 
     public function showFavourite($id)
     {
-        $user = auth()->user();
+        $user = Auth::guard('api')->user();
         $favourite = Favourite::where([
             'id' => $id,
             'user_id' => $user->id
@@ -43,7 +43,7 @@ class FavouriteRepository implements FavouriteInterface
 
     public function showAllFavourite()
     {
-        $user = auth()->user();
+        $user = Auth::guard('sanctum')->user();
         $favouriteCountries = Favourite::where('user_id', $user->id)
             ->where('favoritable_type', Country::class)
             ->with(['favoritable.tours.images', 'favoritable.tours.feedbacks', 'favoritable.departureFlights', 'favoritable.arrivalFlights'])
@@ -58,7 +58,9 @@ class FavouriteRepository implements FavouriteInterface
             $averageRating = $country->tours->avg('average_rating') ?? 0.0;
 
             // Get a representative image for the country (e.g., from the first tour)
-            $countryImage = $country->tours->first()->main_image ? asset('storage/' . $country->tours->first()->main_image) : asset('storage/' . 'images/countries/default.png');
+            $countryImage = ($country->tours->isNotEmpty() && $country->tours->first()->main_image)
+                ? asset('storage/' . $country->tours->first()->main_image)
+                : asset('storage/' . 'images/countries/default.png');
 
             // Calculate average price from associated flights
             $allFlights = $country->departureFlights->merge($country->arrivalFlights);

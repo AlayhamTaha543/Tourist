@@ -14,6 +14,9 @@ use App\Notifications\PaymentNotification;
 use App\Repositories\Interfaces\BookingInterface;
 use App\Services\TaxiBooking\TaxiBookingService;
 use App\Traits\ApiResponse;
+use App\Http\Resources\BookingCollectionResource;
+use App\Http\Resources\BookingHistoryCollectionResource;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Str;
 
@@ -122,11 +125,15 @@ class BookingRepository implements BookingInterface
                     ];
                     break;
                 case 'travel':
+                    if (is_null($booking->travelBooking)) {
+                        Log::warning('Booking with ID ' . $booking->id . ' (Reference: ' . $booking->booking_reference . ') has booking_type "travel" but no associated TravelBooking record.');
+                        continue 2; // Skip to the next booking in the outer foreach loop
+                    }
                     $response['flight'][] = [
                         'booking_reference' => $booking->booking_reference,
                         'date' => $booking->booking_date,
                         'total_price' => $booking->total_price,
-                        'flight' => optional($booking->travelBooking->flight),
+                        'flight' => optional(optional($booking->travelBooking)->flight),
                         'number_of_people' => $booking->travelBooking->number_of_people ?? 0,
                     ];
                     break;
@@ -148,6 +155,10 @@ class BookingRepository implements BookingInterface
                     ];
                     break;
                 case 'rental':
+                    if (is_null($booking->rentalBooking)) {
+                        Log::warning('Booking with ID ' . $booking->id . ' (Reference: ' . $booking->booking_reference . ') has booking_type "rental" but no associated RentalBooking record.');
+                        continue 2; // Skip to the next booking in the outer foreach loop
+                    }
                     $response['rental'][] = [
                         'booking_reference' => $booking->booking_reference,
                         'date' => $booking->booking_date,
@@ -161,7 +172,7 @@ class BookingRepository implements BookingInterface
             }
         }
 
-        return $this->success('Booking history retrieved successfully', $response);
+        return $this->success('Booking history retrieved successfully', new BookingHistoryCollectionResource($bookings));
     }
     public function getAllBookings()
     {
@@ -195,7 +206,7 @@ class BookingRepository implements BookingInterface
             switch ($booking->booking_type) {
                 case 'taxi':
                     if (is_null($booking->taxiBooking)) {
-                        \Log::warning('Booking with ID ' . $booking->id . ' (Reference: ' . $booking->booking_reference . ') has booking_type "taxi" but no associated TaxiBooking record.');
+                        Log::warning('Booking with ID ' . $booking->id . ' (Reference: ' . $booking->booking_reference . ') has booking_type "taxi" but no associated TaxiBooking record.');
                         continue 2; // Skip to the next booking in the outer foreach loop
                     }
                     $response['taxi'][] = [
@@ -231,6 +242,10 @@ class BookingRepository implements BookingInterface
                     ];
                     break;
                 case 'travel':
+                    if (is_null($booking->travelBooking)) {
+                        Log::warning('Booking with ID ' . $booking->id . ' (Reference: ' . $booking->booking_reference . ') has booking_type "travel" but no associated TravelBooking record in history.');
+                        continue 2; // Skip to the next booking in the outer foreach loop
+                    }
                     $response['flight'][] = [
                         'booking_reference' => $booking->booking_reference,
                         'date' => $booking->booking_date,
@@ -257,6 +272,10 @@ class BookingRepository implements BookingInterface
                     ];
                     break;
                 case 'rental':
+                    if (is_null($booking->rentalBooking)) {
+                        Log::warning('Booking with ID ' . $booking->id . ' (Reference: ' . $booking->booking_reference . ') has booking_type "rental" but no associated RentalBooking record in all bookings.');
+                        continue 2; // Skip to the next booking in the outer foreach loop
+                    }
                     $response['rental'][] = [
                         'booking_reference' => $booking->booking_reference,
                         'date' => $booking->booking_date,
@@ -270,7 +289,7 @@ class BookingRepository implements BookingInterface
             }
         }
 
-        return $this->success('All bookings retrieved successfully', $response);
+        return $this->success('All bookings retrieved successfully', new BookingCollectionResource($bookings));
     }
     public function cancelBooking($id)
     {

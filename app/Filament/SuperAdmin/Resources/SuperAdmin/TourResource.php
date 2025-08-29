@@ -23,7 +23,65 @@ class TourResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Forms\Components\TextInput::make('name')
+                    ->required()
+                    ->maxLength(255),
+                Forms\Components\Textarea::make('description')
+                    ->maxLength(65535)
+                    ->nullable(),
+                Forms\Components\TextInput::make('short_description')
+                    ->maxLength(255)
+                    ->nullable(),
+                Forms\Components\Select::make('location_id')
+                    ->relationship('location', 'name')
+                    ->nullable()
+                    ->label('Location'),
+                Forms\Components\TextInput::make('duration_hours')
+                    ->numeric()
+                    ->nullable(),
+                Forms\Components\TextInput::make('duration_days')
+                    ->numeric()
+                    ->nullable(),
+                Forms\Components\TextInput::make('base_price')
+                    ->required()
+                    ->numeric(),
+                Forms\Components\TextInput::make('language')
+                    ->maxLength(255)
+                    ->nullable(),
+                Forms\Components\TextInput::make('discount_percentage')
+                    ->numeric()
+                    ->nullable(),
+                Forms\Components\TextInput::make('max_capacity')
+                    ->required()
+                    ->numeric(),
+                Forms\Components\TextInput::make('min_participants')
+                    ->numeric()
+                    ->nullable(),
+                Forms\Components\Select::make('difficulty_level')
+                    ->options([
+                        'easy' => 'Easy',
+                        'moderate' => 'Moderate',
+                        'difficult' => 'Difficult',
+                    ])
+                    ->nullable(),
+                Forms\Components\TextInput::make('average_rating')
+                    ->numeric()
+                    ->nullable(),
+                Forms\Components\TextInput::make('total_ratings')
+                    ->numeric()
+                    ->nullable(),
+                Forms\Components\FileUpload::make('main_image')
+                    ->image()
+                    ->directory('tours')
+                    ->nullable(),
+                Forms\Components\Toggle::make('is_active')
+                    ->nullable(),
+                Forms\Components\Toggle::make('is_featured')
+                    ->nullable(),
+                Forms\Components\Select::make('admin_id')
+                    ->relationship('admin', 'name')
+                    ->required()
+                    ->label('Admin'),
             ]);
     }
 
@@ -31,7 +89,20 @@ class TourResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('name')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('location.name')
+                    ->label('Location Name')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('admin.name')
+                    ->label('Admin Name')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('base_price')
+                    ->money('USD')
+                    ->sortable(),
             ])
             ->filters([
                 //

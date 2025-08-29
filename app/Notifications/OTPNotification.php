@@ -36,7 +36,7 @@ class OTPNotification extends Notification
     {
         return (new MailMessage)
             ->line('Your OTP code is: ' . $notifiable->code)
-            ->action('Verify Email', url('/verify-email?code=' . $notifiable->code . '&email=' . $notifiable->email))
+            // ->action('Verify Email', url('/verify-email?code=' . $notifiable->code . '&email=' . $notifiable->email))
             ->line('This code will expire in 6 minutes.')
             ->line('Thank you for using our application!');
     }

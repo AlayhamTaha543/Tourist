@@ -23,14 +23,14 @@ class ValidatePassportImage implements ValidationRule
             return;
         }
 
-        $apiEndpoint = env('LLM_PASSPORT_API_ENDPOINT', 'https://openrouter.ai/api/v1/chat/completions');
-        $apiKey = env('OPENROUTER_API_KEY');
-        $model = env('LLM_PASSPORT_MODEL', 'mistralai/mistral-small-3.2-24b-instruct:free');
+        $apiEndpoint = env('GEMINI_API_ENDPOINT', 'https://generativelanguage.googleapis.com/v1beta/models/');
+        $apiKey = env('GEMINI_API_KEY');
+        $model = env('GEMINI_PASSPORT_MODEL', 'gemini-2.5-flash'); // Using gemini-1.5-flash as default
 
         Log::info("LLM API Configuration: Endpoint={$apiEndpoint}, Model={$model}");
 
         if (!$apiKey) {
-            Log::error('OPENROUTER_API_KEY is not set in .env file. Passport validation service is not configured.');
+            Log::error('GEMINI_API_KEY is not set in .env file. Passport validation service is not configured.');
             $fail('Passport validation service is not configured.');
             return;
         }
@@ -42,19 +42,16 @@ class ValidatePassportImage implements ValidationRule
             Log::info('Image converted to base64 with MIME type: ' . $mimeType);
 
             $requestPayload = [
-                'model' => $model,
-                'messages' => [
+                'contents' => [
                     [
-                        'role' => 'user',
-                        'content' => [
+                        'parts' => [
                             [
-                                'type' => 'text',
                                 'text' => 'Does this image clearly show a passport? Respond with "yes" or "no" and a brief explanation.'
                             ],
                             [
-                                'type' => 'image_url',
-                                'image_url' => [
-                                    'url' => "data:{$mimeType};base64,{$base64Image}"
+                                'inline_data' => [
+                                    'mime_type' => $mimeType,
+                                    'data' => $base64Image
                                 ]
                             ]
                         ]
@@ -62,23 +59,22 @@ class ValidatePassportImage implements ValidationRule
                 ]
             ];
 
-            Log::info('Sending request to OpenRouter API with base64 image payload.');
+            Log::info('Sending request to Gemini API with base64 image payload.');
 
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer ' . $apiKey,
-            ])->post($apiEndpoint, $requestPayload);
+            ])->post("{$apiEndpoint}{$model}:generateContent?key={$apiKey}", $requestPayload);
 
-            Log::info('Received response from OpenRouter API. Status: ' . $response->status() . ', Body: ' . $response->body());
+            Log::info('Received response from Gemini API. Status: ' . $response->status() . ', Body: ' . $response->body());
 
             if ($response->failed()) {
-                Log::error('OpenRouter API request failed: ' . $response->body());
+                Log::error('Gemini API request failed: ' . $response->body());
                 $fail('Failed to verify passport image with external service. Please try again.');
                 return;
             }
 
             $responseData = $response->json();
-            $llmResponseContent = $responseData['choices'][0]['message']['content'] ?? '';
+            $llmResponseContent = $responseData['candidates'][0]['content']['parts'][0]['text'] ?? '';
             Log::info('LLM Response Content: ' . $llmResponseContent);
 
             if (stripos($llmResponseContent, 'yes') === false) {
@@ -89,7 +85,7 @@ class ValidatePassportImage implements ValidationRule
             }
 
         } catch (\Exception $e) {
-            Log::error('Error calling OpenRouter API: ' . $e->getMessage());
+            Log::error('Error calling Gemini API: ' . $e->getMessage());
             $fail('An error occurred during passport image verification. Please try again.');
         } finally {
             Log::info('ValidatePassportImage rule finished.');

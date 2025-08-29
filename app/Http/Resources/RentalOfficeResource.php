@@ -30,6 +30,7 @@ class RentalOfficeResource extends JsonResource
             'vehicles' => $this->when($this->relationLoaded('vehicles'), function () {
                 return $this->vehicles->map(function ($vehicle) {
                     return [
+                        'id' => $vehicle->id,
                         'registration_number' => $vehicle->license_plate,
                         'make' => $vehicle->make,
                         'model' => $vehicle->model,

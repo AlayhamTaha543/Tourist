@@ -4,7 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class TaxiBookingResource extends JsonResource
+class TravelBookingResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -18,13 +18,12 @@ class TaxiBookingResource extends JsonResource
             'booking_reference' => $this->booking_reference,
             'date' => $this->booking_date,
             'total_price' => $this->total_price,
-            'taxi' => [
-                'name' => optional($this->taxiBooking->taxiService)->name ?? null,
-                'location' => optional(optional($this->taxiBooking->taxiService)->location)->name ?? null,
+            'flight' => [
+                'flight_number' => optional(optional($this->travelBooking)->flight)->flight_number ?? null,
+                'departure_location' => optional(optional(optional($this->travelBooking)->flight)->departure)->name ?? null,
+                'arrival_location' => optional(optional(optional($this->travelBooking)->flight)->arrival)->name ?? null,
             ],
-            'pickup_location' => optional($this->taxiBooking->pickupLocation)->name ?? null,
-            'dropoff_location' => optional($this->taxiBooking->dropoffLocation)->name ?? null,
-            'pickup_time' => $this->taxiBooking->pickup_date_time ?? null,
+            'number_of_people' => optional($this->travelBooking)->number_of_people ?? 0,
         ];
     }
 }
