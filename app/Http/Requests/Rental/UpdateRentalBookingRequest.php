@@ -14,8 +14,8 @@ class UpdateRentalBookingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'pickup_date' => 'sometimes|date|after_or_equal:today',
-            'return_date' => 'sometimes|date|after:pickup_date',
+            'pickup_date' => 'sometimes|date|date_format:Y-m-d|after_or_equal:today',
+            'return_date' => 'sometimes|date|date_format:Y-m-d|after:pickup_date',
             'status' => 'sometimes|in:reserved,active,completed,cancelled',
         ];
     }

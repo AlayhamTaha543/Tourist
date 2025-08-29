@@ -31,8 +31,8 @@ class StoreRentalBookingRequest extends FormRequest
                 }),
             ],
             'office_id' => 'required|exists:rental_offices,id',
-            'pickup_date' => 'required|date|after_or_equal:today',
-            'return_date' => 'required|date|after:pickup_date',
+            'pickup_date' => 'required|date|date_format:Y-m-d|after_or_equal:today',
+            'return_date' => 'required|date|date_format:Y-m-d|after:pickup_date',
             'payment_method' => 'nullable|string',
         ];
     }

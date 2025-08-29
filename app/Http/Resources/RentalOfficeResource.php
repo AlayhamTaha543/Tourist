@@ -15,7 +15,7 @@ class RentalOfficeResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $defaultImage="images/rental/r.png";
+        $defaultImage = "images/rental/r.png";
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -37,10 +37,10 @@ class RentalOfficeResource extends JsonResource
                         'seating_capacity' => $vehicle->seating_capacity,
                         'price_per_day' => $vehicle->price_per_day,
                         'status' => $vehicle->status,
-                        'category' => $this->when($vehicle->relationLoaded('category'), [
-                            'name' => $vehicle->category->name,
-                            'description' => $vehicle->category->description,
-                        ]),
+                        'vehicle_type' => $vehicle->category->name,
+                        'vehicle_type_id' => $vehicle->category->id,
+                        'image' => $vehicle->image ? asset('storage/' . $vehicle->image) : asset('storage/' . "images/rental/r.png"),
+
                     ];
                 });
             }),

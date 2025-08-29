@@ -23,10 +23,10 @@ class RentalVehicleResource extends JsonResource
             'image' => $this->image,
             'seating_capacity' => $this->seating_capacity,
             'status' => $this->status,
-            'category' => $this->when($this->relationLoaded('category') && $this->category, [
-                'name' => $this->category->name,
-                'description' => $this->category->description,
-            ]),
+            'vehicle_type' => $this->category->name,
+            'vehicle_type_id' => $this->category->id,
+
+
         ];
     }
 }
