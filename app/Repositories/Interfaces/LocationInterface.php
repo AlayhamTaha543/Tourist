@@ -7,4 +7,5 @@ interface LocationInterface
     public function showLocation($id);
     public function showAllLocation();
     public function showAllLocationFilter();
+    public function getFlightLocations();
 }

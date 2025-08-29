@@ -15,5 +15,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('bookFlightByPoint/{id}', 'bookFlightByPoint');
         Route::post('updateFlightBooking/{id}', 'updateFlightBooking');
         Route::get('bookings', 'getNearestBookedFlight');
+        Route::get('search', 'searchFlights');
     });
 });

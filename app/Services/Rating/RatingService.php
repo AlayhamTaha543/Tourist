@@ -21,7 +21,7 @@ class RatingService
      */
     public function createRating(
         int $userId,
-        int $bookingId,
+        ?int $bookingId, // Make bookingId nullable
         string $rateableType,
         int $rateableId,
         float $value,
@@ -29,8 +29,8 @@ class RatingService
     ): Rating {
         $this->validateRatingValue($value);
 
-        // If not an application rating, check if the booking exists and belongs to the user
-        if ($rateableType !== 'App\\Models\\Application') {
+        // If not an application rating and bookingId is provided, check if the booking exists and belongs to the user
+        if ($rateableType !== 'App\\Models\\Application' && $bookingId !== null) {
             Booking::where('id', $bookingId)
                 ->where('user_id', $userId)
                 ->firstOrFail();

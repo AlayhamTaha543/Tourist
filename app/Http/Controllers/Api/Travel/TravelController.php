@@ -93,4 +93,8 @@ class TravelController extends Controller
             'data' => $bookedFlights
         ]);
     }
+    public function searchFlights(Request $request)
+    {
+        return $this->travelRepository->searchFlights($request);
+    }
 }

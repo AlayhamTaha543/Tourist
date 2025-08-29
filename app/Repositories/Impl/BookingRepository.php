@@ -176,6 +176,8 @@ class BookingRepository implements BookingInterface
             'travelBooking.flight',
             'rentalBooking.rentalVehicle',
             'taxiBooking.taxiService',
+            'taxiBooking.pickupLocation',
+            'taxiBooking.dropoffLocation',
         ])
             ->where('user_id', $user->id)
             ->get();
@@ -192,7 +194,10 @@ class BookingRepository implements BookingInterface
         foreach ($bookings as $booking) {
             switch ($booking->booking_type) {
                 case 'taxi':
-                    dd($booking);
+                    if (is_null($booking->taxiBooking)) {
+                        \Log::warning('Booking with ID ' . $booking->id . ' (Reference: ' . $booking->booking_reference . ') has booking_type "taxi" but no associated TaxiBooking record.');
+                        continue 2; // Skip to the next booking in the outer foreach loop
+                    }
                     $response['taxi'][] = [
                         'booking_reference' => $booking->booking_reference,
                         'date' => $booking->booking_date,

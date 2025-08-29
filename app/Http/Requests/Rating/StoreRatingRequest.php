@@ -27,14 +27,23 @@ class StoreRatingRequest extends FormRequest
             'rateable_type' => [
                 'required',
                 'string',
-                Rule::in(['Hotel', 'TravelAgency', 'TaxiService', 'RentalOffice', 'Restaurant', 'Tour', 'Application']),
+                Rule::in([
+                    'App\\Models\\Hotel',
+                    'App\\Models\\TravelAgency',
+                    'App\\Models\\TaxiService',
+                    'App\\Models\\RentalOffice',
+                    'App\\Models\\Restaurant',
+                    'App\\Models\\Tour',
+                    'App\\Models\\Application',
+                ]),
             ],
             'booking_id' => [
-                'nullable', // Allow null for application ratings
+                'nullable',
                 'integer',
-                Rule::requiredIf($this->input('rateable_type') !== 'Application'),
+                // Conditionally apply 'required' and 'exists' rules
+                $this->input('rateable_type') !== 'App\\Models\\Application' ? 'required' : null,
                 Rule::when(
-                    $this->input('booking_id') !== null && $this->input('rateable_type') !== 'Application',
+                    $this->input('rateable_type') !== 'App\\Models\\Application' && $this->input('booking_id') !== null,
                     [
                         Rule::exists('bookings', 'id')->where(function ($query) {
                             return $query->where('user_id', $this->user()->id);
@@ -45,7 +54,7 @@ class StoreRatingRequest extends FormRequest
             'rateable_id' => [
                 'required',
                 'integer',
-                Rule::when($this->input('rateable_type') === 'Application', ['in:1']), // Assuming '1' is the ID for the application
+                Rule::when($this->input('rateable_type') === 'App\\Models\\Application', ['in:1']),
             ],
             'rating' => ['required', 'numeric', 'min:1', 'max:5'],
             'comment' => ['nullable', 'string', 'max:1000'],
@@ -57,16 +66,17 @@ class StoreRatingRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        $rateableType = $this->rateable_type;
-        if ($rateableType === 'Application') {
+        // No longer need to prepend 'App\\Models\\' here as rules now expect FQCN
+        // Also, booking_id is handled by rules directly now.
+        if ($this->rateable_type === 'Application') {
             $this->merge([
-                'rateable_type' => 'App\\Models\\Application', // Or a specific model for the app if it exists
-                'rateable_id' => 1, // Fixed ID for the application
-                'booking_id' => null, // No booking ID for app ratings
+                'rateable_type' => 'App\\Models\\Application',
+                'rateable_id' => 1,
+                'booking_id' => null,
             ]);
         } else {
             $this->merge([
-                'rateable_type' => 'App\\Models\\' . $rateableType,
+                'rateable_type' => 'App\\Models\\' . $this->rateable_type,
             ]);
         }
     }

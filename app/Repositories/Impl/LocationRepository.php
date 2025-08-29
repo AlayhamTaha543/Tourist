@@ -16,10 +16,12 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
+use App\Models\TravelFlight;
 
 class LocationRepository implements LocationInterface
 {
-    use ApiResponse,HandlesUserPoints;
+    use ApiResponse, HandlesUserPoints;
+
     public function showLocation($id){
         $location = Location::with('city.country')->where('id',$id)
                         ->first();
@@ -87,6 +89,41 @@ class LocationRepository implements LocationInterface
 
         return $this->success('All locations retrieved successfully', [
             'locations' => $result,
+        ]);
+    }
+
+    public function getFlightLocations()
+    {
+        $futureFlights = TravelFlight::where('departure_time', '>', Carbon::now())->get();
+
+        $departureLocationIds = $futureFlights->pluck('departure_id')->unique()->values();
+        $arrivalLocationIds = $futureFlights->pluck('arrival_id')->unique()->values();
+
+        $departureLocations = Location::whereIn('id', $departureLocationIds)
+            ->with('city.country')
+            ->get();
+
+        $arrivalLocations = Location::whereIn('id', $arrivalLocationIds)
+            ->with('city.country')
+            ->get();
+
+        $formattedDepartureLocations = $departureLocations->map(function ($location) {
+            return [
+                'id' => $location->id,
+                'fullName' => $location->fullName(),
+            ];
+        });
+
+        $formattedArrivalLocations = $arrivalLocations->map(function ($location) {
+            return [
+                'id' => $location->id,
+                'fullName' => $location->fullName(),
+            ];
+        });
+
+        return $this->success('Flight locations retrieved successfully', [
+            'departure' => $formattedDepartureLocations,
+            'arrival' => $formattedArrivalLocations,
         ]);
     }
 }

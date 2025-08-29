@@ -14,22 +14,25 @@ class AdminLogin extends Component
     public $password;
     public $remember;
 
-    public function rules(){
-        return[
-            'email'=>'required|email|string',
-            'password'=>'required',
-            'remember'=>'nullable'
+    public function rules()
+    {
+        return [
+            'email' => 'required|email|string',
+            'password' => 'required',
+            'remember' => 'nullable'
         ];
     }
-    public function submit(){
+    public function submit()
+    {
         $this->validate();
-        if(! Filament::auth()->attempt([
-            'email'=>$this->email,
-            'password'=>$this->password,
-        ],$this->remember)){
-            throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
-            ]);
+        if (
+            !Filament::auth()->attempt([
+                'email' => $this->email,
+                'password' => $this->password,
+            ], $this->remember)
+        ) {
+            $this->addError('form', trans('auth.failed'));
+            return;
         }
         Filament::auth()->login(Filament::auth()->user());
         session()->regenerate();
@@ -57,7 +60,7 @@ class AdminLogin extends Component
                 return redirect()->to(Dashboard::getUrl(panel: 'admin'));
         }
     }
-    
+
     public function render()
     {
         return view('admin.admin-login');

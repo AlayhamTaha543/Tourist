@@ -686,4 +686,60 @@ class TravelRepository implements TravelInterface
         }
     }
 
+    public function searchFlights(Request $request)
+    {
+        $request->validate([
+            'departure_id' => 'required|exists:locations,id',
+            'arrival_id' => 'required|exists:locations,id',
+            'date' => 'required|date_format:Y-m-d',
+        ]);
+
+        $departureId = $request->input('departure_id');
+        $arrivalId = $request->input('arrival_id');
+        $searchDate = Carbon::parse($request->input('date'))->startOfDay();
+
+        $flights = TravelFlight::with(['departure.city.country', 'arrival.city.country', 'flightTypes'])
+            ->where('departure_id', $departureId)
+            ->where('arrival_id', $arrivalId)
+            ->whereDate('departure_time', $searchDate)
+            ->where('departure_time', '>', Carbon::now())
+            ->where('available_seats', '>', 0)
+            ->get();
+
+        if ($flights->isEmpty()) {
+            return $this->error('No flights found for the given criteria.', 404);
+        }
+
+        $result = $flights->map(function ($flight) {
+            $user = auth('sanctum')->user();
+            $isFavourited = $this->getIsFavourited($user, $flight);
+            $averageRating = $this->getAverageFlightRating($flight->id);
+
+            return [
+                'id' => $flight->id,
+                'flight_number' => $flight->flight_number,
+                'departure_location' => $this->formatLocation($flight->departure),
+                'arrival_location' => $this->formatLocation($flight->arrival),
+                'departure_time' => $flight->departure_time,
+                'arrival_time' => $flight->arrival_time,
+                'duration_minutes' => $flight->duration_minutes,
+                'price' => $flight->price,
+                'available_seats' => $flight->available_seats,
+                'status' => $flight->status,
+                'rating' => round($averageRating, 1),
+                'is_favourited' => $isFavourited,
+                'flight_types' => $flight->flightTypes->map(function ($type) {
+                    return [
+                        'flight_type' => $type->flight_type,
+                        'price' => $type->price,
+                        'available_seats' => $type->available_seats,
+                    ];
+                }),
+            ];
+        });
+
+        return $this->success('Flights retrieved successfully', [
+            'flights' => $result,
+        ]);
+    }
 }

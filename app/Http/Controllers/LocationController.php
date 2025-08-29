@@ -25,4 +25,9 @@ class LocationController extends Controller
     {
         return $this->locationRepository->showAllLocationFilter();
     }
+
+    public function getFlightLocations()
+    {
+        return $this->locationRepository->getFlightLocations();
+    }
 }

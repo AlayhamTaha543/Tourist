@@ -8,5 +8,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('show/{id}', 'showLocation');
         Route::get('showAll', 'showAllLocation');
         Route::get('showAllLocationFilter', 'showAllLocationFilter');
+        Route::get('flight-locations', 'getFlightLocations');
     });
 });
