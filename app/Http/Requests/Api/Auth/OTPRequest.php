@@ -22,7 +22,7 @@ class OTPRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code'=>'required|digits:4'
-    ];
+            'email' => 'required|email'
+        ];
     }
 }

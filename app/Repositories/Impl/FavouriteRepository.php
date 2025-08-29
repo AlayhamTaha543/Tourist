@@ -58,7 +58,7 @@ class FavouriteRepository implements FavouriteInterface
             $averageRating = $country->tours->avg('average_rating') ?? 0.0;
 
             // Get a representative image for the country (e.g., from the first tour)
-            $countryImage = $country->tours->first()->main_image ?? 'http://127.0.0.1:8000/storage/images/countries/default.png';
+            $countryImage = $country->tours->first()->main_image ? asset('storage/' . $country->tours->first()->main_image) : asset('storage/' . 'images/countries/default.png');
 
             // Calculate average price from associated flights
             $allFlights = $country->departureFlights->merge($country->arrivalFlights);
