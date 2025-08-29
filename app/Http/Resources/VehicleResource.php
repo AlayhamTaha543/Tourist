@@ -24,6 +24,7 @@ class VehicleResource extends JsonResource
             'image' => $this->image ? asset('storage/' . $this->image) : asset('storage/' . "images/taxi/t.png"),
 
             'vehicle_type' => $this->vehicleType->name,
+            'vehicle_type_id' => $this->vehicleType->id,
 
 
 
