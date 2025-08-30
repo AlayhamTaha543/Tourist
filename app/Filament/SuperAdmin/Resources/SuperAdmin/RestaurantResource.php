@@ -32,12 +32,6 @@ class RestaurantResource extends Resource
                 Forms\Components\TextInput::make('discount')
                     ->numeric()
                     ->nullable(),
-                Forms\Components\TextInput::make('latitude')
-                    ->numeric()
-                    ->nullable(),
-                Forms\Components\TextInput::make('longitude')
-                    ->numeric()
-                    ->nullable(),
                 Forms\Components\Select::make('location_id')
                     ->relationship('location', 'name')
                     ->nullable()
@@ -84,8 +78,7 @@ class RestaurantResource extends Resource
                 Forms\Components\TextInput::make('max_chairs')
                     ->numeric()
                     ->nullable(),
-                Forms\Components\Toggle::make('has_reservation')
-                    ->nullable(),
+
                 Forms\Components\Toggle::make('is_active')
                     ->nullable(),
                 Forms\Components\Toggle::make('is_featured')

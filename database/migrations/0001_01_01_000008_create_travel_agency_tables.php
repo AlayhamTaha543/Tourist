@@ -30,7 +30,7 @@ return new class extends Migration {
         // Travel Packages table
         Schema::create('travel_packages', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('agency_id')->constrained('travel_agencies', 'id');
+            $table->unsignedBigInteger('agency_id')->constrained('travel_agencies', 'id')->cascadeOnDelete();
             $table->string('name')->notNull();
             $table->text('description')->nullable();
             $table->integer('duration_days')->notNull();
@@ -48,8 +48,8 @@ return new class extends Migration {
         // Package Destinations table
         Schema::create('package_destinations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('package_id')->constrained('travel_packages', 'id');
-            $table->foreignId('location_id')->constrained('locations', 'id');
+            $table->foreignId('package_id')->constrained('travel_packages', 'id')->cascadeOnDelete();
+            $table->foreignId('location_id')->constrained('locations', 'id')->cascadeOnDelete();
             $table->integer('day_number')->notNull();
             $table->text('description')->nullable();
             $table->string('duration')->nullable();
@@ -59,7 +59,7 @@ return new class extends Migration {
         // Package Inclusions table
         Schema::create('package_inclusions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('package_id')->constrained('travel_packages', 'id');
+            $table->foreignId('package_id')->constrained('travel_packages', 'id')->cascadeOnDelete();
             $table->enum('inclusion_type', ['tour', 'hotel', 'transport', 'meal', 'other'])->notNull();
             $table->string('description')->notNull();
             $table->boolean('is_highlighted')->default(false);

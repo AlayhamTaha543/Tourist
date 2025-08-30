@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -25,7 +24,7 @@ return new class extends Migration
         // Cities table
         Schema::create('cities', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('country_id')->constrained('countries', 'id');
+            $table->foreignId('country_id')->constrained('countries', 'id')->cascadeOnDelete();
             $table->string('name')->notNull();
             $table->boolean('isPopular')->default(false);
             $table->text('description')->nullable();
@@ -38,7 +37,7 @@ return new class extends Migration
             $table->string('name');
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
-            $table->foreignId('city_id')->nullable()->constrained('cities')->nullOnDelete();
+            $table->foreignId('city_id')->nullable()->constrained('cities')->cascadeOnDelete();
             $table->string('region')->nullable();
             $table->boolean('is_popular')->default(false);
             $table->timestamps();

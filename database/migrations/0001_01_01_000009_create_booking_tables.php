@@ -14,7 +14,7 @@ return new class extends Migration {
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
             $table->string('booking_reference')->unique()->notNull();
-            $table->foreignId('user_id')->constrained('users', 'id');
+            $table->foreignId('user_id')->constrained('users', 'id')->cascadeOnDelete();
             $table->enum('booking_type', ['tour', 'hotel', 'taxi', 'restaurant', 'package', 'travel', 'rental'])->notNull();
             $table->dateTime('booking_date')->default(now());
             $table->enum('status', ['pending', 'confirmed', 'cancelled', 'completed'])->default('pending');
@@ -27,7 +27,7 @@ return new class extends Migration {
         });
         Schema::create('travel_bookings', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('booking_id')->constrained('Bookings', 'id');
+            $table->unsignedBigInteger('booking_id')->constrained('Bookings', 'id')->onDelete('cascade');
             $table->unsignedBigInteger('user_id')->constrained('user', 'id')->onDelete('cascade');
             $table->unsignedBigInteger('flight_id')->constrained('travel_flights', 'id')->onDelete('cascade');
             $table->enum('ticket_type', ['one_way', 'round_trip'])->default('one_way');
@@ -41,9 +41,9 @@ return new class extends Migration {
         // Tour Bookings table
         Schema::create('tour_bookings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('booking_id')->constrained('bookings', 'id');
-            $table->foreignId('tour_id')->constrained('tours', 'id');
-            $table->foreignId('schedule_id')->constrained('tour_schedules', 'id');
+            $table->foreignId('booking_id')->constrained('bookings', 'id')->cascadeOnDelete();
+            $table->foreignId('tour_id')->constrained('tours', 'id')->cascadeOnDelete();
+            $table->foreignId('schedule_id')->constrained('tour_schedules', 'id')->cascadeOnDelete();
             $table->integer('number_of_adults')->notNull()->default(1);
             $table->integer('number_of_children')->notNull()->default(0);
             $table->double('cost')->notNull();
@@ -53,10 +53,10 @@ return new class extends Migration {
         // Hotel Bookings table
         Schema::create('hotel_bookings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('booking_id')->constrained('bookings', 'id');
-            $table->foreignId('user_id')->constrained('users', 'id');
-            $table->foreignId('hotel_id')->constrained('hotels', 'id');
-            $table->foreignId('room_type_id')->constrained('room_types', 'id');
+            $table->foreignId('booking_id')->constrained('bookings', 'id')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users', 'id')->cascadeOnDelete();
+            $table->foreignId('hotel_id')->constrained('hotels', 'id')->cascadeOnDelete();
+            $table->foreignId('room_type_id')->constrained('room_types', 'id')->cascadeOnDelete();
             $table->integer('hotel_room');
             $table->date('check_in_date')->notNull();
             $table->date('check_out_date')->notNull();
@@ -70,10 +70,10 @@ return new class extends Migration {
         // Restaurant Bookings table
         Schema::create('restaurant_bookings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('booking_id')->constrained('bookings', 'id');
-            $table->foreignId('user_id')->constrained('users');
-            $table->foreignId('restaurant_id')->constrained('restaurants');
-            $table->foreignId('restaurant_chair_id')->constrained('restaurant_chairs', 'id'); // Changed from table_id
+            $table->foreignId('booking_id')->constrained('bookings', 'id')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('restaurant_id')->constrained('restaurants')->cascadeOnDelete();
+            $table->foreignId('restaurant_chair_id')->constrained('restaurant_chairs', 'id')->cascadeOnDelete(); // Changed from table_id
             $table->date('reservation_date');
             $table->time('reservation_time');
             $table->integer('number_of_guests');
@@ -86,13 +86,13 @@ return new class extends Migration {
         Schema::create('taxi_bookings', function (Blueprint $table) {
             $table->id('id');
             $table->foreignId('booking_id')->constrained('bookings', 'id')->onDelete('cascade');
-            $table->foreignId('taxi_service_id')->constrained('taxi_services', 'id');
-            $table->foreignId('vehicle_type_id')->constrained('vehicle_types', 'id');
-            $table->foreignId('trip_id')->nullable()->constrained();
-            $table->foreignId('vehicle_id')->nullable()->constrained('vehicles', 'id');
+            $table->foreignId('taxi_service_id')->constrained('taxi_services', 'id')->cascadeOnDelete();
+            $table->foreignId('vehicle_type_id')->constrained('vehicle_types', 'id')->cascadeOnDelete();
+            $table->foreignId('trip_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('vehicle_id')->nullable()->constrained('vehicles', 'id')->cascadeOnDelete();
             $table->foreignId('driver_id')->references('id')->on('drivers')->onDelete('cascade');
-            $table->foreignId('pickup_location_id')->nullable()->constrained('locations', 'id');
-            $table->foreignId('dropoff_location_id')->nullable()->constrained('locations', 'id');
+            $table->foreignId('pickup_location_id')->nullable()->constrained('locations', 'id')->cascadeOnDelete();
+            $table->foreignId('dropoff_location_id')->nullable()->constrained('locations', 'id')->cascadeOnDelete();
             $table->dateTime('pickup_date_time')->notNull();
             $table->enum('type_of_booking', ['one_way', 'round_trip', 'hourly'])->default('one_way');
             $table->decimal('estimated_distance', 10, 2)->nullable();
@@ -109,7 +109,7 @@ return new class extends Migration {
         Schema::create('package_bookings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tour_id')->constrained('tours')->onDelete('cascade');
-            $table->foreignId('package_id')->constrained('travel_packages', 'id');
+            $table->foreignId('package_id')->constrained('travel_packages', 'id')->cascadeOnDelete();
             $table->integer('number_of_adults')->notNull()->default(1);
             $table->integer('number_of_children')->notNull()->default(0);
             $table->decimal('cost', 10, 2);
@@ -119,14 +119,14 @@ return new class extends Migration {
             $table->foreignId('booking_id')->primary()->constrained('bookings')->onDelete('cascade');
 
             $table->unsignedBigInteger('customer_id');
-            $table->foreign('customer_id')->references('id')->on('users');
+            $table->foreign('customer_id')->references('id')->on('users')->cascadeOnDelete();
 
             // Changed from unsignedInteger to unsignedBigInteger to match rental_vehicles.id
             $table->unsignedBigInteger('vehicle_id');
-            $table->foreign('vehicle_id')->references('id')->on('rental_vehicles');
+            $table->foreign('vehicle_id')->references('id')->on('rental_vehicles')->cascadeOnDelete();
 
             $table->unsignedBigInteger('office_id');
-            $table->foreign('office_id')->references('id')->on('rental_offices');
+            $table->foreign('office_id')->references('id')->on('rental_offices')->cascadeOnDelete();
 
             $table->date('pickup_date');
             $table->date('return_date');

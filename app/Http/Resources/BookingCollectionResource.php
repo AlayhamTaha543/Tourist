@@ -72,7 +72,7 @@ class BookingCollectionResource extends ResourceCollection
                         Log::warning('Booking with ID ' . $booking->id . ' (Reference: ' . $booking->booking_reference . ') has booking_type "rental" but no associated RentalBooking record.');
                         continue 2;
                     }
-                    $response['rental'][] = new RentalBookingResource($booking);
+                    $response['taxi'][] = new RentalBookingResource($booking);
                     break;
             }
         }

@@ -4,8 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Restaurant;
 use App\Models\RestaurantImage;
-use App\Models\MenuCategory;
-use App\Models\MenuItem;
 use App\Models\RestaurantChair; // Import RestaurantChair
 use App\Models\ChairAvailability; // Import ChairAvailability
 use Carbon\Carbon; // Import Carbon
@@ -92,32 +90,6 @@ class RestaurantSeeder extends Seeder
                 'image' => 'path/to/image_' . $index . '.jpg',
                 'caption' => 'Photo of ' . $data['name'],
                 'is_active' => true,
-            ]);
-
-            // Menu Category
-            $category = MenuCategory::updateOrCreate([
-                'restaurant_id' => $restaurant->id,
-                'name' => 'Specialties',
-            ], [
-                'description' => 'Signature dishes of the restaurant',
-                'display_order' => 1,
-                'is_active' => true,
-            ]);
-
-            // Menu Item
-            MenuItem::updateOrCreate([
-                'category_id' => $category->id,
-                'name' => 'Signature Dish ' . ($index + 1),
-            ], [
-                'description' => 'A special dish from ' . $data['name'],
-                'price' => rand(20, 80),
-                'is_vegetarian' => (bool) rand(0, 1),
-                'is_vegan' => false,
-                'is_gluten_free' => false,
-                'spiciness' => 'mild',
-                'image' => 'path/to/dish_' . $index . '.jpg',
-                'is_active' => true,
-                'is_featured' => false,
             ]);
 
             // Create Indoor Chairs

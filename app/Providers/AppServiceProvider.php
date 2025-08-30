@@ -110,7 +110,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        URL::forceScheme('https');
+        // URL::forceScheme('https'); // Commented out to allow HTTP for local development
 
         Relation::morphMap([
             'Hotel' => Hotel::class,

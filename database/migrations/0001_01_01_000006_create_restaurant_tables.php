@@ -40,7 +40,7 @@ return new class extends Migration {
         // Restaurant Images table
         Schema::create('restaurant_images', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('restaurant_id')->constrained('restaurants', 'id');
+            $table->foreignId('restaurant_id')->constrained('restaurants', 'id')->cascadeOnDelete();
             $table->string('image')->notNull();
             $table->integer('display_order')->default(0);
             $table->string('caption')->nullable();
@@ -48,45 +48,16 @@ return new class extends Migration {
             $table->timestamps();
         });
 
-        // Menu Categories table
-        Schema::create('menu_categories', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('restaurant_id')->constrained('restaurants', 'id');
-            $table->string('name')->notNull();
-            $table->text('description')->nullable();
-            $table->integer('display_order')->default(0);
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-        });
-
-        // Menu Items table
-        Schema::create('menu_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('category_id')->constrained('menu_categories', 'id');
-            $table->string('name')->notNull();
-            $table->text('description')->nullable();
-            $table->decimal('price', 10)->notNull();
-            $table->json('sizes')->nullable();
-            $table->boolean('is_vegetarian')->default(false);
-            $table->boolean('is_vegan')->default(false);
-            $table->boolean('is_gluten_free')->default(false);
-            $table->enum('spiciness', ['not_spicy', 'mild', 'medium', 'hot'])->nullable();
-            $table->string('image')->nullable();
-            $table->boolean('is_active')->default(true);
-            $table->boolean('is_featured')->default(false);
-            $table->timestamps();
-        });
-
         // Restaurant Chairs table
         Schema::create('restaurant_chairs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('restaurant_id')->constrained('restaurants', 'id');
+            $table->foreignId('restaurant_id')->constrained('restaurants', 'id')->cascadeOnDelete();
             $table->integer('cost')->notNull();
             $table->enum('location', ['indoor', 'outdoor', 'private'])->nullable();
             $table->integer('total_chairs')->default(0);
             $table->boolean('is_active')->default(true);
             $table->boolean('is_reservable')->default(false);
-            
+
             $table->timestamps();
         });
         Schema::create('chair_availabilities', function (Blueprint $table) {
@@ -96,10 +67,10 @@ return new class extends Migration {
             $table->time('time_slot');
             $table->integer('available_chairs_count')->default(0);
             $table->timestamps();
-            
+
             // Ensure uniqueness for restaurant_chair_id, date, and time_slot combination
             $table->unique(['restaurant_chair_id', 'date', 'time_slot']);
-            
+
             // Add indexes for better query performance
             $table->index(['date', 'time_slot']);
         });
@@ -111,8 +82,6 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::dropIfExists('restaurant_chairs');
-        Schema::dropIfExists('menu_items');
-        Schema::dropIfExists('menu_categories');
         Schema::dropIfExists('restaurant_images');
         Schema::dropIfExists('restaurants');
         Schema::dropIfExists('chair_availabilities');

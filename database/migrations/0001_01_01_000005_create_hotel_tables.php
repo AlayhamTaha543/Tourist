@@ -37,7 +37,7 @@ return new class extends Migration {
         // Hotel Images table
         Schema::create('hotel_images', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('hotel_id')->constrained('hotels', 'id');
+            $table->foreignId('hotel_id')->constrained('hotels', 'id')->cascadeOnDelete();
             $table->string('image')->notNull();
             $table->integer('display_order')->default(0);
             $table->string('caption')->nullable();
@@ -57,8 +57,8 @@ return new class extends Migration {
         // Hotel Amenity Mapping table
         Schema::create('hotel_amenity_maps', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('hotel_id')->constrained('hotels', 'id');
-            $table->foreignId('amenity_id')->constrained('hotel_amenities', 'id');
+            $table->foreignId('hotel_id')->constrained('hotels', 'id')->cascadeOnDelete();
+            $table->foreignId('amenity_id')->constrained('hotel_amenities', 'id')->cascadeOnDelete();
             $table->unique(['hotel_id', 'amenity_id']);
             $table->timestamps();
         });
@@ -66,7 +66,7 @@ return new class extends Migration {
         // Room Types table
         Schema::create('room_types', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('hotel_id')->constrained('hotels', 'id');
+            $table->foreignId('hotel_id')->constrained('hotels', 'id')->cascadeOnDelete();
             $table->string('name')->notNull();
             $table->integer('number');
             $table->text('description')->nullable();
@@ -83,7 +83,7 @@ return new class extends Migration {
         // Room Availability table
         Schema::create('room_availabilities', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('room_type_id')->constrained('room_types', 'id');
+            $table->foreignId('room_type_id')->constrained('room_types', 'id')->cascadeOnDelete();
             $table->date('date')->notNull();
             $table->integer('available_rooms')->notNull();
             $table->decimal('price', 10, 2)->nullable();
