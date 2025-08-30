@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\TravelAdmin\Resources\TravelAdmin\FlightTypeResource\Pages;
+namespace App\Filament\TravelAdmin\Resources\FlightTypeResource\Pages;
 
-use App\Filament\TravelAdmin\Resources\TravelAdmin\FlightTypeResource;
+use App\Filament\TravelAdmin\Resources\FlightTypeResource;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 

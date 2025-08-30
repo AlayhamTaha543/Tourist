@@ -43,21 +43,40 @@ class AdminLogin extends Component
             return redirect()->to(Dashboard::getUrl(panel: 'admin'));
         }
 
-        switch ($admin->section) {
-            case 'restaurant':
-                return redirect()->to(Dashboard::getUrl(panel: 'restaurantAdmin'));
-            case 'hotel':
-                return redirect()->to(Dashboard::getUrl(panel: 'hotelAdmin'));
-            case 'tour':
-                return redirect()->to(Dashboard::getUrl(panel: 'tourAdmin'));
-            case 'taxi':
-                return redirect()->to(Dashboard::getUrl(panel: 'taxiAdmin'));
-            case 'rental':
-                return redirect()->to(Dashboard::getUrl(panel: 'rentAdmin'));
-            case 'travel':
-                return redirect()->to(Dashboard::getUrl(panel: 'travelAdmin'));
-            default:
-                return redirect()->to(Dashboard::getUrl(panel: 'admin'));
+        if ($admin->role === 'admin') {
+            switch ($admin->section) {
+                case 'restaurant':
+                    return redirect()->to(Dashboard::getUrl(panel: 'restaurantAdmin'));
+                case 'hotel':
+                    return redirect()->to(Dashboard::getUrl(panel: 'hotelAdmin'));
+                case 'tour':
+                    return redirect()->to(Dashboard::getUrl(panel: 'tourAdmin'));
+                case 'taxi':
+                    return redirect()->to(Dashboard::getUrl(panel: 'taxiAdmin'));
+                case 'rental':
+                    return redirect()->to(Dashboard::getUrl(panel: 'rentAdmin'));
+                case 'travel':
+                    return redirect()->to(Dashboard::getUrl(panel: 'travelAdmin'));
+                default:
+                    return redirect()->to(Dashboard::getUrl(panel: 'admin'));
+            }
+        }
+
+        if ($admin->role === 'sub_admin') {
+            switch ($admin->section) {
+                case 'restaurant':
+                    return redirect()->to(Dashboard::getUrl(panel: 'restaurantSubAdmin'));
+                case 'hotel':
+                    return redirect()->to(Dashboard::getUrl(panel: 'hotelSubAdmin'));
+                case 'rental':
+                    return redirect()->to(Dashboard::getUrl(panel: 'rentSubAdmin'));
+                case 'travel':
+                    return redirect()->to(Dashboard::getUrl(panel: 'travelSubAdmin'));
+                case 'taxi':
+                    return redirect()->to(Dashboard::getUrl(panel: 'taxiSubAdmin'));
+                default:
+                    return redirect()->to(Dashboard::getUrl(panel: 'admin'));
+            }
         }
     }
 

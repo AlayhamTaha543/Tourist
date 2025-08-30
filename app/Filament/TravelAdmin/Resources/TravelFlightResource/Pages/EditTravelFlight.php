@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\TravelAdmin\Resources\TravelAdmin\TravelFlightResource\Pages;
+namespace App\Filament\TravelAdmin\Resources\TravelFlightResource\Pages;
 
-use App\Filament\TravelAdmin\Resources\TravelAdmin\TravelFlightResource;
+use App\Filament\TravelAdmin\Resources\TravelFlightResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 

@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\TravelAdmin\Resources\TravelAdmin\TravelBookingResource\Pages;
+namespace App\Filament\TravelAdmin\Resources\TravelBookingResource\Pages;
 
-use App\Filament\TravelAdmin\Resources\TravelAdmin\TravelBookingResource;
+use App\Filament\TravelAdmin\Resources\TravelBookingResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 

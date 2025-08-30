@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Filament\TravelAdmin\Resources\TravelAdmin;
+namespace App\Filament\TravelAdmin\Resources;
 
-use App\Filament\TravelAdmin\Resources\TravelAdmin\TravelBookingResource\Pages;
-use App\Filament\TravelAdmin\Resources\TravelAdmin\TravelBookingResource\RelationManagers;
-use App\Models\TravelAdmin\TravelBooking;
+use App\Filament\TravelAdmin\Resources\TravelBookingResource\Pages;
+use App\Filament\TravelAdmin\Resources\TravelBookingResource\RelationManagers;
+use App\Models\TravelBooking;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class TravelBookingResource extends Resource
 {
@@ -60,5 +61,15 @@ class TravelBookingResource extends Resource
             'create' => Pages\CreateTravelBooking::route('/create'),
             'edit' => Pages\EditTravelBooking::route('/{record}/edit'),
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->whereHas('flight', function (Builder $query) {
+                $query->whereHas('agency', function (Builder $query) {
+                    $query->where('admin_id', Auth::id());
+                });
+            });
     }
 }

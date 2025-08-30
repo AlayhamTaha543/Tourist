@@ -58,7 +58,10 @@ class CountryDetailsController extends Controller
             return response()->json(['error' => $result['error'], 'details' => $result['details'] ?? null], $result['status']);
         }
 
-        return response()->json(['country' => $countryName, 'famous_foods' => explode(', ', $result['data'])]);
+        return response()->json([
+            'country' => $countryName,
+            'description' => trim($result['data'])
+        ]);
     }
 
     public function getFamousMuseums(Request $request)
@@ -79,7 +82,10 @@ class CountryDetailsController extends Controller
             return response()->json(['error' => $result['error'], 'details' => $result['details'] ?? null], $result['status']);
         }
 
-        return response()->json(['country' => $countryName, 'famous_museums' => explode(', ', $result['data'])]);
+        return response()->json([
+            'country' => $countryName,
+            'description' => trim($result['data'])
+        ]);
     }
 
     public function getFamousPublicParks(Request $request)
@@ -100,7 +106,10 @@ class CountryDetailsController extends Controller
             return response()->json(['error' => $result['error'], 'details' => $result['details'] ?? null], $result['status']);
         }
 
-        return response()->json(['country' => $countryName, 'famous_public_parks' => explode(', ', $result['data'])]);
+        return response()->json([
+            'country' => $countryName,
+            'description' => trim($result['data'])
+        ]);
     }
 
     public function getFamousShoppingMalls(Request $request)
@@ -121,6 +130,9 @@ class CountryDetailsController extends Controller
             return response()->json(['error' => $result['error'], 'details' => $result['details'] ?? null], $result['status']);
         }
 
-        return response()->json(['country' => $countryName, 'famous_shopping_malls' => explode(', ', $result['data'])]);
+        return response()->json([
+            'country' => $countryName,
+            'description' => trim($result['data'])
+        ]);
     }
 }
