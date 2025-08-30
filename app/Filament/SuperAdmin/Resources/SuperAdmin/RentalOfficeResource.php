@@ -36,9 +36,14 @@ class RentalOfficeResource extends Resource
                     ->relationship('location', 'name')
                     ->required()
                     ->label('Location'),
+
                 Forms\Components\Select::make('manager_id')
-                    ->relationship('manager', 'name')
-                    ->required()
+                    ->relationship(
+                        'manager',
+                        'name',
+                        fn(Builder $query) => $query->where('role', 'admin')->where('section', 'rent')
+                    )
+                    ->nullable()
                     ->label('Manager'),
                 Forms\Components\FileUpload::make('image')
                     ->image()

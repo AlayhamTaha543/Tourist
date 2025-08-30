@@ -15,16 +15,16 @@ class TaxiBookingResource extends JsonResource
     public function toArray($request)
     {
         return [
-            'booking_reference' => $this->booking_reference,
+            'booking_reference' => $this->booking_id,
             'date' => $this->booking_date,
-            'total_price' => $this->total_price,
+            'total_price' => $this->duration_minutes * $this->estimated_distance,
             'taxi' => [
-                'name' => optional($this->taxiBooking->taxiService)->name ?? null,
-                'location' => optional(optional($this->taxiBooking->taxiService)->location)->name ?? null,
+                'name' => optional($this->taxiService)->name ?? null,
+                'location' => optional(optional($this->taxiService)->location)->name ?? null,
             ],
-            'pickup_location' => optional($this->taxiBooking->pickupLocation)->name ?? null,
-            'dropoff_location' => optional($this->taxiBooking->dropoffLocation)->name ?? null,
-            'pickup_time' => $this->taxiBooking->pickup_date_time ?? null,
+            'pickup_location' => optional(optional($this->taxiBooking)->pickupLocation)->name ?? null,
+            'dropoff_location' => optional(optional($this->taxiBooking)->dropoffLocation)->name ?? null,
+            'pickup_time' => optional($this->taxiBooking)->pickup_date_time ?? null,
         ];
     }
 }

@@ -20,6 +20,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class RestaurantImageResource extends Resource
 {
@@ -33,7 +34,11 @@ class RestaurantImageResource extends Resource
             ->schema([
                 Select::make('restaurant_id')
                     ->label('Restaurant')
-                    ->options(Restaurant::all()->pluck('name', 'id'))
+                    ->options(function () {
+                        $admin = Auth::user();
+                        return Restaurant::where('admin_id', $admin->id)
+                            ->pluck('name', 'id');
+                    })
                     ->required()
                     ->searchable(),
                 FileUpload::make('image')
@@ -89,6 +94,17 @@ class RestaurantImageResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    // Add this method to filter the main query
+    public static function getEloquentQuery(): Builder
+    {
+        $admin = Auth::user();
+
+        return parent::getEloquentQuery()
+            ->whereHas('restaurant', function (Builder $query) use ($admin) {
+                $query->where('admin_id', $admin->id);
+            });
     }
 
     public static function getRelations(): array

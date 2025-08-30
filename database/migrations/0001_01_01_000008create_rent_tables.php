@@ -14,12 +14,11 @@ return new class extends Migration {
             $table->double('rating')->default(2.5);
             $table->string('image', 50)->nullable();
 
-
             $table->unsignedBigInteger('location_id');
-            $table->foreign('location_id')->references('id')->on('locations');
+            $table->foreign('location_id')->references('id')->on('locations')->onDelete('cascade');
 
             $table->unsignedBigInteger('manager_id');
-            $table->foreign('manager_id')->references('id')->on('admins');
+            $table->foreign('manager_id')->references('id')->on('admins')->onDelete('cascade');
 
             $table->timestamps();
         });
@@ -35,10 +34,11 @@ return new class extends Migration {
             $table->id('id');
 
             $table->unsignedBigInteger('office_id');
-            $table->foreign('office_id')->references('id')->on('rental_offices');
+            // Add onDelete('cascade') to automatically delete vehicles when office is deleted
+            $table->foreign('office_id')->references('id')->on('rental_offices')->onDelete('cascade');
 
             $table->unsignedBigInteger('category_id');
-            $table->foreign('category_id')->references('id')->on('rental_vehicle_categories');
+            $table->foreign('category_id')->references('id')->on('rental_vehicle_categories')->onDelete('cascade');
             $table->decimal('price_per_day', 8, 2);
 
             $table->string('license_plate', 20)->unique();
@@ -57,15 +57,15 @@ return new class extends Migration {
         Schema::create('rental_vehicle_status_history', function (Blueprint $table) {
             $table->id('id');
 
-            // Changed from unsignedInteger to unsignedBigInteger to match rental_vehicles.id
             $table->unsignedBigInteger('vehicle_id');
-            $table->foreign('vehicle_id')->references('id')->on('rental_vehicles');
+            // Add onDelete('cascade') to automatically delete history when vehicle is deleted
+            $table->foreign('vehicle_id')->references('id')->on('rental_vehicles')->onDelete('cascade');
 
             $table->enum('old_status', ['available', 'reserved', 'in_maintenance']);
             $table->enum('new_status', ['available', 'reserved', 'in_maintenance']);
 
             $table->unsignedBigInteger('changed_by_id');
-            $table->foreign('changed_by_id')->references('id')->on('admins');
+            $table->foreign('changed_by_id')->references('id')->on('admins')->onDelete('cascade');
 
             $table->timestamp('changed_at')->useCurrent();
             $table->timestamps();

@@ -21,7 +21,7 @@ return new class extends Migration {
             $table->string('email')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamp('deleted_at')->nullable();
-            $table->foreignId('manager_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('manager_id')->nullable()->constrained('admins')->onDelete('cascade');
             $table->timestamps();
         });
 

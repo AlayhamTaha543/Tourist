@@ -87,10 +87,15 @@ class RestaurantResource extends Resource
                     ->nullable(),
                 Forms\Components\Toggle::make('is_recommended')
                     ->nullable(),
+
                 Forms\Components\Select::make('admin_id')
-                    ->relationship('admin', 'name')
-                    ->required()
-                    ->label('Admin'),
+                    ->relationship(
+                        'admin',
+                        'name',
+                        fn(Builder $query) => $query->where('role', 'admin')->where('section', 'restaurant')
+                    )
+                    ->nullable()
+                    ->label('Manager'),
             ]);
     }
 

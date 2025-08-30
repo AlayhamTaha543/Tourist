@@ -34,22 +34,22 @@ class TravelFlightResource extends Resource
             ->schema([
                 Grid::make(2)
                     ->schema([
-                        Select::make('travel_agency_id')
+                        Select::make('agency_id')
                             ->label('Agency Name')
-                            ->options(TravelAgency::all()->pluck('name', 'id'))
+                            ->relationship('agency', 'name')  // Use relationship instead of options
                             ->required()
                             ->searchable(),
                         TextInput::make('flight_number')
                             ->required()
                             ->maxLength(255),
-                        Select::make('departure_location_id')
-                            ->label('Departure Name')
-                            ->options(Location::all()->pluck('name', 'id'))
+                        Select::make('departure_id')  // Changed from departure_location_id
+                            ->label('Departure Location')
+                            ->relationship('departure', 'name')  // Use relationship
                             ->required()
                             ->searchable(),
-                        Select::make('arrival_location_id')
-                            ->label('Arrival Name')
-                            ->options(Location::all()->pluck('name', 'id'))
+                        Select::make('arrival_id')  // Changed from arrival_location_id
+                            ->label('Arrival Location')
+                            ->relationship('arrival', 'name')  // Use relationship
                             ->required()
                             ->searchable(),
                         DateTimePicker::make('departure_time')
@@ -63,9 +63,7 @@ class TravelFlightResource extends Resource
                         TextInput::make('available_seats')
                             ->required()
                             ->numeric(),
-                        Toggle::make('is_popular')
-                            ->label('Is Popular')
-                            ->inline(false),
+                        // Remove is_popular since it's not in the model
                     ])
             ]);
     }
@@ -74,16 +72,19 @@ class TravelFlightResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('travelAgency.name')
+                TextColumn::make('agency.name')  // Changed from travelAgency.name
                     ->label('Agency Name')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('departureLocation.name')
-                    ->label('Departure Name')
+                TextColumn::make('departure.name')  // Changed from departureLocation.name
+                    ->label('Departure Location')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('arrivalLocation.name')
-                    ->label('Arrival Name')
+                TextColumn::make('arrival.name')  // Changed from arrivalLocation.name
+                    ->label('Arrival Location')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('flight_number')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('departure_time')
@@ -95,11 +96,11 @@ class TravelFlightResource extends Resource
                 TextColumn::make('price')
                     ->money()
                     ->sortable(),
-                IconColumn::make('is_popular')
-                    ->label('Is Popular')
-                    ->boolean(),
                 TextColumn::make('available_seats')
                     ->numeric()
+                    ->sortable(),
+                TextColumn::make('status')
+                    ->badge()
                     ->sortable(),
             ])
             ->filters([

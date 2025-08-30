@@ -22,10 +22,11 @@ class RatingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'rating_type'  => 'required|string|in:tour,hotel,taxi,restaurant,package,guide,driver',
-            'entity_id'    => 'required|integer',
-            'rating'       => 'required|integer|min:1|max:5',
-            'comment'      => 'nullable|string',
+            'rating_type' => 'required|string|in:tour,hotel,taxi,restaurant,package,guide,driver',
+            'entity_id' => 'required|integer',
+            'rating' => 'required|integer|min:1|max:5',
+            'comment' => 'nullable|string',
+            'booking_id' => 'nullable|integer',
         ];
     }
 }

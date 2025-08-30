@@ -31,7 +31,7 @@ return new class extends Migration {
         // Ratings table
         Schema::create('ratings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users');
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete(); // Make nullable and set to NULL when user is deleted
             $table->foreignId('booking_id')->constrained('bookings')->nullable();
             $table->morphs('rateable');
             $table->float('rating')->notNull();
@@ -47,7 +47,7 @@ return new class extends Migration {
         // Feedback table
         Schema::create('feedback', function (Blueprint $table) {
             $table->id('id');
-            $table->foreignId('user_id')->nullable()->constrained('users', 'id');
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete(); // Set to NULL when user is deleted
             $table->morphs('feedbackable');
             $table->text('feedback_text')->notNull();
             $table->dateTime('feedback_date')->default(now());
@@ -55,7 +55,7 @@ return new class extends Migration {
             $table->enum('status', ['Unread', 'Read', 'Responded'])->default('Unread');
             $table->text('response_text')->nullable();
             $table->dateTime('response_date')->nullable();
-            $table->foreignId('responded_by')->nullable()->constrained('users', 'id');
+            $table->foreignId('responded_by')->nullable()->constrained('users', 'id')->nullOnDelete();
             $table->timestamps();
         });
 
@@ -73,10 +73,9 @@ return new class extends Migration {
             $table->integer('current_usage')->default(0);
             $table->enum('applicable_type', ['All', 'Tour', 'Hotel', 'Taxi', 'Restaurant', 'Package'])->nullable();
             $table->boolean('is_active')->default(true);
-            $table->foreignId('created_by')->constrained('users', 'id');
+            $table->foreignId('created_by')->nullable()->constrained('users', 'id')->nullOnDelete();
             $table->timestamps();
         });
-
 
         // User Ranks table
         Schema::create('ranks', function (Blueprint $table) {
@@ -88,7 +87,7 @@ return new class extends Migration {
 
         Schema::create('user_ranks', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Delete user rank when user is deleted
             $table->foreignId('rank_id')->nullable()->constrained('ranks')->nullOnDelete();
             $table->integer('points_earned')->default(0);
             $table->timestamps();
@@ -100,6 +99,7 @@ return new class extends Migration {
             $table->integer('points');
             $table->timestamps();
         });
+
         Schema::create('discount_points', function (Blueprint $table) {
             $table->id();
             $table->enum('action', ['book_flight', 'book_tour', 'book_hotel', 'add_restaurant_order', 'book_restaurant']);
@@ -111,7 +111,7 @@ return new class extends Migration {
         // Wishlist table
         Schema::create('wishlist', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users');
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete(); // Delete wishlist items when user is deleted
             $table->enum('item_type', ['tour', 'hotel', 'restaurant', 'package']);
             $table->unsignedBigInteger('item_id');
             $table->dateTime('added_date')->default(now());
@@ -122,7 +122,7 @@ return new class extends Migration {
         // Audit Log table
         Schema::create('audit_log', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->nullable()->constrained('users', 'id');
+            $table->foreignId('user_id')->nullable()->constrained('users', 'id')->nullOnDelete(); // Set to NULL when user is deleted
             $table->string('entity_type')->notNull();
             $table->integer('entity_id')->notNull();
             $table->string('action')->notNull();
@@ -132,6 +132,7 @@ return new class extends Migration {
             $table->dateTime('log_date')->default(now());
             $table->timestamps();
         });
+
         // Tour Translations table
         Schema::create('tour_translations', function (Blueprint $table) {
             $table->id();
@@ -144,7 +145,7 @@ return new class extends Migration {
         // Partnerships table
         Schema::create('partnerships', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('admin_id')->nullable()->constrained('users');
+            $table->foreignId('admin_id')->nullable()->constrained('users')->nullOnDelete(); // Set to NULL when user is deleted
             $table->foreignId('hotel_id')->nullable()->constrained('hotels');
             $table->foreignId('restaurant_id')->nullable()->constrained('restaurants');
             $table->foreignId('taxiService_id')->nullable()->constrained('taxi_services', 'id');
@@ -161,7 +162,10 @@ return new class extends Migration {
     {
         Schema::dropIfExists('partnerships');
         Schema::dropIfExists('tour_translations');
+        Schema::dropIfExists('discount_points');
+        Schema::dropIfExists('point_rules');
         Schema::dropIfExists('user_ranks');
+        Schema::dropIfExists('ranks');
         Schema::dropIfExists('audit_log');
         Schema::dropIfExists('wishlist');
         Schema::dropIfExists('promotions');

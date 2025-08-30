@@ -46,7 +46,7 @@ class TaxiService extends Model
 
     public function manager()
     {
-        return $this->belongsTo(User::class)->withDefault();
+        return $this->belongsTo(Admin::class)->withDefault();
     }
 
     public function vehicleTypes()

@@ -51,7 +51,11 @@ class TaxiServiceResource extends Resource
                 Forms\Components\Toggle::make('is_active')
                     ->nullable(),
                 Forms\Components\Select::make('manager_id')
-                    ->relationship('manager', 'name')
+                    ->relationship(
+                        'manager',
+                        'name',
+                        fn(Builder $query) => $query->where('role', 'admin')->where('section', 'taxi')
+                    )
                     ->nullable()
                     ->label('Manager'),
                 Forms\Components\TimePicker::make('open_time')
@@ -77,7 +81,7 @@ class TaxiServiceResource extends Resource
                     ->sortable(),
                 Tables\Columns\ImageColumn::make('logo_url')
                     ->label('Logo'),
-                Tables\Columns\TextColumn::make('manager.name')
+                Tables\Columns\TextColumn::make('manager.email')
                     ->label('Manager Name')
                     ->searchable()
                     ->sortable(),
